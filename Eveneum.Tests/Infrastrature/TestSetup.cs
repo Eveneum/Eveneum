@@ -23,12 +23,12 @@ namespace Eveneum.Tests.Infrastrature
         }
 
         public static SampleMetadata GetMetadata() => new SampleMetadata
+        {
+            Property = Gen.Random.Items(new[] { true, false })(),
+            Nested = new NestedContent
             {
-                Property = Gen.Random.Items(new[] { true, false })(),
-                Nested = new NestedContent
-                {
-                    Content = Gen.Random.Text.VeryLong()()
-                }
-            };
+                Content = Gen.Random.Text.VeryLong()()
+            }
+        };
     }
 }

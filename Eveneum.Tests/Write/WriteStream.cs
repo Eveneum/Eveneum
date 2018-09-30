@@ -44,7 +44,7 @@ namespace Eveneum.Tests
             Assert.AreEqual((ulong)events.Count, headerDocument.Version);
             Assert.AreEqual(metadata.GetType().AssemblyQualifiedName, headerDocument.Type);
             Assert.NotNull(headerDocument.Body);
-            Assert.AreEqual(JObject.FromObject(metadata), headerDocument.Body);
+            Assert.AreEqual(JToken.FromObject(metadata), headerDocument.Body);
             Assert.NotNull(headerDocument.ETag);
             Assert.False(headerDocument.Deleted);
             Assert.AreEqual(events.Count + EveneumDocument.GetOrderingFraction(DocumentType.Header), headerDocument.SortOrder);
@@ -58,7 +58,7 @@ namespace Eveneum.Tests
                 Assert.AreEqual(streamId, eventDocument.StreamId);
                 Assert.AreEqual(@event.GetType().AssemblyQualifiedName, eventDocument.Type);
                 Assert.NotNull(eventDocument.Body);
-                Assert.AreEqual(JObject.FromObject(@event), eventDocument.Body);
+                Assert.AreEqual(JToken.FromObject(@event), eventDocument.Body);
                 Assert.NotNull(eventDocument.ETag);
                 Assert.False(eventDocument.Deleted);
             }

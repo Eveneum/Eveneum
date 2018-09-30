@@ -83,7 +83,7 @@ namespace Eveneum
             return new Stream(streamId, headerDocument.Version, headerDocument.Body.ToObject(Type.GetType(headerDocument.Type)), events, snapshot);
         }
 
-        public async Task WriteSnapshot(string streamId, ulong version, object snapshot)
+        public async Task WriteSnapshot(string streamId, ulong version, object snapshot, bool deletePrevious = false)
         {
             var document = new SnapshotDocument
             {
@@ -91,11 +91,35 @@ namespace Eveneum
                 StreamId = streamId,
                 Version = version,
                 Type = snapshot.GetType().AssemblyQualifiedName,
-                Body = JObject.FromObject(snapshot)
+                Body = JToken.FromObject(snapshot)
             };
 
             var uri = UriFactory.CreateDocumentCollectionUri(this.Database, this.Collection);
             await this.Client.UpsertDocumentAsync(uri, document, new RequestOptions { PartitionKey = this.PartitionKey }, true);
+
+            if (deletePrevious)
+                await this.DeleteSnapshots(streamId, version);
+        }
+
+        public async Task DeleteSnapshots(string streamId, ulong maxVersion)
+        {
+            var query = this.Client.CreateDocumentQuery<SnapshotDocument>(UriFactory.CreateDocumentCollectionUri(this.Database, this.Collection), new FeedOptions { PartitionKey = this.PartitionKey })
+                .Where(x => x.StreamId == streamId)
+                .Where(x => x.DocumentType == DocumentType.Snapshot)
+                .Where(x => x.Version < maxVersion)
+                .AsDocumentQuery();
+
+            var documents = new List<Document>();
+
+            while(query.HasMoreResults)
+            {
+                var page = await query.ExecuteNextAsync<Document>();
+                documents.AddRange(page);
+            }
+
+            var tasks = documents.Select(document => this.Client.DeleteDocumentAsync(document.SelfLink, new RequestOptions { PartitionKey = this.PartitionKey }));
+
+            await Task.WhenAll(tasks);
         }
 
         public async Task WriteToStream(string streamId, object[] events, ulong expectedVersion = 0, object metadata = null)
@@ -127,7 +151,7 @@ namespace Eveneum
 
             if (metadata != null)
             {
-                header.Body = JObject.FromObject(metadata);
+                header.Body = JToken.FromObject(metadata);
                 header.Type = metadata.GetType().AssemblyQualifiedName;
             }
 
@@ -147,7 +171,7 @@ namespace Eveneum
                     StreamId = streamId,
                     Version = ++eventVersion,
                     Type = @event.GetType().AssemblyQualifiedName,
-                    Body = JObject.FromObject(@event)
+                    Body = JToken.FromObject(@event)
                 });
 
             foreach(var eventDocument in eventDocuments)
