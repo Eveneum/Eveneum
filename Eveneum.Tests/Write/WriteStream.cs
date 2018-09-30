@@ -85,5 +85,79 @@ namespace Eveneum.Tests
 
             Assert.AreEqual(1 + events.Length, allDocuments.Count);
         }
+
+        [TestCase(true)]
+        [TestCase(false)]
+        public async Task NoEvents(bool partitioned)
+        {
+            // Arrange
+            var partition = partitioned ? Guid.NewGuid().ToString() : null;
+
+            var client = await CosmosSetup.GetClient(this.Database, this.Collection, partitioned: partitioned);
+            var store = new EventStore(client, this.Database, this.Collection, partition);
+
+            var streamId = Guid.NewGuid().ToString();
+            var events = Array.Empty<object>();
+
+            // Act
+            await store.WriteToStream(streamId, events);
+
+            // Assert
+            var allDocuments = await CosmosSetup.QueryAllDocuments(client, this.Database, this.Collection);
+
+            Assert.AreEqual(1, allDocuments.Count);
+        }
+
+        [TestCase(true)]
+        [TestCase(false)]
+        public async Task FailsWhenStreamIdIsUsed(bool partitioned)
+        {
+            // Arrange
+            var partition = partitioned ? Guid.NewGuid().ToString() : null;
+
+            var client = await CosmosSetup.GetClient(this.Database, this.Collection, partitioned: partitioned);
+            var store = new EventStore(client, this.Database, this.Collection, partition);
+
+            var streamId = Guid.NewGuid().ToString();
+            var existingEvents = TestSetup.GetEvents(10).Cast<object>().ToArray();
+
+            await store.WriteToStream(streamId, existingEvents);
+
+            // Act
+            var exception = Assert.CatchAsync<Exception>(() => store.WriteToStream(streamId, TestSetup.GetEvents().Cast<object>().ToArray())); // TODO: introduce specific exception
+
+            // Assert
+            Assert.NotNull(exception);
+
+            var allDocuments = await CosmosSetup.QueryAllDocuments(client, this.Database, this.Collection);
+
+            Assert.AreEqual(1 + existingEvents.Length, allDocuments.Count);
+        }
+
+        [TestCase(true)]
+        [TestCase(false)]
+        public async Task FailsWhenExpectedVersionDoesntMatch(bool partitioned)
+        {
+            // Arrange
+            var partition = partitioned ? Guid.NewGuid().ToString() : null;
+
+            var client = await CosmosSetup.GetClient(this.Database, this.Collection, partitioned: partitioned);
+            var store = new EventStore(client, this.Database, this.Collection, partition);
+
+            var streamId = Guid.NewGuid().ToString();
+            var existingEvents = TestSetup.GetEvents(10).Cast<object>().ToArray();
+
+            await store.WriteToStream(streamId, existingEvents);
+
+            // Act
+            var exception = Assert.CatchAsync<OptimisticConcurrencyException>(() => store.WriteToStream(streamId, TestSetup.GetEvents().Cast<object>().ToArray(), (ulong)existingEvents.Length - 1));
+
+            // Assert
+            Assert.NotNull(exception);
+
+            var allDocuments = await CosmosSetup.QueryAllDocuments(client, this.Database, this.Collection);
+
+            Assert.AreEqual(1 + existingEvents.Length, allDocuments.Count);
+        }
     }
 }
