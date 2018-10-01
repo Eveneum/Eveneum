@@ -1,13 +1,12 @@
-﻿using Eveneum.Documents;
-using Microsoft.Azure.Documents;
-using Microsoft.Azure.Documents.Client;
-using Microsoft.Azure.Documents.Linq;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.Azure.Documents;
+using Microsoft.Azure.Documents.Client;
+using Microsoft.Azure.Documents.Linq;
+using Newtonsoft.Json.Linq;
+using Eveneum.Documents;
 
 namespace Eveneum
 {
@@ -19,24 +18,17 @@ namespace Eveneum
         private readonly string Partition;
         private readonly PartitionKey PartitionKey;
 
-        private readonly JsonSerializerSettings JsonSerializerSettings = new JsonSerializerSettings();
+        private readonly Uri DocumentCollectionUri;
 
         public EventStore(DocumentClient client, string database, string collection, string partition = null)
         {
-            if (client == null)
-                throw new ArgumentNullException(nameof(client));
-
-            if (database == null)
-                throw new ArgumentNullException(nameof(database));
-
-            if (collection == null)
-                throw new ArgumentNullException(nameof(collection));
-
-            this.Client = client;
-            this.Database = database;
-            this.Collection = collection;
+            this.Client = client ?? throw new ArgumentNullException(nameof(client));
+            this.Database = database ?? throw new ArgumentNullException(nameof(database));
+            this.Collection = collection ?? throw new ArgumentNullException(nameof(collection));
             this.Partition = string.IsNullOrEmpty(partition) ? null : partition;
             this.PartitionKey = string.IsNullOrEmpty(this.Partition) ? null : new PartitionKey(this.Partition);
+
+            this.DocumentCollectionUri = UriFactory.CreateDocumentCollectionUri(this.Database, this.Collection);
         }
 
         public async Task<Stream> ReadStream(string streamId)
@@ -45,7 +37,7 @@ namespace Eveneum
                 throw new ArgumentNullException(nameof(streamId));
 
             var sql = $"SELECT * FROM x WHERE x.{nameof(EveneumDocument.StreamId)} = '{streamId}' ORDER BY x.{nameof(EveneumDocument.SortOrder)} DESC";
-            var query = this.Client.CreateDocumentQuery<Document>(UriFactory.CreateDocumentCollectionUri(this.Database, this.Collection), sql, new FeedOptions { PartitionKey = this.PartitionKey }).AsDocumentQuery();
+            var query = this.Client.CreateDocumentQuery<Document>(this.DocumentCollectionUri, sql, new FeedOptions { PartitionKey = this.PartitionKey }).AsDocumentQuery();
 
             var page = await query.ExecuteNextAsync<Document>();
             
@@ -94,19 +86,18 @@ namespace Eveneum
                 Body = JToken.FromObject(snapshot)
             };
 
-            var uri = UriFactory.CreateDocumentCollectionUri(this.Database, this.Collection);
-            await this.Client.UpsertDocumentAsync(uri, document, new RequestOptions { PartitionKey = this.PartitionKey }, true);
+            await this.Client.UpsertDocumentAsync(this.DocumentCollectionUri, document, new RequestOptions { PartitionKey = this.PartitionKey }, true);
 
             if (deletePrevious)
                 await this.DeleteSnapshots(streamId, version);
         }
 
-        public async Task DeleteSnapshots(string streamId, ulong maxVersion)
+        public async Task DeleteSnapshots(string streamId, ulong olderThanVersion)
         {
-            var query = this.Client.CreateDocumentQuery<SnapshotDocument>(UriFactory.CreateDocumentCollectionUri(this.Database, this.Collection), new FeedOptions { PartitionKey = this.PartitionKey })
+            var query = this.Client.CreateDocumentQuery<SnapshotDocument>(this.DocumentCollectionUri, new FeedOptions { PartitionKey = this.PartitionKey })
                 .Where(x => x.StreamId == streamId)
                 .Where(x => x.DocumentType == DocumentType.Snapshot)
-                .Where(x => x.Version < maxVersion)
+                .Where(x => x.Version < olderThanVersion)
                 .AsDocumentQuery();
 
             var documents = new List<Document>();
@@ -131,8 +122,7 @@ namespace Eveneum
                 Version = expectedVersion + (ulong)events.Length
             };
 
-            var headerUri = UriFactory.CreateDocumentUri(this.Database, this.Collection, header.Id);
-            var documentCollectionUri = UriFactory.CreateDocumentCollectionUri(this.Database, this.Collection);
+            var headerUri = UriFactory.CreateDocumentUri(this.Database, this.Collection, header.Id);            
 
             string etag = null;
 
@@ -157,7 +147,7 @@ namespace Eveneum
 
             if (expectedVersion == 0)
             {
-                await this.Client.CreateDocumentAsync(documentCollectionUri, header, new RequestOptions { PartitionKey = this.PartitionKey });
+                await this.Client.CreateDocumentAsync(this.DocumentCollectionUri, header, new RequestOptions { PartitionKey = this.PartitionKey });
             }
             else
             {
@@ -175,7 +165,7 @@ namespace Eveneum
                 });
 
             foreach(var eventDocument in eventDocuments)
-                await this.Client.CreateDocumentAsync(documentCollectionUri, eventDocument, new RequestOptions { PartitionKey = this.PartitionKey });
+                await this.Client.CreateDocumentAsync(this.DocumentCollectionUri, eventDocument, new RequestOptions { PartitionKey = this.PartitionKey });
         }
 
         public async Task DeleteStream(Stream stream)
