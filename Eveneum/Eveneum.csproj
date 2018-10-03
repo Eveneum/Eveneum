@@ -76,6 +76,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DocumentQueryExtensions.cs" />
     <Compile Include="Documents\EveneumDocument.cs" />
     <Compile Include="Documents\EventDocument.cs" />
     <Compile Include="Documents\SnapshotDocument.cs" />

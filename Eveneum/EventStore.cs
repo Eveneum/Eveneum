@@ -100,15 +100,20 @@ namespace Eveneum
                 .Where(x => x.Version < olderThanVersion)
                 .AsDocumentQuery();
 
-            var documents = new List<Document>();
+            var documents = new List<SnapshotDocument>();
 
             while(query.HasMoreResults)
             {
-                var page = await query.ExecuteNextAsync<Document>();
+                var page = await query.ExecuteNextAsync<SnapshotDocument>();
                 documents.AddRange(page);
             }
 
-            var tasks = documents.Select(document => this.Client.DeleteDocumentAsync(document.SelfLink, new RequestOptions { PartitionKey = this.PartitionKey }));
+            var tasks = documents.Select(async document =>
+            {
+                document.Deleted = true;
+                
+                await this.Client.UpsertDocumentAsync(this.DocumentCollectionUri, document,new RequestOptions { PartitionKey = this.PartitionKey });
+            });
 
             await Task.WhenAll(tasks);
         }

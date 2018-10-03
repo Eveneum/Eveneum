@@ -1,7 +1,10 @@
 ﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
+using Eveneum.Documents;
 using Eveneum.Tests.Infrastrature;
+using Microsoft.Azure.Documents;
+using Microsoft.Azure.Documents.Client;
 using NUnit.Framework;
 
 namespace Eveneum.Tests
@@ -35,7 +38,7 @@ namespace Eveneum.Tests
             // Assert
             var allDocuments = await CosmosSetup.QueryAllDocuments(client, this.Database, this.Collection);
 
-            Assert.AreEqual(1 + events.Length, allDocuments.Count);
+            Assert.AreEqual(1 + events.Length, allDocuments.Where(x => !x.Deleted).Count());
         }
 
         [TestCase(true)]
@@ -62,7 +65,44 @@ namespace Eveneum.Tests
             // Assert
             var allDocuments = await CosmosSetup.QueryAllDocuments(client, this.Database, this.Collection);
 
-            Assert.AreEqual(1 + events.Length + 1, allDocuments.Count);
+            Assert.AreEqual(1 + events.Length + 1, allDocuments.Where(x => !x.Deleted).Count());
+        }
+
+        [TestCase(true)]
+        [TestCase(false)]
+        public async Task DeletedSnapshotAppearsInChangeFeed(bool partitioned)
+        {
+            // Arrange
+            var partition = partitioned ? Guid.NewGuid().ToString() : null;
+
+            var client = await CosmosSetup.GetClient(this.Database, this.Collection, partitioned: partitioned);
+            var store = new EventStore(client, this.Database, this.Collection, partition);
+
+            var streamId = Guid.NewGuid().ToString();
+            var events = TestSetup.GetEvents(10).Cast<object>().ToArray();
+
+            await store.WriteToStream(streamId, events);
+            await store.WriteSnapshot(streamId, 2, 2);
+            await store.WriteSnapshot(streamId, 4, 4);
+            await store.WriteSnapshot(streamId, 8, 8);
+
+            // Act           
+            var token = await this.GetCurrentChangeFeedToken(client, partition);
+
+            await store.DeleteSnapshots(streamId, 8);
+
+            // Assert
+            var documents = await this.LoadChangeFeed(client, partition, token);
+
+            Assert.AreEqual(2, documents.Count);
+            var snapshots = documents.OfType<SnapshotDocument>().ToList();
+            Assert.AreEqual(2, snapshots.Count);
+            
+            foreach(var snapshot in snapshots)
+            {
+                Assert.IsTrue(snapshot.Deleted);
+                Assert.Contains(snapshot.Version, new[] { 2, 4 });
+            }
         }
     }
 }
