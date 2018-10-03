@@ -3,14 +3,12 @@ using System.Linq;
 using System.Threading.Tasks;
 using Eveneum.Documents;
 using Eveneum.Tests.Infrastrature;
-using Microsoft.Azure.Documents;
-using Microsoft.Azure.Documents.Client;
 using NUnit.Framework;
 
 namespace Eveneum.Tests
 {
     /// <summary>
-    /// Writes a stream with a large number of events.
+    /// Soft-deletes snapshots up to a specific version
     /// </summary>
     public class DeleteSnapshots : CosmosTest
     {

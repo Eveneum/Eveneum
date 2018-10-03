@@ -87,6 +87,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DeleteStream.cs" />
     <Compile Include="Infrastrature\TestSetup.cs" />
     <Compile Include="Infrastrature\CosmosSetup.cs" />
     <Compile Include="Infrastrature\CosmosTest.cs" />

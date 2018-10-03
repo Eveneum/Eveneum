@@ -10,13 +10,13 @@ using Eveneum.Documents;
 
 namespace Eveneum
 {
-    class EventStore : IEventStore
+    public class EventStore : IEventStore
     {
-        private readonly DocumentClient Client;
-        private readonly string Collection;
-        private readonly string Database;
-        private readonly string Partition;
-        private readonly PartitionKey PartitionKey;
+        public readonly DocumentClient Client;
+        public readonly string Database;
+        public readonly string Collection;
+        public readonly string Partition;
+        public readonly PartitionKey PartitionKey;
 
         private readonly Uri DocumentCollectionUri;
 
@@ -52,6 +52,13 @@ namespace Eveneum
                 foreach (var document in page)
                 {
                     var eveneumDoc = EveneumDocument.Parse(document);
+
+                    if (eveneumDoc is HeaderDocument && eveneumDoc.Deleted)
+                        throw new KeyNotFoundException(streamId); // TODO: domain-specific exception needed
+
+                    if (eveneumDoc.Deleted)
+                        continue;
+
                     documents.Add(eveneumDoc);
 
                     if (eveneumDoc is SnapshotDocument)
@@ -173,8 +180,25 @@ namespace Eveneum
                 await this.Client.CreateDocumentAsync(this.DocumentCollectionUri, eventDocument, new RequestOptions { PartitionKey = this.PartitionKey });
         }
 
-        public async Task DeleteStream(Stream stream)
+        public async Task DeleteStream(string streamId, ulong expectedVersion)
         {
+            var query = this.Client.CreateDocumentQuery<EveneumDocument>(this.DocumentCollectionUri, new FeedOptions { PartitionKey = this.PartitionKey })
+                .Where(x => x.StreamId == streamId)
+                .Where(x => !x.Deleted)
+                .AsDocumentQuery();
+
+            while (query.HasMoreResults)
+            {
+                var page = await query.ExecuteNextAsync<Document>();
+
+                foreach(var document in page)
+                {
+                    var doc = EveneumDocument.Parse(document);
+                    doc.Deleted = true;
+
+                    await this.Client.UpsertDocumentAsync(this.DocumentCollectionUri, doc, new RequestOptions { PartitionKey = this.PartitionKey });
+                }
+            }
         }
     }
 }
