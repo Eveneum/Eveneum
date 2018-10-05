@@ -71,5 +71,96 @@ namespace Eveneum.Tests
                 Assert.IsTrue(document.Deleted);
             }
         }
+
+        [TestCase(true)]
+        [TestCase(false)]
+        public async Task FailsWhenExpectedVersionDoesntMatch(bool partitioned)
+        {
+            // Arrange
+            var partition = partitioned ? Guid.NewGuid().ToString() : null;
+
+            var client = await CosmosSetup.GetClient(this.Database, this.Collection, partitioned: partitioned);
+            var store = new EventStore(client, this.Database, this.Collection, partition);
+
+            var streamId = Guid.NewGuid().ToString();
+            var events = TestSetup.GetEvents().Cast<object>().ToArray();
+
+            await store.WriteToStream(streamId, events);
+
+            // Act
+            var exception = Assert.CatchAsync<OptimisticConcurrencyException>(() => store.DeleteStream(streamId, (ulong)events.Length + 1));
+
+            // Assert
+            Assert.IsNotNull(exception);
+        }
+
+        [TestCase(true)]
+        [TestCase(false)]
+        public async Task FailsWhenStreamDoesntExist(bool partitioned)
+        {
+            // Arrange
+            var partition = partitioned ? Guid.NewGuid().ToString() : null;
+
+            var client = await CosmosSetup.GetClient(this.Database, this.Collection, partitioned: partitioned);
+            var store = new EventStore(client, this.Database, this.Collection, partition);
+
+            var streamId = Guid.NewGuid().ToString();
+
+            // Act
+            var exception = Assert.CatchAsync<StreamNotFoundException>(() => store.DeleteStream(streamId, 0));
+
+            // Assert
+            Assert.IsNotNull(exception);
+            Assert.AreEqual(streamId, exception.StreamId);
+        }
+
+        [TestCase(true)]
+        [TestCase(false)]
+        public async Task FailsWhenStreamAlreadyDeleted(bool partitioned)
+        {
+            // Arrange
+            var partition = partitioned ? Guid.NewGuid().ToString() : null;
+
+            var client = await CosmosSetup.GetClient(this.Database, this.Collection, partitioned: partitioned);
+            var store = new EventStore(client, this.Database, this.Collection, partition);
+
+            var streamId = Guid.NewGuid().ToString();
+            var events = TestSetup.GetEvents().Cast<object>().ToArray();
+
+            await store.WriteToStream(streamId, events);
+            await store.DeleteStream(streamId, (ulong)events.Length);
+
+            // Act
+            var exception = Assert.CatchAsync<StreamNotFoundException>(() => store.DeleteStream(streamId, (ulong)events.Length));
+
+            // Assert
+            Assert.IsNotNull(exception);
+            Assert.AreEqual(streamId, exception.StreamId);
+        }
+
+        [TestCase(true)]
+        [TestCase(false)]
+        public async Task DoesntDeleteOtherStreams(bool partitioned)
+        {
+            // Arrange
+            var partition = partitioned ? Guid.NewGuid().ToString() : null;
+
+            var client = await CosmosSetup.GetClient(this.Database, this.Collection, partitioned: partitioned);
+            var store = new EventStore(client, this.Database, this.Collection, partition);
+
+            var streamId = Guid.NewGuid().ToString();
+            await store.WriteToStream(streamId, TestSetup.GetEvents(10).Cast<object>().ToArray());
+
+            var otherStreamId = Guid.NewGuid().ToString();
+            await store.WriteToStream(otherStreamId, TestSetup.GetEvents(5).Cast<object>().ToArray());
+
+            // Act
+            await store.DeleteStream(streamId, 10);
+
+            // Assert
+            var allDocuments = await CosmosSetup.QueryAllDocuments(client, this.Database, this.Collection);
+
+            Assert.AreEqual(1 + 5, allDocuments.Where(x => x.StreamId == otherStreamId && !x.Deleted).Count());
+        }
     }
 }

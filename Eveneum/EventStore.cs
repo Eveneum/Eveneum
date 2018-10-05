@@ -82,7 +82,7 @@ namespace Eveneum
             return new Stream(streamId, headerDocument.Version, headerDocument.Body.ToObject(Type.GetType(headerDocument.Type)), events, snapshot);
         }
 
-        public async Task WriteSnapshot(string streamId, ulong version, object snapshot, bool deletePrevious = false)
+        public async Task WriteSnapshot(string streamId, ulong version, object snapshot, bool deleteOlderSnapshots = false)
         {
             var document = new SnapshotDocument
             {
@@ -95,7 +95,7 @@ namespace Eveneum
 
             await this.Client.UpsertDocumentAsync(this.DocumentCollectionUri, document, new RequestOptions { PartitionKey = this.PartitionKey }, true);
 
-            if (deletePrevious)
+            if (deleteOlderSnapshots)
                 await this.DeleteSnapshots(streamId, version);
         }
 
@@ -182,6 +182,34 @@ namespace Eveneum
 
         public async Task DeleteStream(string streamId, ulong expectedVersion)
         {
+            var header = new HeaderDocument
+            {
+                Partition = this.Partition,
+                StreamId = streamId,
+                Version = expectedVersion
+            };
+
+            var headerUri = UriFactory.CreateDocumentUri(this.Database, this.Collection, header.Id);
+
+            HeaderDocument existingHeader;
+
+            try
+            {
+                existingHeader = await this.Client.ReadDocumentAsync<HeaderDocument>(headerUri, new RequestOptions { PartitionKey = this.PartitionKey });
+            }
+            catch(DocumentClientException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                throw new StreamNotFoundException(streamId);
+            }
+
+            if (existingHeader.Deleted)
+                throw new StreamNotFoundException(streamId);
+
+            if (existingHeader.Version != expectedVersion)
+                throw new OptimisticConcurrencyException(); // TODO: specific exception
+
+            string etag = existingHeader.ETag;
+
             var query = this.Client.CreateDocumentQuery<EveneumDocument>(this.DocumentCollectionUri, new FeedOptions { PartitionKey = this.PartitionKey })
                 .Where(x => x.StreamId == streamId)
                 .Where(x => !x.Deleted)
