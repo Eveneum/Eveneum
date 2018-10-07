@@ -42,7 +42,7 @@ namespace Eveneum
             var page = await query.ExecuteNextAsync<Document>();
             
             if (page.Count == 0)
-                throw new KeyNotFoundException(streamId); // TODO: domain-specific exception needed
+                throw new StreamNotFoundException(streamId);
 
             var documents = new List<EveneumDocument>();
             var finishLoading = false;
@@ -54,7 +54,7 @@ namespace Eveneum
                     var eveneumDoc = EveneumDocument.Parse(document);
 
                     if (eveneumDoc is HeaderDocument && eveneumDoc.Deleted)
-                        throw new KeyNotFoundException(streamId); // TODO: domain-specific exception needed
+                        throw new StreamNotFoundException(streamId);
 
                     if (eveneumDoc.Deleted)
                         continue;

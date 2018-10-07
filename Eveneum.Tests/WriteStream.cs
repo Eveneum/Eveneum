@@ -9,7 +9,7 @@ using NUnit.Framework;
 namespace Eveneum.Tests
 {
     /// <summary>
-    /// Writes a stream with a large number of events.
+    /// Writes a new stream or appends to an existing one
     /// </summary>
     public class WriteStream : CosmosTest
     {
