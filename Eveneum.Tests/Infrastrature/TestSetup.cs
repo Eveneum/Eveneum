@@ -6,12 +6,12 @@ namespace Eveneum.Tests.Infrastrature
 {
     static class TestSetup
     {
-        public static IReadOnlyCollection<SampleEvent> GetEvents(int count = 5)
+        public static IReadOnlyCollection<SampleEvent> GetEvents(int count = 5, int startVersion = 1)
         {
             var numbers = Gen.Random.Numbers.Decimals();
             var strings = Gen.Random.Text.VeryLong();
 
-            return Enumerable.Range(1, count).Select(x => new SampleEvent
+            return Enumerable.Range(startVersion, count).Select(x => new SampleEvent
             {
                 Version = x,
                 Number = numbers(),

@@ -152,7 +152,7 @@ namespace Eveneum.Tests
             await store.WriteToStream(streamId, TestSetup.GetEvents(10).Cast<object>().ToArray());
 
             var otherStreamId = Guid.NewGuid().ToString();
-            await store.WriteToStream(otherStreamId, TestSetup.GetEvents(5).Cast<object>().ToArray());
+            await store.WriteToStream(otherStreamId, TestSetup.GetEvents().Cast<object>().ToArray());
 
             // Act
             await store.DeleteStream(streamId, 10);
