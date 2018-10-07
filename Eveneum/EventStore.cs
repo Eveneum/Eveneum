@@ -144,7 +144,7 @@ namespace Eveneum
                 var existingHeader = await this.Client.ReadDocumentAsync<HeaderDocument>(headerUri, new RequestOptions { PartitionKey = this.PartitionKey });
 
                 if (existingHeader.Document.Version != expectedVersion)
-                    throw new OptimisticConcurrencyException(); // TODO: specific exception
+                    throw new OptimisticConcurrencyException(streamId, expectedVersion, existingHeader.Document.Version);
 
                 etag = existingHeader.Document.ETag;
             }
@@ -206,7 +206,7 @@ namespace Eveneum
                 throw new StreamNotFoundException(streamId);
 
             if (existingHeader.Version != expectedVersion)
-                throw new OptimisticConcurrencyException(); // TODO: specific exception
+                throw new OptimisticConcurrencyException(streamId, expectedVersion, existingHeader.Version);
 
             string etag = existingHeader.ETag;
 

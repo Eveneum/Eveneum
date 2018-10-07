@@ -5,7 +5,6 @@ namespace Eveneum
     [Serializable]
     public class StreamNotFoundException : Exception
     {
-        public StreamNotFoundException() { }
         public StreamNotFoundException(string streamId) : base($"Stream '{streamId}' wasn't found")
         {
             this.StreamId = streamId;

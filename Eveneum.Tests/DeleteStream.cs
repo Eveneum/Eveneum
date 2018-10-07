@@ -92,6 +92,9 @@ namespace Eveneum.Tests
 
             // Assert
             Assert.IsNotNull(exception);
+            Assert.AreEqual(streamId, exception.StreamId);
+            Assert.AreEqual(events.Length + 1, exception.ExpectedVersion);
+            Assert.AreEqual(events.Length, exception.ActualVersion);
         }
 
         [TestCase(true)]

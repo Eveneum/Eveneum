@@ -154,6 +154,9 @@ namespace Eveneum.Tests
 
             // Assert
             Assert.NotNull(exception);
+            Assert.AreEqual(streamId, exception.StreamId);
+            Assert.AreEqual(existingEvents.Length - 1, exception.ExpectedVersion);
+            Assert.AreEqual(existingEvents.Length, exception.ActualVersion);
 
             var allDocuments = await CosmosSetup.QueryAllDocuments(client, this.Database, this.Collection);
 
@@ -244,6 +247,9 @@ namespace Eveneum.Tests
 
             // Assert
             Assert.NotNull(exception);
+            Assert.AreEqual(streamId, exception.StreamId);
+            Assert.AreEqual(events.Count - 2, exception.ExpectedVersion);
+            Assert.AreEqual(events.Count, exception.ActualVersion);
         }
     }
 }
