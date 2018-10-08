@@ -28,26 +28,26 @@ namespace Eveneum.Tests
             var metadata = TestSetup.GetMetadata();
 
             // Act
-            await store.WriteToStream(streamId, events.Cast<object>().ToArray(), metadata: metadata);
+            await store.WriteToStream(streamId, events, metadata: metadata);
 
             // Assert
             var allDocuments = await CosmosSetup.QueryAllDocuments(client, this.Database, this.Collection);
 
-            Assert.AreEqual(1 + events.Count, allDocuments.Count);
+            Assert.AreEqual(1 + events.Length, allDocuments.Count);
 
             var headerDocument = allDocuments.OfType<HeaderDocument>().Single();
             Assert.AreEqual(streamId, headerDocument.Id);
             Assert.AreEqual(partition, headerDocument.Partition);
             Assert.AreEqual(DocumentType.Header, headerDocument.DocumentType);
             Assert.AreEqual(streamId, headerDocument.StreamId);
-            Assert.AreEqual(typeof(SampleMetadata).AssemblyQualifiedName, headerDocument.Type);
-            Assert.AreEqual((ulong)events.Count, headerDocument.Version);
-            Assert.AreEqual(metadata.GetType().AssemblyQualifiedName, headerDocument.Type);
-            Assert.NotNull(headerDocument.Body);
-            Assert.AreEqual(JToken.FromObject(metadata), headerDocument.Body);
+            Assert.AreEqual(typeof(SampleMetadata).AssemblyQualifiedName, headerDocument.MetadataType);
+            Assert.AreEqual((ulong)events.Length, headerDocument.Version);
+            Assert.AreEqual(metadata.GetType().AssemblyQualifiedName, headerDocument.MetadataType);
+            Assert.NotNull(headerDocument.Metadata);
+            Assert.AreEqual(JToken.FromObject(metadata), headerDocument.Metadata);
             Assert.NotNull(headerDocument.ETag);
             Assert.False(headerDocument.Deleted);
-            Assert.AreEqual(events.Count + EveneumDocument.GetOrderingFraction(DocumentType.Header), headerDocument.SortOrder);
+            Assert.AreEqual(events.Length + EveneumDocument.GetOrderingFraction(DocumentType.Header), headerDocument.SortOrder);
 
             foreach(var @event in events)
             {
@@ -56,9 +56,9 @@ namespace Eveneum.Tests
                 Assert.AreEqual(partition, eventDocument.Partition);
                 Assert.AreEqual(DocumentType.Event, eventDocument.DocumentType);
                 Assert.AreEqual(streamId, eventDocument.StreamId);
-                Assert.AreEqual(@event.GetType().AssemblyQualifiedName, eventDocument.Type);
+                Assert.AreEqual(@event.Body.GetType().AssemblyQualifiedName, eventDocument.BodyType);
                 Assert.NotNull(eventDocument.Body);
-                Assert.AreEqual(JToken.FromObject(@event), eventDocument.Body);
+                Assert.AreEqual(JToken.FromObject(@event.Body), eventDocument.Body);
                 Assert.NotNull(eventDocument.ETag);
                 Assert.False(eventDocument.Deleted);
             }
@@ -75,7 +75,7 @@ namespace Eveneum.Tests
             var store = new EventStore(client, this.Database, this.Collection, partition);
 
             var streamId = Guid.NewGuid().ToString();
-            var events = TestSetup.GetEvents(1000).Cast<object>().ToArray();
+            var events = TestSetup.GetEvents(1000);
 
             // Act
             await store.WriteToStream(streamId, events);
@@ -97,7 +97,7 @@ namespace Eveneum.Tests
             var store = new EventStore(client, this.Database, this.Collection, partition);
 
             var streamId = Guid.NewGuid().ToString();
-            var events = Array.Empty<object>();
+            var events = Array.Empty<EventData>();
 
             // Act
             await store.WriteToStream(streamId, events);
@@ -119,12 +119,12 @@ namespace Eveneum.Tests
             var store = new EventStore(client, this.Database, this.Collection, partition);
 
             var streamId = Guid.NewGuid().ToString();
-            var existingEvents = TestSetup.GetEvents(10).Cast<object>().ToArray();
+            var existingEvents = TestSetup.GetEvents(10);
 
             await store.WriteToStream(streamId, existingEvents);
 
             // Act
-            var exception = Assert.CatchAsync<Exception>(() => store.WriteToStream(streamId, TestSetup.GetEvents().Cast<object>().ToArray())); // TODO: introduce specific exception
+            var exception = Assert.CatchAsync<Exception>(() => store.WriteToStream(streamId, TestSetup.GetEvents())); // TODO: introduce specific exception
 
             // Assert
             Assert.NotNull(exception);
@@ -145,12 +145,12 @@ namespace Eveneum.Tests
             var store = new EventStore(client, this.Database, this.Collection, partition);
 
             var streamId = Guid.NewGuid().ToString();
-            var existingEvents = TestSetup.GetEvents(10).Cast<object>().ToArray();
+            var existingEvents = TestSetup.GetEvents(10);
 
             await store.WriteToStream(streamId, existingEvents);
 
             // Act
-            var exception = Assert.CatchAsync<OptimisticConcurrencyException>(() => store.WriteToStream(streamId, TestSetup.GetEvents().Cast<object>().ToArray(), (ulong)existingEvents.Length - 1));
+            var exception = Assert.CatchAsync<OptimisticConcurrencyException>(() => store.WriteToStream(streamId, TestSetup.GetEvents(), (ulong)existingEvents.Length - 1));
 
             // Assert
             Assert.NotNull(exception);
@@ -175,17 +175,17 @@ namespace Eveneum.Tests
 
             var streamId = Guid.NewGuid().ToString();
             var events = TestSetup.GetEvents();
-            var newEvents = TestSetup.GetEvents(startVersion: events.Count + 1);
+            var newEvents = TestSetup.GetEvents(startVersion: events.Length + 1);
 
-            await store.WriteToStream(streamId, events.Cast<object>().ToArray());
+            await store.WriteToStream(streamId, events);
 
             // Act
-            await store.WriteToStream(streamId, newEvents.Cast<object>().ToArray(), (ulong)events.Count);
+            await store.WriteToStream(streamId, newEvents, (ulong)events.Length);
 
             // Assert
             var allDocuments = await CosmosSetup.QueryAllDocuments(client, this.Database, this.Collection);
 
-            Assert.AreEqual(1 + events.Count + newEvents.Count, allDocuments.Count);
+            Assert.AreEqual(1 + events.Length + newEvents.Length, allDocuments.Count);
 
             foreach (var @event in newEvents)
             {
@@ -194,9 +194,9 @@ namespace Eveneum.Tests
                 Assert.AreEqual(partition, eventDocument.Partition);
                 Assert.AreEqual(DocumentType.Event, eventDocument.DocumentType);
                 Assert.AreEqual(streamId, eventDocument.StreamId);
-                Assert.AreEqual(@event.GetType().AssemblyQualifiedName, eventDocument.Type);
+                Assert.AreEqual(@event.Body.GetType().AssemblyQualifiedName, eventDocument.BodyType);
                 Assert.NotNull(eventDocument.Body);
-                Assert.AreEqual(JToken.FromObject(@event), eventDocument.Body);
+                Assert.AreEqual(JToken.FromObject(@event.Body), eventDocument.Body);
                 Assert.NotNull(eventDocument.ETag);
                 Assert.False(eventDocument.Deleted);
             }
@@ -215,15 +215,15 @@ namespace Eveneum.Tests
             var streamId = Guid.NewGuid().ToString();
             var events = TestSetup.GetEvents();
 
-            await store.WriteToStream(streamId, events.Cast<object>().ToArray());
+            await store.WriteToStream(streamId, events);
 
             // Act
-            await store.WriteToStream(streamId, Array.Empty<object>(), (ulong)events.Count);
+            await store.WriteToStream(streamId, Array.Empty<EventData>(), (ulong)events.Length);
 
             // Assert
             var allDocuments = await CosmosSetup.QueryAllDocuments(client, this.Database, this.Collection);
 
-            Assert.AreEqual(1 + events.Count, allDocuments.Count);
+            Assert.AreEqual(1 + events.Length, allDocuments.Count);
         }
 
         [TestCase(true)]
@@ -238,18 +238,18 @@ namespace Eveneum.Tests
 
             var streamId = Guid.NewGuid().ToString();
             var events = TestSetup.GetEvents();
-            var newEvents = TestSetup.GetEvents(startVersion: events.Count + 1);
+            var newEvents = TestSetup.GetEvents(startVersion: events.Length + 1);
 
-            await store.WriteToStream(streamId, events.Cast<object>().ToArray());
+            await store.WriteToStream(streamId, events);
 
             // Act
-            var exception = Assert.ThrowsAsync<OptimisticConcurrencyException>(() => store.WriteToStream(streamId, newEvents.Cast<object>().ToArray(), (ulong)events.Count - 2));
+            var exception = Assert.ThrowsAsync<OptimisticConcurrencyException>(() => store.WriteToStream(streamId, newEvents, (ulong)events.Length - 2));
 
             // Assert
             Assert.NotNull(exception);
             Assert.AreEqual(streamId, exception.StreamId);
-            Assert.AreEqual(events.Count - 2, exception.ExpectedVersion);
-            Assert.AreEqual(events.Count, exception.ActualVersion);
+            Assert.AreEqual(events.Length - 2, exception.ExpectedVersion);
+            Assert.AreEqual(events.Length, exception.ActualVersion);
         }
     }
 }

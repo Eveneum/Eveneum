@@ -6,20 +6,23 @@ namespace Eveneum.Tests.Infrastrature
 {
     static class TestSetup
     {
-        public static IReadOnlyCollection<SampleEvent> GetEvents(int count = 5, int startVersion = 1)
+        public static EventData[] GetEvents(int count = 5, int startVersion = 1)
         {
             var numbers = Gen.Random.Numbers.Decimals();
             var strings = Gen.Random.Text.VeryLong();
 
-            return Enumerable.Range(startVersion, count).Select(x => new SampleEvent
-            {
-                Version = x,
-                Number = numbers(),
-                Nested = new NestedContent
+            return Enumerable.Range(startVersion, count)
+                .Select(x => new SampleEvent
                 {
-                    Content = strings()
-                }
-            }).ToList();
+                    Version = x,
+                    Number = numbers(),
+                    Nested = new NestedContent
+                    {
+                        Content = strings()
+                    }
+                })
+                .Select(x => new EventData((ulong)x.Version, x))
+                .ToArray();
         }
 
         public static SampleMetadata GetMetadata() => new SampleMetadata

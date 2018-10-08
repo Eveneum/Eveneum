@@ -24,9 +24,10 @@ namespace Eveneum.Tests
         public async Task WhenIWriteNewStreamWithEvents(int events)
         {
             ScenarioContext.Current.SetStreamId(Guid.NewGuid().ToString());
-            ScenarioContext.Current.SetNewEvents(TestSetup.GetEvents(events).ToArray());
+            ScenarioContext.Current.SetNewEvents(TestSetup.GetEvents(events));
+            ScenarioContext.Current.SetExistingDocuments(await CosmosSetup.QueryAllDocuments(this.Context.Client, this.Context.Database, this.Context.Collection));
 
-            await this.Context.EventStore.WriteToStream(ScenarioContext.Current.GetStreamId(), ScenarioContext.Current.GetNewEvents().Cast<object>().ToArray(), metadata: ScenarioContext.Current.GetHeaderMetadata());
+            await this.Context.EventStore.WriteToStream(ScenarioContext.Current.GetStreamId(), ScenarioContext.Current.GetNewEvents(), metadata: ScenarioContext.Current.GetHeaderMetadata());
         }
 
         [When(@"I write a new stream with metadata and (.*) events")]
@@ -51,8 +52,8 @@ namespace Eveneum.Tests
             Assert.AreEqual(ScenarioContext.Current.GetStreamId(), headerDocument.StreamId);
             Assert.AreEqual(version, headerDocument.Version);
             Assert.AreEqual(version + EveneumDocument.GetOrderingFraction(DocumentType.Header), headerDocument.SortOrder);
-            Assert.IsNull(headerDocument.Type);
-            Assert.IsFalse(headerDocument.Body.HasValues);
+            Assert.IsNull(headerDocument.MetadataType);
+            Assert.IsFalse(headerDocument.Metadata.HasValues);
             Assert.NotNull(headerDocument.ETag);
             Assert.False(headerDocument.Deleted);
         }
@@ -71,9 +72,9 @@ namespace Eveneum.Tests
             Assert.AreEqual(ScenarioContext.Current.GetStreamId(), headerDocument.StreamId);
             Assert.AreEqual(version, headerDocument.Version);
             Assert.AreEqual(version + EveneumDocument.GetOrderingFraction(DocumentType.Header), headerDocument.SortOrder);
-            Assert.AreEqual(typeof(SampleMetadata).AssemblyQualifiedName, headerDocument.Type);
-            Assert.NotNull(headerDocument.Body);
-            Assert.AreEqual(JToken.FromObject(ScenarioContext.Current.GetHeaderMetadata()), headerDocument.Body);
+            Assert.AreEqual(typeof(SampleMetadata).AssemblyQualifiedName, headerDocument.MetadataType);
+            Assert.NotNull(headerDocument.Metadata);
+            Assert.AreEqual(JToken.FromObject(ScenarioContext.Current.GetHeaderMetadata()), headerDocument.Metadata);
             Assert.NotNull(headerDocument.ETag);
             Assert.False(headerDocument.Deleted);
         }
@@ -81,7 +82,38 @@ namespace Eveneum.Tests
         [Then(@"no events are appended")]
         public async Task ThenNoEventsAreAppended()
         {
-            // TODO
+            var streamId = ScenarioContext.Current.GetStreamId();
+            var currentDocuments = await CosmosSetup.QueryAllDocuments(this.Context.Client, this.Context.Database, this.Context.Collection);
+            var existingDocumentIds = ScenarioContext.Current.GetExistingDocuments().Select(x => x.Id);
+
+            var newEventDocuments = currentDocuments
+                .OfType<EventDocument>()
+                .Where(x => x.Partition == this.Context.Partition && x.StreamId == streamId)
+                .Where(x => !existingDocumentIds.Contains(x.Id));
+
+            Assert.IsEmpty(newEventDocuments);
+        }
+
+        [Then(@"new events are appended")]
+        public async Task ThenNewEventsAreAppended()
+        {
+            var streamId = ScenarioContext.Current.GetStreamId();
+            var newEvents = ScenarioContext.Current.GetNewEvents();
+            var currentDocuments = await CosmosSetup.QueryAllDocuments(this.Context.Client, this.Context.Database, this.Context.Collection);
+
+            foreach(var newEvent in newEvents)
+            {
+                var eventDocument = currentDocuments.OfType<EventDocument>().SingleOrDefault(x => x.Partition == this.Context.Partition && x.Id == EventDocument.GenerateId(streamId, newEvent.Version));
+
+                Assert.IsNotNull(eventDocument);
+                Assert.AreEqual(DocumentType.Event, eventDocument.DocumentType);
+                Assert.AreEqual(streamId, eventDocument.StreamId);
+                Assert.AreEqual(newEvent.Body.GetType().AssemblyQualifiedName, eventDocument.BodyType);
+                Assert.NotNull(eventDocument.Body);
+                Assert.AreEqual(JToken.FromObject(newEvent.Body), eventDocument.Body);
+                Assert.NotNull(eventDocument.ETag);
+                Assert.False(eventDocument.Deleted);
+            }
         }
     }
 }

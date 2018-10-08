@@ -23,7 +23,7 @@ namespace Eveneum.Tests
             var store = new EventStore(client, this.Database, this.Collection, partition);
 
             var streamId = Guid.NewGuid().ToString();
-            var events = TestSetup.GetEvents(10).Cast<object>().ToArray();
+            var events = TestSetup.GetEvents(10);
 
             await store.WriteToStream(streamId, events);
             await store.WriteSnapshot(streamId, 2, 2);
@@ -50,7 +50,7 @@ namespace Eveneum.Tests
             var store = new EventStore(client, this.Database, this.Collection, partition);
 
             var streamId = Guid.NewGuid().ToString();
-            var events = TestSetup.GetEvents(10).Cast<object>().ToArray();
+            var events = TestSetup.GetEvents(10);
 
             await store.WriteToStream(streamId, events);
             await store.WriteSnapshot(streamId, 2, 2);
@@ -77,7 +77,7 @@ namespace Eveneum.Tests
             var store = new EventStore(client, this.Database, this.Collection, partition);
 
             var streamId = Guid.NewGuid().ToString();
-            var events = TestSetup.GetEvents(10).Cast<object>().ToArray();
+            var events = TestSetup.GetEvents(10);
 
             await store.WriteToStream(streamId, events);
             await store.WriteSnapshot(streamId, 2, 2);

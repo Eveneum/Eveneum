@@ -76,20 +76,20 @@ namespace Eveneum
             while (query.HasMoreResults);
 
             var headerDocument = documents.First() as HeaderDocument;
-            var events = documents.OfType<EventDocument>().Select(x => x.Body.ToObject(Type.GetType(x.Type))).Reverse().ToArray();
-            var snapshot = documents.OfType<SnapshotDocument>().Select(x => new Snapshot(x.Body.ToObject(Type.GetType(x.Type)), x.Version)).FirstOrDefault();
+            var events = documents.OfType<EventDocument>().Select(x => x.Body.ToObject(Type.GetType(x.BodyType))).Reverse().ToArray();
+            var snapshot = documents.OfType<SnapshotDocument>().Select(x => new Snapshot(x.Body.ToObject(Type.GetType(x.BodyType)), x.Version)).FirstOrDefault();
 
-            return new Stream(streamId, headerDocument.Version, headerDocument.Body.ToObject(Type.GetType(headerDocument.Type)), events, snapshot);
+            return new Stream(streamId, headerDocument.Version, headerDocument.Metadata.ToObject(Type.GetType(headerDocument.MetadataType)), events, snapshot);
         }
 
-        public async Task WriteSnapshot(string streamId, ulong version, object snapshot, bool deleteOlderSnapshots = false)
+        public async Task WriteSnapshot(string streamId, ulong version, object snapshot, object metadata = null, bool deleteOlderSnapshots = false)
         {
             var document = new SnapshotDocument
             {
                 Partition = this.Partition,
                 StreamId = streamId,
                 Version = version,
-                Type = snapshot.GetType().AssemblyQualifiedName,
+                BodyType = snapshot.GetType().AssemblyQualifiedName,
                 Body = JToken.FromObject(snapshot)
             };
 
@@ -125,7 +125,7 @@ namespace Eveneum
             await Task.WhenAll(tasks);
         }
 
-        public async Task WriteToStream(string streamId, object[] events, ulong expectedVersion = 0, object metadata = null)
+        public async Task WriteToStream(string streamId, EventData[] events, ulong expectedVersion = 0, object metadata = null)
         {
             var header = new HeaderDocument
             {
@@ -149,12 +149,10 @@ namespace Eveneum
                 etag = existingHeader.Document.ETag;
             }
 
-            var eventVersion = expectedVersion;
-
             if (metadata != null)
             {
-                header.Body = JToken.FromObject(metadata);
-                header.Type = metadata.GetType().AssemblyQualifiedName;
+                header.Metadata = JToken.FromObject(metadata);
+                header.MetadataType = metadata.GetType().AssemblyQualifiedName;
             }
 
             if (expectedVersion == 0)
@@ -166,14 +164,14 @@ namespace Eveneum
                 await this.Client.ReplaceDocumentAsync(headerUri, header, new RequestOptions { PartitionKey = this.PartitionKey, AccessCondition = new AccessCondition { Type = AccessConditionType.IfMatch, Condition = etag } });
             }
 
-            var eventDocuments = (events ?? Enumerable.Empty<object>())
+            var eventDocuments = (events ?? Enumerable.Empty<EventData>())
                 .Select(@event => new EventDocument
                 {                    
                     Partition = this.Partition,
                     StreamId = streamId,
-                    Version = ++eventVersion,
-                    Type = @event.GetType().AssemblyQualifiedName,
-                    Body = JToken.FromObject(@event)
+                    Version = @event.Version,
+                    BodyType = @event.Body.GetType().AssemblyQualifiedName,
+                    Body = JToken.FromObject(@event.Body)
                 });
 
             foreach(var eventDocument in eventDocuments)

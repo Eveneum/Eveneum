@@ -81,6 +81,7 @@
     <Compile Include="Documents\EventDocument.cs" />
     <Compile Include="Documents\SnapshotDocument.cs" />
     <Compile Include="Documents\HeaderDocument.cs" />
+    <Compile Include="EventData.cs" />
     <Compile Include="EventStore.cs" />
     <Compile Include="IEventStore.cs" />
     <Compile Include="StreamNotFoundException.cs" />

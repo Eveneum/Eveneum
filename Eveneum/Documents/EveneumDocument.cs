@@ -26,8 +26,6 @@ namespace Eveneum.Documents
         public string StreamId { get; set; }
         public ulong Version { get; set; }
 
-        public string Type { get; set; }
-        public JToken Body { get; set; }
         public bool Deleted { get; set; }
 
         public decimal SortOrder => this.Version + GetOrderingFraction(this.DocumentType);

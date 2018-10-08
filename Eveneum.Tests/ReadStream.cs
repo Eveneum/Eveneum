@@ -22,10 +22,10 @@ namespace Eveneum.Tests
             var store = new EventStore(client, this.Database, this.Collection, partition);
 
             var streamId = Guid.NewGuid().ToString();
-            var events = Enumerable.Empty<object>();
+            var events = Array.Empty<EventData>();
             var metadata = TestSetup.GetMetadata();
 
-            await store.WriteToStream(streamId, events.Cast<object>().ToArray(), metadata: metadata);
+            await store.WriteToStream(streamId, events, metadata: metadata);
 
             // Act
             var stream = await store.ReadStream(streamId);

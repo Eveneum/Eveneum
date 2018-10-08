@@ -22,7 +22,7 @@ namespace Eveneum.Tests
             var store = new EventStore(client, this.Database, this.Collection, partition);
 
             var streamId = Guid.NewGuid().ToString();
-            var events = TestSetup.GetEvents(200).Cast<object>().ToArray();
+            var events = TestSetup.GetEvents(200);
 
             await store.WriteToStream(streamId, events);
             await store.WriteSnapshot(streamId, 10, 10);
@@ -49,7 +49,7 @@ namespace Eveneum.Tests
             var store = new EventStore(client, this.Database, this.Collection, partition);
 
             var streamId = Guid.NewGuid().ToString();
-            var events = TestSetup.GetEvents(10).Cast<object>().ToArray();
+            var events = TestSetup.GetEvents(10);
 
             await store.WriteToStream(streamId, events);
             await store.WriteSnapshot(streamId, 2, 2);
@@ -83,7 +83,7 @@ namespace Eveneum.Tests
             var store = new EventStore(client, this.Database, this.Collection, partition);
 
             var streamId = Guid.NewGuid().ToString();
-            var events = TestSetup.GetEvents().Cast<object>().ToArray();
+            var events = TestSetup.GetEvents();
 
             await store.WriteToStream(streamId, events);
 
@@ -128,7 +128,7 @@ namespace Eveneum.Tests
             var store = new EventStore(client, this.Database, this.Collection, partition);
 
             var streamId = Guid.NewGuid().ToString();
-            var events = TestSetup.GetEvents().Cast<object>().ToArray();
+            var events = TestSetup.GetEvents();
 
             await store.WriteToStream(streamId, events);
             await store.DeleteStream(streamId, (ulong)events.Length);
@@ -152,10 +152,10 @@ namespace Eveneum.Tests
             var store = new EventStore(client, this.Database, this.Collection, partition);
 
             var streamId = Guid.NewGuid().ToString();
-            await store.WriteToStream(streamId, TestSetup.GetEvents(10).Cast<object>().ToArray());
+            await store.WriteToStream(streamId, TestSetup.GetEvents(10));
 
             var otherStreamId = Guid.NewGuid().ToString();
-            await store.WriteToStream(otherStreamId, TestSetup.GetEvents().Cast<object>().ToArray());
+            await store.WriteToStream(otherStreamId, TestSetup.GetEvents());
 
             // Act
             await store.DeleteStream(streamId, 10);
