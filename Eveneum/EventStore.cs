@@ -157,7 +157,14 @@ namespace Eveneum
 
             if (expectedVersion == 0)
             {
-                await this.Client.CreateDocumentAsync(this.DocumentCollectionUri, header, new RequestOptions { PartitionKey = this.PartitionKey });
+                try
+                {
+                    await this.Client.CreateDocumentAsync(this.DocumentCollectionUri, header, new RequestOptions { PartitionKey = this.PartitionKey });
+                }
+                catch(DocumentClientException ex) when (ex.Error.Code == nameof(System.Net.HttpStatusCode.Conflict))
+                {
+                    throw new StreamAlreadyExistsException(streamId);
+                }
             }
             else
             {

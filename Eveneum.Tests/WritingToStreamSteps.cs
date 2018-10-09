@@ -20,22 +20,22 @@ namespace Eveneum.Tests
             this.Context = context;
         }
 
-        [When(@"I write a new stream with (.*) events")]
-        public async Task WhenIWriteNewStreamWithEvents(int events)
+        [When(@"I write a new stream (.*) with (.*) events")]
+        public async Task WhenIWriteNewStreamWithEvents(string streamId, int events)
         {
-            ScenarioContext.Current.SetStreamId(Guid.NewGuid().ToString());
+            ScenarioContext.Current.SetStreamId(streamId);
             ScenarioContext.Current.SetNewEvents(TestSetup.GetEvents(events));
             ScenarioContext.Current.SetExistingDocuments(await CosmosSetup.QueryAllDocuments(this.Context.Client, this.Context.Database, this.Context.Collection));
 
             await this.Context.EventStore.WriteToStream(ScenarioContext.Current.GetStreamId(), ScenarioContext.Current.GetNewEvents(), metadata: ScenarioContext.Current.GetHeaderMetadata());
         }
 
-        [When(@"I write a new stream with metadata and (.*) events")]
-        public async Task WhenIWriteNewStreamWithMetadataAndNoEvents(int events)
+        [When(@"I write a new stream (.*) with metadata and (.*) events")]
+        public async Task WhenIWriteNewStreamWithMetadataAndNoEvents(string streamId, int events)
         {
             ScenarioContext.Current.SetHeaderMetadata(TestSetup.GetMetadata());
 
-            await WhenIWriteNewStreamWithEvents(events);
+            await WhenIWriteNewStreamWithEvents(streamId, events);
         }
 
         [Then(@"the header version (.*) with no metadata is persisted")]
@@ -92,6 +92,16 @@ namespace Eveneum.Tests
                 .Where(x => !existingDocumentIds.Contains(x.Id));
 
             Assert.IsEmpty(newEventDocuments);
+        }
+
+        [Then(@"the action fails as stream (.*) already exists")]
+        public void ThenTheActionFailsAsStreamAlreadyExists(string streamId)
+        {
+            Assert.NotNull(ScenarioContext.Current.TestError);
+            Assert.IsInstanceOf<StreamAlreadyExistsException>(ScenarioContext.Current.TestError);
+
+            var exception = ScenarioContext.Current.TestError as StreamAlreadyExistsException;
+            Assert.AreEqual(streamId, exception.StreamId);
         }
 
         [Then(@"new events are appended")]

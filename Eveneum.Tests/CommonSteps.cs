@@ -31,5 +31,17 @@ namespace Eveneum.Tests
 
             await this.Context.Initialize();
         }
+
+        [Given(@"an existing stream (.*) with (.*) events")]
+        public async Task GivenAnExistingStream(string streamId, int events)
+        {
+            await this.Context.EventStore.WriteToStream(streamId, TestSetup.GetEvents(events), metadata: TestSetup.GetMetadata());
+        }
+
+        [Then(@"optimistic concurency failure occurs")]
+        public void ThenOptimisticConcurencyFailureOccurs()
+        {
+            ScenarioContext.Current.Pending();
+        }
     }
 }
