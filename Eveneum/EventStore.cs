@@ -125,29 +125,30 @@ namespace Eveneum
             await Task.WhenAll(tasks);
         }
 
-        public async Task WriteToStream(string streamId, EventData[] events, ulong expectedVersion = 0, object metadata = null)
+        public async Task WriteToStream(string streamId, EventData[] events, ulong? expectedVersion = null, object metadata = null)
         {
-            var header = new HeaderDocument
-            {
-                Partition = this.Partition,
-                StreamId = streamId,
-                Version = expectedVersion + (ulong)events.Length
-            };
 
-            var headerUri = UriFactory.CreateDocumentUri(this.Database, this.Collection, header.Id);            
+            var headerUri = UriFactory.CreateDocumentUri(this.Database, this.Collection, HeaderDocument.GenerateId(streamId));            
 
             string etag = null;
 
             // Existing stream
-            if (expectedVersion > 0)
+            if (expectedVersion.HasValue && expectedVersion.Value > 0)
             {
                 var existingHeader = await this.Client.ReadDocumentAsync<HeaderDocument>(headerUri, new RequestOptions { PartitionKey = this.PartitionKey });
 
                 if (existingHeader.Document.Version != expectedVersion)
-                    throw new OptimisticConcurrencyException(streamId, expectedVersion, existingHeader.Document.Version);
+                    throw new OptimisticConcurrencyException(streamId, expectedVersion.Value, existingHeader.Document.Version);
 
                 etag = existingHeader.Document.ETag;
             }
+
+            var header = new HeaderDocument
+            {
+                Partition = this.Partition,
+                StreamId = streamId,
+                Version = (expectedVersion ?? 0) + (ulong)events.Length
+            };
 
             if (metadata != null)
             {
@@ -155,7 +156,7 @@ namespace Eveneum
                 header.MetadataType = metadata.GetType().AssemblyQualifiedName;
             }
 
-            if (expectedVersion == 0)
+            if (!expectedVersion.HasValue)
             {
                 try
                 {

@@ -38,7 +38,17 @@ namespace Eveneum.Tests
             await WhenIWriteNewStreamWithEvents(streamId, events);
         }
 
-        [Then(@"the header version (.*) with no metadata is persisted")]
+        [When(@"I append (\d+) events to stream (.*) in expected version (\d+)")]
+        public async Task WhenIAppendEventsToStreamInExpectedVersion(int events, string streamId, ushort expectedVersion)
+        {
+            ScenarioContext.Current.SetStreamId(streamId);
+            ScenarioContext.Current.SetNewEvents(TestSetup.GetEvents(events, expectedVersion + 1));
+            ScenarioContext.Current.SetExistingDocuments(await CosmosSetup.QueryAllDocuments(this.Context.Client, this.Context.Database, this.Context.Collection));
+
+            await this.Context.EventStore.WriteToStream(ScenarioContext.Current.GetStreamId(), ScenarioContext.Current.GetNewEvents(), expectedVersion, metadata: ScenarioContext.Current.GetHeaderMetadata());
+        }
+
+        [Then(@"the header version (\d+) with no metadata is persisted")]
         public async Task ThenTheHeaderVersionWithNoMetadataIsPersisted(ulong version)
         {
             var headerDocumentResponse = await this.Context.Client.ReadDocumentAsync<HeaderDocument>(UriFactory.CreateDocumentUri(this.Context.Database, this.Context.Collection, ScenarioContext.Current.GetStreamId()), new RequestOptions { PartitionKey = this.Context.PartitionKey });
@@ -108,12 +118,22 @@ namespace Eveneum.Tests
         public async Task ThenNewEventsAreAppended()
         {
             var streamId = ScenarioContext.Current.GetStreamId();
-            var newEvents = ScenarioContext.Current.GetNewEvents();
             var currentDocuments = await CosmosSetup.QueryAllDocuments(this.Context.Client, this.Context.Database, this.Context.Collection);
+            var existingDocumentIds = ScenarioContext.Current.GetExistingDocuments().Select(x => x.Id);
 
-            foreach(var newEvent in newEvents)
+            var newEventDocuments = currentDocuments
+                .OfType<EventDocument>()
+                .Where(x => x.Partition == this.Context.Partition && x.StreamId == streamId)
+                .Where(x => !existingDocumentIds.Contains(x.Id))
+                .ToList();
+
+            var newEvents = ScenarioContext.Current.GetNewEvents();
+
+            Assert.AreEqual(newEventDocuments.Count, newEvents.Length);
+
+            foreach (var newEvent in newEvents)
             {
-                var eventDocument = currentDocuments.OfType<EventDocument>().SingleOrDefault(x => x.Partition == this.Context.Partition && x.Id == EventDocument.GenerateId(streamId, newEvent.Version));
+                var eventDocument = newEventDocuments.Find(x => x.Partition == this.Context.Partition && x.Id == EventDocument.GenerateId(streamId, newEvent.Version));
 
                 Assert.IsNotNull(eventDocument);
                 Assert.AreEqual(DocumentType.Event, eventDocument.DocumentType);
