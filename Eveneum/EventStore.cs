@@ -127,28 +127,28 @@ namespace Eveneum
 
         public async Task WriteToStream(string streamId, EventData[] events, ulong? expectedVersion = null, object metadata = null)
         {
+            var headerUri = UriFactory.CreateDocumentUri(this.Database, this.Collection, HeaderDocument.GenerateId(streamId));
 
-            var headerUri = UriFactory.CreateDocumentUri(this.Database, this.Collection, HeaderDocument.GenerateId(streamId));            
-
-            string etag = null;
+            HeaderDocument header;
 
             // Existing stream
-            if (expectedVersion.HasValue && expectedVersion.Value > 0)
+            if (expectedVersion.HasValue)
             {
-                var existingHeader = await this.Client.ReadDocumentAsync<HeaderDocument>(headerUri, new RequestOptions { PartitionKey = this.PartitionKey });
+                header = await this.Client.ReadDocumentAsync<HeaderDocument>(headerUri, new RequestOptions { PartitionKey = this.PartitionKey });
 
-                if (existingHeader.Document.Version != expectedVersion)
-                    throw new OptimisticConcurrencyException(streamId, expectedVersion.Value, existingHeader.Document.Version);
-
-                etag = existingHeader.Document.ETag;
+                if (header.Version != expectedVersion)
+                    throw new OptimisticConcurrencyException(streamId, expectedVersion.Value, header.Version);
+            }
+            else
+            {
+                header = new HeaderDocument
+                {
+                    Partition = this.Partition,
+                    StreamId = streamId
+                };
             }
 
-            var header = new HeaderDocument
-            {
-                Partition = this.Partition,
-                StreamId = streamId,
-                Version = (expectedVersion ?? 0) + (ulong)events.Length
-            };
+            header.Version += (ulong)events.Length;
 
             if (metadata != null)
             {
@@ -169,7 +169,7 @@ namespace Eveneum
             }
             else
             {
-                await this.Client.ReplaceDocumentAsync(headerUri, header, new RequestOptions { PartitionKey = this.PartitionKey, AccessCondition = new AccessCondition { Type = AccessConditionType.IfMatch, Condition = etag } });
+                await this.Client.ReplaceDocumentAsync(headerUri, header, new RequestOptions { PartitionKey = this.PartitionKey, AccessCondition = new AccessCondition { Type = AccessConditionType.IfMatch, Condition = header.ETag } });
             }
 
             var eventDocuments = (events ?? Enumerable.Empty<EventData>())

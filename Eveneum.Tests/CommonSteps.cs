@@ -35,13 +35,15 @@ namespace Eveneum.Tests
         [Given(@"an existing stream (.*) with (\d+) events")]
         public async Task GivenAnExistingStream(string streamId, ushort events)
         {
-            await this.Context.EventStore.WriteToStream(streamId, TestSetup.GetEvents(events), metadata: TestSetup.GetMetadata());
+            await this.Context.EventStore.WriteToStream(streamId, TestSetup.GetEvents(events));
         }
 
-        [Then(@"optimistic concurency failure occurs")]
-        public void ThenOptimisticConcurencyFailureOccurs()
+        [Given(@"an existing stream (.*) with metadata and (\d+) events")]
+        public async Task GivenAnExistingStreamWithMetadataAndEvents(string streamId, ushort events)
         {
-            ScenarioContext.Current.Pending();
+            ScenarioContext.Current.SetHeaderMetadata(TestSetup.GetMetadata());
+
+            await this.Context.EventStore.WriteToStream(streamId, TestSetup.GetEvents(events), metadata: ScenarioContext.Current.GetHeaderMetadata());
         }
     }
 }
