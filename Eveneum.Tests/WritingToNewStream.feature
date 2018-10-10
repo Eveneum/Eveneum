@@ -1,4 +1,4 @@
-﻿Feature: Writing To Stream
+﻿Feature: Writing To New Stream
 	
 Scenario Outline: Creating new stream with no metadata and no events
 	Given an event store backed by <partitioned> collection
