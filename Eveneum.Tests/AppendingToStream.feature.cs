@@ -164,6 +164,138 @@ this.ScenarioInitialize(scenarioInfo);
 #line hidden
             this.ScenarioCleanup();
         }
+        
+        [NUnit.Framework.TestAttribute()]
+        [NUnit.Framework.DescriptionAttribute("Appending to stream with no events with non-matching expected version fails")]
+        [NUnit.Framework.CategoryAttribute("ExpectException")]
+        [NUnit.Framework.TestCaseAttribute("partitioned", null)]
+        [NUnit.Framework.TestCaseAttribute("non-partitioned", null)]
+        public virtual void AppendingToStreamWithNoEventsWithNon_MatchingExpectedVersionFails(string partitioned, string[] exampleTags)
+        {
+            string[] @__tags = new string[] {
+                    "ExpectException"};
+            if ((exampleTags != null))
+            {
+                @__tags = System.Linq.Enumerable.ToArray(System.Linq.Enumerable.Concat(@__tags, exampleTags));
+            }
+            TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Appending to stream with no events with non-matching expected version fails", null, @__tags);
+#line 50
+this.ScenarioInitialize(scenarioInfo);
+            this.ScenarioStart();
+#line 51
+ testRunner.Given(string.Format("an event store backed by {0} collection", partitioned), ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Given ");
+#line 52
+ testRunner.And("an existing stream S with 0 events", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
+#line 53
+ testRunner.When("I append 10 events to stream S in expected version 6", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
+#line 54
+ testRunner.Then("the action fails as expected version 6 doesn\'t match the current version 0 of str" +
+                    "eam S", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
+#line 55
+ testRunner.And("no events are appended", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
+#line hidden
+            this.ScenarioCleanup();
+        }
+        
+        [NUnit.Framework.TestAttribute()]
+        [NUnit.Framework.DescriptionAttribute("Appending to stream with metadata and no events with non-matching expected versio" +
+            "n fails")]
+        [NUnit.Framework.CategoryAttribute("ExpectException")]
+        [NUnit.Framework.TestCaseAttribute("partitioned", null)]
+        [NUnit.Framework.TestCaseAttribute("non-partitioned", null)]
+        public virtual void AppendingToStreamWithMetadataAndNoEventsWithNon_MatchingExpectedVersionFails(string partitioned, string[] exampleTags)
+        {
+            string[] @__tags = new string[] {
+                    "ExpectException"};
+            if ((exampleTags != null))
+            {
+                @__tags = System.Linq.Enumerable.ToArray(System.Linq.Enumerable.Concat(@__tags, exampleTags));
+            }
+            TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Appending to stream with metadata and no events with non-matching expected versio" +
+                    "n fails", null, @__tags);
+#line 62
+this.ScenarioInitialize(scenarioInfo);
+            this.ScenarioStart();
+#line 63
+ testRunner.Given(string.Format("an event store backed by {0} collection", partitioned), ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Given ");
+#line 64
+ testRunner.And("an existing stream S with metadata and 0 events", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
+#line 65
+ testRunner.When("I append 10 events to stream S in expected version 6", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
+#line 66
+ testRunner.Then("the action fails as expected version 6 doesn\'t match the current version 0 of str" +
+                    "eam S", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
+#line 67
+ testRunner.And("no events are appended", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
+#line hidden
+            this.ScenarioCleanup();
+        }
+        
+        [NUnit.Framework.TestAttribute()]
+        [NUnit.Framework.DescriptionAttribute("Appending to stream with some events with non-matching expected version fails")]
+        [NUnit.Framework.CategoryAttribute("ExpectException")]
+        [NUnit.Framework.TestCaseAttribute("partitioned", null)]
+        [NUnit.Framework.TestCaseAttribute("non-partitioned", null)]
+        public virtual void AppendingToStreamWithSomeEventsWithNon_MatchingExpectedVersionFails(string partitioned, string[] exampleTags)
+        {
+            string[] @__tags = new string[] {
+                    "ExpectException"};
+            if ((exampleTags != null))
+            {
+                @__tags = System.Linq.Enumerable.ToArray(System.Linq.Enumerable.Concat(@__tags, exampleTags));
+            }
+            TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Appending to stream with some events with non-matching expected version fails", null, @__tags);
+#line 74
+this.ScenarioInitialize(scenarioInfo);
+            this.ScenarioStart();
+#line 75
+ testRunner.Given(string.Format("an event store backed by {0} collection", partitioned), ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Given ");
+#line 76
+ testRunner.And("an existing stream S with 10 events", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
+#line 77
+ testRunner.When("I append 5 events to stream S in expected version 6", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
+#line 78
+ testRunner.Then("the action fails as expected version 6 doesn\'t match the current version 10 of st" +
+                    "ream S", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
+#line 79
+ testRunner.And("no events are appended", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
+#line hidden
+            this.ScenarioCleanup();
+        }
+        
+        [NUnit.Framework.TestAttribute()]
+        [NUnit.Framework.DescriptionAttribute("Appending to stream with metadata and some events with non-matching expected vers" +
+            "ion fails")]
+        [NUnit.Framework.CategoryAttribute("ExpectException")]
+        [NUnit.Framework.TestCaseAttribute("partitioned", null)]
+        [NUnit.Framework.TestCaseAttribute("non-partitioned", null)]
+        public virtual void AppendingToStreamWithMetadataAndSomeEventsWithNon_MatchingExpectedVersionFails(string partitioned, string[] exampleTags)
+        {
+            string[] @__tags = new string[] {
+                    "ExpectException"};
+            if ((exampleTags != null))
+            {
+                @__tags = System.Linq.Enumerable.ToArray(System.Linq.Enumerable.Concat(@__tags, exampleTags));
+            }
+            TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Appending to stream with metadata and some events with non-matching expected vers" +
+                    "ion fails", null, @__tags);
+#line 86
+this.ScenarioInitialize(scenarioInfo);
+            this.ScenarioStart();
+#line 87
+ testRunner.Given(string.Format("an event store backed by {0} collection", partitioned), ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Given ");
+#line 88
+ testRunner.And("an existing stream S with metadata and 20 events", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
+#line 89
+ testRunner.When("I append 10 events to stream S in expected version 6", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
+#line 90
+ testRunner.Then("the action fails as expected version 6 doesn\'t match the current version 20 of st" +
+                    "ream S", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
+#line 91
+ testRunner.And("no events are appended", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
+#line hidden
+            this.ScenarioCleanup();
+        }
     }
 }
 #pragma warning restore
