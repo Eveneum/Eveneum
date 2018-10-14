@@ -134,7 +134,14 @@ namespace Eveneum
             // Existing stream
             if (expectedVersion.HasValue)
             {
-                header = await this.Client.ReadDocumentAsync<HeaderDocument>(headerUri, new RequestOptions { PartitionKey = this.PartitionKey });
+                try
+                {
+                    header = await this.Client.ReadDocumentAsync<HeaderDocument>(headerUri, new RequestOptions { PartitionKey = this.PartitionKey });
+                }
+                catch (DocumentClientException ex) when (ex.Error.Code == nameof(System.Net.HttpStatusCode.NotFound))
+                {
+                    throw new StreamNotFoundException(streamId);
+                }
 
                 if (header.Version != expectedVersion)
                     throw new OptimisticConcurrencyException(streamId, expectedVersion.Value, header.Version);

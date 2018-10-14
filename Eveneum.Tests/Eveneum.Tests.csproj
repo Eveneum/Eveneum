@@ -93,10 +93,25 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AppendingToNonExistentStream.feature.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>AppendingToNonExistentStream.feature</DependentUpon>
+    </Compile>
+    <Compile Include="AppendingToStreamWithNonMatchingExpectedVersion.feature.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>AppendingToStreamWithNonMatchingExpectedVersion.feature</DependentUpon>
+    </Compile>
     <Compile Include="AppendingToStream.feature.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>AppendingToStream.feature</DependentUpon>
+    </Compile>
+    <Compile Include="CreatingNewStreamWithDuplicatedStreamId.feature.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>CreatingNewStreamWithDuplicatedStreamId.feature</DependentUpon>
     </Compile>
     <Compile Include="DeleteStream.cs" />
     <Compile Include="Infrastrature\CosmosDbContext.cs" />
@@ -107,27 +122,38 @@
     <Compile Include="Infrastrature\CosmosTest.cs" />
     <Compile Include="DeleteSnapshots.cs" />
     <Compile Include="ReadStream.cs" />
-    <Compile Include="WriteStream.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Sample.cs" />
-    <Compile Include="WritingToNewStream.feature.cs">
+    <Compile Include="CreatingNewStream.feature.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
-      <DependentUpon>WritingToNewStream.feature</DependentUpon>
+      <DependentUpon>CreatingNewStream.feature</DependentUpon>
     </Compile>
     <Compile Include="CommonSteps.cs" />
     <Compile Include="WritingToStreamSteps.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="AppendingToNonExistentStream.feature">
+      <Generator>SpecFlowSingleFileGenerator</Generator>
+      <LastGenOutput>AppendingToNonExistentStream.feature.cs</LastGenOutput>
+    </None>
+    <None Include="AppendingToStreamWithNonMatchingExpectedVersion.feature">
+      <Generator>SpecFlowSingleFileGenerator</Generator>
+      <LastGenOutput>AppendingToStreamWithNonMatchingExpectedVersion.feature.cs</LastGenOutput>
+    </None>
     <None Include="app.config" />
     <None Include="AppendingToStream.feature">
       <Generator>SpecFlowSingleFileGenerator</Generator>
       <LastGenOutput>AppendingToStream.feature.cs</LastGenOutput>
     </None>
-    <None Include="packages.config" />
-    <None Include="WritingToNewStream.feature">
+    <None Include="CreatingNewStreamWithDuplicatedStreamId.feature">
       <Generator>SpecFlowSingleFileGenerator</Generator>
-      <LastGenOutput>WritingToNewStream.feature.cs</LastGenOutput>
+      <LastGenOutput>CreatingNewStreamWithDuplicatedStreamId.feature.cs</LastGenOutput>
+    </None>
+    <None Include="packages.config" />
+    <None Include="CreatingNewStream.feature">
+      <Generator>SpecFlowSingleFileGenerator</Generator>
+      <LastGenOutput>CreatingNewStream.feature.cs</LastGenOutput>
     </None>
   </ItemGroup>
   <ItemGroup>

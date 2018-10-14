@@ -18,20 +18,21 @@ namespace Eveneum.Tests
     [System.CodeDom.Compiler.GeneratedCodeAttribute("TechTalk.SpecFlow", "2.4.0.0")]
     [System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     [NUnit.Framework.TestFixtureAttribute()]
-    [NUnit.Framework.DescriptionAttribute("Writing To New Stream")]
-    public partial class WritingToNewStreamFeature
+    [NUnit.Framework.DescriptionAttribute("Creating new stream with duplicated streamId")]
+    public partial class CreatingNewStreamWithDuplicatedStreamIdFeature
     {
         
         private TechTalk.SpecFlow.ITestRunner testRunner;
         
-#line 1 "WritingToNewStream.feature"
+#line 1 "CreatingNewStreamWithDuplicatedStreamId.feature"
 #line hidden
         
         [NUnit.Framework.OneTimeSetUpAttribute()]
         public virtual void FeatureSetup()
         {
             testRunner = TechTalk.SpecFlow.TestRunnerManager.GetTestRunner();
-            TechTalk.SpecFlow.FeatureInfo featureInfo = new TechTalk.SpecFlow.FeatureInfo(new System.Globalization.CultureInfo("en-US"), "Writing To New Stream", null, ProgrammingLanguage.CSharp, ((string[])(null)));
+            TechTalk.SpecFlow.FeatureInfo featureInfo = new TechTalk.SpecFlow.FeatureInfo(new System.Globalization.CultureInfo("en-US"), "Creating new stream with duplicated streamId", "\tThe action fails with StreamAlreadyExists exception when trying to create new st" +
+                    "ream with duplicated streamId", ProgrammingLanguage.CSharp, ((string[])(null)));
             testRunner.OnFeatureStart(featureInfo);
         }
         
@@ -70,94 +71,6 @@ namespace Eveneum.Tests
         }
         
         [NUnit.Framework.TestAttribute()]
-        [NUnit.Framework.DescriptionAttribute("Creating new stream with no metadata and no events")]
-        [NUnit.Framework.TestCaseAttribute("partitioned", null)]
-        [NUnit.Framework.TestCaseAttribute("non-partitioned", null)]
-        public virtual void CreatingNewStreamWithNoMetadataAndNoEvents(string partitioned, string[] exampleTags)
-        {
-            TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Creating new stream with no metadata and no events", null, exampleTags);
-#line 3
-this.ScenarioInitialize(scenarioInfo);
-            this.ScenarioStart();
-#line 4
- testRunner.Given(string.Format("an event store backed by {0} collection", partitioned), ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Given ");
-#line 5
- testRunner.When("I write a new stream S with 0 events", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
-#line 6
- testRunner.Then("the header version 0 with no metadata is persisted", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
-#line 7
- testRunner.And("no events are appended", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
-#line hidden
-            this.ScenarioCleanup();
-        }
-        
-        [NUnit.Framework.TestAttribute()]
-        [NUnit.Framework.DescriptionAttribute("Creating new stream with metadata and no events")]
-        [NUnit.Framework.TestCaseAttribute("partitioned", null)]
-        [NUnit.Framework.TestCaseAttribute("non-partitioned", null)]
-        public virtual void CreatingNewStreamWithMetadataAndNoEvents(string partitioned, string[] exampleTags)
-        {
-            TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Creating new stream with metadata and no events", null, exampleTags);
-#line 13
-this.ScenarioInitialize(scenarioInfo);
-            this.ScenarioStart();
-#line 14
- testRunner.Given(string.Format("an event store backed by {0} collection", partitioned), ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Given ");
-#line 15
- testRunner.When("I write a new stream S with metadata and 0 events", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
-#line 16
- testRunner.Then("the header version 0 with metadata is persisted", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
-#line 17
- testRunner.And("no events are appended", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
-#line hidden
-            this.ScenarioCleanup();
-        }
-        
-        [NUnit.Framework.TestAttribute()]
-        [NUnit.Framework.DescriptionAttribute("Creating new stream with no metadata and some events")]
-        [NUnit.Framework.TestCaseAttribute("partitioned", null)]
-        [NUnit.Framework.TestCaseAttribute("non-partitioned", null)]
-        public virtual void CreatingNewStreamWithNoMetadataAndSomeEvents(string partitioned, string[] exampleTags)
-        {
-            TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Creating new stream with no metadata and some events", null, exampleTags);
-#line 23
-this.ScenarioInitialize(scenarioInfo);
-            this.ScenarioStart();
-#line 24
- testRunner.Given(string.Format("an event store backed by {0} collection", partitioned), ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Given ");
-#line 25
- testRunner.When("I write a new stream S with 10 events", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
-#line 26
- testRunner.Then("the header version 10 with no metadata is persisted", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
-#line 27
- testRunner.And("new events are appended", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
-#line hidden
-            this.ScenarioCleanup();
-        }
-        
-        [NUnit.Framework.TestAttribute()]
-        [NUnit.Framework.DescriptionAttribute("Creating new stream with metadata and some events")]
-        [NUnit.Framework.TestCaseAttribute("partitioned", null)]
-        [NUnit.Framework.TestCaseAttribute("non-partitioned", null)]
-        public virtual void CreatingNewStreamWithMetadataAndSomeEvents(string partitioned, string[] exampleTags)
-        {
-            TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Creating new stream with metadata and some events", null, exampleTags);
-#line 33
-this.ScenarioInitialize(scenarioInfo);
-            this.ScenarioStart();
-#line 34
- testRunner.Given(string.Format("an event store backed by {0} collection", partitioned), ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Given ");
-#line 35
- testRunner.When("I write a new stream S with metadata and 10 events", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
-#line 36
- testRunner.Then("the header version 10 with metadata is persisted", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
-#line 37
- testRunner.And("new events are appended", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
-#line hidden
-            this.ScenarioCleanup();
-        }
-        
-        [NUnit.Framework.TestAttribute()]
         [NUnit.Framework.DescriptionAttribute("Creating new stream with no metadata and no events fails if stream id already exi" +
             "sts")]
         [NUnit.Framework.CategoryAttribute("ExpectException")]
@@ -173,18 +86,18 @@ this.ScenarioInitialize(scenarioInfo);
             }
             TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Creating new stream with no metadata and no events fails if stream id already exi" +
                     "sts", null, @__tags);
-#line 44
+#line 5
 this.ScenarioInitialize(scenarioInfo);
             this.ScenarioStart();
-#line 45
+#line 6
  testRunner.Given(string.Format("an event store backed by {0} collection", partitioned), ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Given ");
-#line 46
+#line 7
  testRunner.And("an existing stream S with 5 events", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
-#line 47
+#line 8
  testRunner.When("I write a new stream S with 0 events", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
-#line 48
+#line 9
  testRunner.Then("the action fails as stream S already exists", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
-#line 49
+#line 10
  testRunner.And("no events are appended", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
 #line hidden
             this.ScenarioCleanup();
@@ -206,18 +119,18 @@ this.ScenarioInitialize(scenarioInfo);
             }
             TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Creating new stream with metadata and no events fails if stream id already exists" +
                     "", null, @__tags);
-#line 56
+#line 17
 this.ScenarioInitialize(scenarioInfo);
             this.ScenarioStart();
-#line 57
+#line 18
  testRunner.Given(string.Format("an event store backed by {0} collection", partitioned), ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Given ");
-#line 58
+#line 19
  testRunner.And("an existing stream S with 0 events", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
-#line 59
+#line 20
  testRunner.When("I write a new stream S with metadata and 0 events", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
-#line 60
+#line 21
  testRunner.Then("the action fails as stream S already exists", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
-#line 61
+#line 22
  testRunner.And("no events are appended", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
 #line hidden
             this.ScenarioCleanup();
@@ -239,18 +152,18 @@ this.ScenarioInitialize(scenarioInfo);
             }
             TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Creating new stream with no metadata and some events fails if stream id already e" +
                     "xists", null, @__tags);
-#line 68
+#line 29
 this.ScenarioInitialize(scenarioInfo);
             this.ScenarioStart();
-#line 69
+#line 30
  testRunner.Given(string.Format("an event store backed by {0} collection", partitioned), ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Given ");
-#line 70
+#line 31
  testRunner.And("an existing stream S with 5 events", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
-#line 71
+#line 32
  testRunner.When("I write a new stream S with 10 events", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
-#line 72
+#line 33
  testRunner.Then("the action fails as stream S already exists", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
-#line 73
+#line 34
  testRunner.And("no events are appended", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
 #line hidden
             this.ScenarioCleanup();
@@ -272,18 +185,18 @@ this.ScenarioInitialize(scenarioInfo);
             }
             TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Creating new stream with metadata and some events fails if stream id already exis" +
                     "ts", null, @__tags);
-#line 80
+#line 41
 this.ScenarioInitialize(scenarioInfo);
             this.ScenarioStart();
-#line 81
+#line 42
  testRunner.Given(string.Format("an event store backed by {0} collection", partitioned), ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Given ");
-#line 82
+#line 43
  testRunner.And("an existing stream S with 0 events", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
-#line 83
+#line 44
  testRunner.When("I write a new stream S with metadata and 100 events", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
-#line 84
+#line 45
  testRunner.Then("the action fails as stream S already exists", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
-#line 85
+#line 46
  testRunner.And("no events are appended", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
 #line hidden
             this.ScenarioCleanup();

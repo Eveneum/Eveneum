@@ -1,44 +1,5 @@
-﻿Feature: Writing To New Stream
-	
-Scenario Outline: Creating new stream with no metadata and no events
-	Given an event store backed by <partitioned> collection
-	When I write a new stream S with 0 events
-	Then the header version 0 with no metadata is persisted
-	And no events are appended
-	Examples:
-		| partitioned     |
-		| partitioned     |
-		| non-partitioned |
-
-Scenario Outline: Creating new stream with metadata and no events
-	Given an event store backed by <partitioned> collection
-	When I write a new stream S with metadata and 0 events
-	Then the header version 0 with metadata is persisted
-	And no events are appended
-	Examples:
-		| partitioned     |
-		| partitioned     |
-		| non-partitioned |
-		
-Scenario Outline: Creating new stream with no metadata and some events
-	Given an event store backed by <partitioned> collection
-	When I write a new stream S with 10 events
-	Then the header version 10 with no metadata is persisted
-	And new events are appended
-	Examples:
-		| partitioned     |
-		| partitioned     |
-		| non-partitioned |
-				
-Scenario Outline: Creating new stream with metadata and some events
-	Given an event store backed by <partitioned> collection
-	When I write a new stream S with metadata and 10 events
-	Then the header version 10 with metadata is persisted
-	And new events are appended
-	Examples:
-		| partitioned     |
-		| partitioned     |
-		| non-partitioned |
+﻿Feature: Creating new stream with duplicated streamId
+	The action fails with StreamAlreadyExists exception when trying to create new stream with duplicated streamId
 
 @ExpectException
 Scenario Outline: Creating new stream with no metadata and no events fails if stream id already exists

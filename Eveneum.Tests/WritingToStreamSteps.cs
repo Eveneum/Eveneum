@@ -89,21 +89,6 @@ namespace Eveneum.Tests
             Assert.False(headerDocument.Deleted);
         }
 
-        [Then(@"no events are appended")]
-        public async Task ThenNoEventsAreAppended()
-        {
-            var streamId = ScenarioContext.Current.GetStreamId();
-            var currentDocuments = await CosmosSetup.QueryAllDocuments(this.Context.Client, this.Context.Database, this.Context.Collection);
-            var existingDocumentIds = ScenarioContext.Current.GetExistingDocuments().Select(x => x.Id);
-
-            var newEventDocuments = currentDocuments
-                .OfType<EventDocument>()
-                .Where(x => x.Partition == this.Context.Partition && x.StreamId == streamId)
-                .Where(x => !existingDocumentIds.Contains(x.Id));
-
-            Assert.IsEmpty(newEventDocuments);
-        }
-
         [Then(@"the action fails as stream (.*) already exists")]
         public void ThenTheActionFailsAsStreamAlreadyExists(string streamId)
         {
@@ -111,6 +96,16 @@ namespace Eveneum.Tests
             Assert.IsInstanceOf<StreamAlreadyExistsException>(ScenarioContext.Current.TestError);
 
             var exception = ScenarioContext.Current.TestError as StreamAlreadyExistsException;
+            Assert.AreEqual(streamId, exception.StreamId);
+        }
+
+        [Then(@"the action fails as stream (.*) doesn't exist")]
+        public void ThenTheActionFailsAsStreamDoesnTExist(string streamId)
+        {
+            Assert.NotNull(ScenarioContext.Current.TestError);
+            Assert.IsInstanceOf<StreamNotFoundException>(ScenarioContext.Current.TestError);
+
+            var exception = ScenarioContext.Current.TestError as StreamNotFoundException;
             Assert.AreEqual(streamId, exception.StreamId);
         }
 
@@ -124,6 +119,21 @@ namespace Eveneum.Tests
             Assert.AreEqual(streamId, exception.StreamId);
             Assert.AreEqual(expectedVersion, exception.ExpectedVersion);
             Assert.AreEqual(currentVersion, exception.ActualVersion);
+        }
+
+        [Then(@"no events are appended")]
+        public async Task ThenNoEventsAreAppended()
+        {
+            var streamId = ScenarioContext.Current.GetStreamId();
+            var currentDocuments = await CosmosSetup.QueryAllDocuments(this.Context.Client, this.Context.Database, this.Context.Collection);
+            var existingDocumentIds = ScenarioContext.Current.GetExistingDocuments().Select(x => x.Id);
+
+            var newEventDocuments = currentDocuments
+                .OfType<EventDocument>()
+                .Where(x => x.Partition == this.Context.Partition && x.StreamId == streamId)
+                .Where(x => !existingDocumentIds.Contains(x.Id));
+
+            Assert.IsEmpty(newEventDocuments);
         }
 
         [Then(@"new events are appended")]
