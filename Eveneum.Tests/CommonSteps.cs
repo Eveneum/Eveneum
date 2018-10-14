@@ -38,6 +38,15 @@ namespace Eveneum.Tests
             await this.Context.EventStore.WriteToStream(streamId, TestSetup.GetEvents(events));
         }
 
+        [Given(@"a deleted stream (.*) with (\d+) events")]
+        public async Task GivenADeletedStream(string streamId, ushort events)
+        {
+            var eventData = TestSetup.GetEvents(events);
+
+            await this.Context.EventStore.WriteToStream(streamId, eventData);
+            await this.Context.EventStore.DeleteStream(streamId, (ulong)eventData.Length);
+        }
+
         [Given(@"an existing stream (.*) with metadata and (\d+) events")]
         public async Task GivenAnExistingStreamWithMetadataAndEvents(string streamId, ushort events)
         {

@@ -114,6 +114,26 @@
       <DependentUpon>CreatingNewStreamWithDuplicatedStreamId.feature</DependentUpon>
     </Compile>
     <Compile Include="DeleteStream.cs" />
+    <Compile Include="DeletingDeletedStream.feature.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>DeletingDeletedStream.feature</DependentUpon>
+    </Compile>
+    <Compile Include="DeletingNonExistentStream.feature.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>DeletingNonExistentStream.feature</DependentUpon>
+    </Compile>
+    <Compile Include="DeletingStream.feature.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>DeletingStream.feature</DependentUpon>
+    </Compile>
+    <Compile Include="DeletingStreamWithNonExpectedVersion.feature.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>DeletingStreamWithNonExpectedVersion.feature</DependentUpon>
+    </Compile>
     <Compile Include="Infrastrature\CosmosDbContext.cs" />
     <Compile Include="Infrastrature\ScenarioContextExtensions.cs" />
     <Compile Include="Infrastrature\StepArgumentConversions.cs" />
@@ -130,6 +150,7 @@
       <DependentUpon>CreatingNewStream.feature</DependentUpon>
     </Compile>
     <Compile Include="CommonSteps.cs" />
+    <Compile Include="DeletingStreamSteps.cs" />
     <Compile Include="WritingToStreamSteps.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -149,6 +170,22 @@
     <None Include="CreatingNewStreamWithDuplicatedStreamId.feature">
       <Generator>SpecFlowSingleFileGenerator</Generator>
       <LastGenOutput>CreatingNewStreamWithDuplicatedStreamId.feature.cs</LastGenOutput>
+    </None>
+    <None Include="DeletingDeletedStream.feature">
+      <Generator>SpecFlowSingleFileGenerator</Generator>
+      <LastGenOutput>DeletingDeletedStream.feature.cs</LastGenOutput>
+    </None>
+    <None Include="DeletingNonExistentStream.feature">
+      <Generator>SpecFlowSingleFileGenerator</Generator>
+      <LastGenOutput>DeletingNonExistentStream.feature.cs</LastGenOutput>
+    </None>
+    <None Include="DeletingStream.feature">
+      <Generator>SpecFlowSingleFileGenerator</Generator>
+      <LastGenOutput>DeletingStream.feature.cs</LastGenOutput>
+    </None>
+    <None Include="DeletingStreamWithNonExpectedVersion.feature">
+      <Generator>SpecFlowSingleFileGenerator</Generator>
+      <LastGenOutput>DeletingStreamWithNonExpectedVersion.feature.cs</LastGenOutput>
     </None>
     <None Include="packages.config" />
     <None Include="CreatingNewStream.feature">
