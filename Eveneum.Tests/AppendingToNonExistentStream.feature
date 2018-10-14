@@ -1,5 +1,5 @@
 ﻿Feature: Appending to non-existent stream
-	Appending to a stream that doesn't exists fails with StreamNotFound exception
+	Appending to a stream that doesn't exist fails with StreamNotFound exception
 
 @ExpectException
 Scenario Outline: Appending to non-existent stream

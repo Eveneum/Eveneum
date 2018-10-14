@@ -33,5 +33,14 @@ namespace Eveneum.Tests.Infrastrature
                 Content = Gen.Random.Text.VeryLong()()
             }
         };
+
+        public static SampleSnapshot GetSnapshot() => new SampleSnapshot
+        {
+            Number = Gen.Random.Numbers.Doubles().BetweenZeroAndOne()(),
+            Nested = new NestedContent
+            {
+                Content = Gen.Random.Text.VeryLong()()
+            }
+        };
     }
 }

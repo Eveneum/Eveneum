@@ -113,6 +113,16 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>CreatingNewStreamWithDuplicatedStreamId.feature</DependentUpon>
     </Compile>
+    <Compile Include="CreatingSnapshot.feature.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>CreatingSnapshot.feature</DependentUpon>
+    </Compile>
+    <Compile Include="CreatingSnapshotForNonExistentStream.feature.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>CreatingSnapshotForNonExistentStream.feature</DependentUpon>
+    </Compile>
     <Compile Include="DeleteStream.cs" />
     <Compile Include="DeletingDeletedStream.feature.cs">
       <AutoGen>True</AutoGen>
@@ -151,6 +161,12 @@
     </Compile>
     <Compile Include="CommonSteps.cs" />
     <Compile Include="DeletingStreamSteps.cs" />
+    <Compile Include="SnapshotSteps.cs" />
+    <Compile Include="CreatingSnapshotForNonExistingEvent.feature.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>CreatingSnapshotForNonExistingEvent.feature</DependentUpon>
+    </Compile>
     <Compile Include="WritingToStreamSteps.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -170,6 +186,14 @@
     <None Include="CreatingNewStreamWithDuplicatedStreamId.feature">
       <Generator>SpecFlowSingleFileGenerator</Generator>
       <LastGenOutput>CreatingNewStreamWithDuplicatedStreamId.feature.cs</LastGenOutput>
+    </None>
+    <None Include="CreatingSnapshot.feature">
+      <Generator>SpecFlowSingleFileGenerator</Generator>
+      <LastGenOutput>CreatingSnapshot.feature.cs</LastGenOutput>
+    </None>
+    <None Include="CreatingSnapshotForNonExistentStream.feature">
+      <Generator>SpecFlowSingleFileGenerator</Generator>
+      <LastGenOutput>CreatingSnapshotForNonExistentStream.feature.cs</LastGenOutput>
     </None>
     <None Include="DeletingDeletedStream.feature">
       <Generator>SpecFlowSingleFileGenerator</Generator>
@@ -191,6 +215,10 @@
     <None Include="CreatingNewStream.feature">
       <Generator>SpecFlowSingleFileGenerator</Generator>
       <LastGenOutput>CreatingNewStream.feature.cs</LastGenOutput>
+    </None>
+    <None Include="CreatingSnapshotForNonExistingEvent.feature">
+      <Generator>SpecFlowSingleFileGenerator</Generator>
+      <LastGenOutput>CreatingSnapshotForNonExistingEvent.feature.cs</LastGenOutput>
     </None>
   </ItemGroup>
   <ItemGroup>

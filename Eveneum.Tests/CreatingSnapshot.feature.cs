@@ -18,20 +18,20 @@ namespace Eveneum.Tests
     [System.CodeDom.Compiler.GeneratedCodeAttribute("TechTalk.SpecFlow", "2.4.0.0")]
     [System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     [NUnit.Framework.TestFixtureAttribute()]
-    [NUnit.Framework.DescriptionAttribute("Deleting non-existent stream")]
-    public partial class DeletingNon_ExistentStreamFeature
+    [NUnit.Framework.DescriptionAttribute("Creating snapshot")]
+    public partial class CreatingSnapshotFeature
     {
         
         private TechTalk.SpecFlow.ITestRunner testRunner;
         
-#line 1 "DeletingNonExistentStream.feature"
+#line 1 "CreatingSnapshot.feature"
 #line hidden
         
         [NUnit.Framework.OneTimeSetUpAttribute()]
         public virtual void FeatureSetup()
         {
             testRunner = TechTalk.SpecFlow.TestRunnerManager.GetTestRunner();
-            TechTalk.SpecFlow.FeatureInfo featureInfo = new TechTalk.SpecFlow.FeatureInfo(new System.Globalization.CultureInfo("en-US"), "Deleting non-existent stream", "\tDeleting a stream that doesn\'t exist fails with StreamNotFound exception", ProgrammingLanguage.CSharp, ((string[])(null)));
+            TechTalk.SpecFlow.FeatureInfo featureInfo = new TechTalk.SpecFlow.FeatureInfo(new System.Globalization.CultureInfo("en-US"), "Creating snapshot", null, ProgrammingLanguage.CSharp, ((string[])(null)));
             testRunner.OnFeatureStart(featureInfo);
         }
         
@@ -70,32 +70,23 @@ namespace Eveneum.Tests
         }
         
         [NUnit.Framework.TestAttribute()]
-        [NUnit.Framework.DescriptionAttribute("Deleting non-existent stream")]
-        [NUnit.Framework.CategoryAttribute("ExpectException")]
+        [NUnit.Framework.DescriptionAttribute("Creating snapshot")]
         [NUnit.Framework.TestCaseAttribute("partitioned", null)]
         [NUnit.Framework.TestCaseAttribute("non-partitioned", null)]
-        public virtual void DeletingNon_ExistentStream(string partitioned, string[] exampleTags)
+        public virtual void CreatingSnapshot(string partitioned, string[] exampleTags)
         {
-            string[] @__tags = new string[] {
-                    "ExpectException"};
-            if ((exampleTags != null))
-            {
-                @__tags = System.Linq.Enumerable.ToArray(System.Linq.Enumerable.Concat(@__tags, exampleTags));
-            }
-            TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Deleting non-existent stream", null, @__tags);
-#line 5
+            TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Creating snapshot", null, exampleTags);
+#line 3
 this.ScenarioInitialize(scenarioInfo);
             this.ScenarioStart();
-#line 6
+#line 4
  testRunner.Given(string.Format("an event store backed by {0} collection", partitioned), ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Given ");
-#line 7
+#line 5
  testRunner.And("an existing stream S with 10 events", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
-#line 8
- testRunner.When("I delete stream X in expected version 10", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
-#line 9
- testRunner.Then("the action fails as stream X doesn\'t exist", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
-#line 10
- testRunner.And("stream S is not soft-deleted", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
+#line 6
+ testRunner.When("I create snapshot for stream S in version 5", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
+#line 7
+ testRunner.Then("the snapshot for version 5 is persisted", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
 #line hidden
             this.ScenarioCleanup();
         }

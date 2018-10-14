@@ -1,5 +1,5 @@
 ﻿Feature: Deleting non-existent stream
-	Deleting a stream that doesn't exists fails with StreamNotFound exception
+	Deleting a stream that doesn't exist fails with StreamNotFound exception
 
 @ExpectException
 Scenario Outline: Deleting non-existent stream

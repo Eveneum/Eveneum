@@ -35,6 +35,8 @@ namespace Eveneum.Tests
         [Given(@"an existing stream (.*) with (\d+) events")]
         public async Task GivenAnExistingStream(string streamId, ushort events)
         {
+            ScenarioContext.Current.SetStreamId(streamId);
+
             await this.Context.EventStore.WriteToStream(streamId, TestSetup.GetEvents(events));
         }
 

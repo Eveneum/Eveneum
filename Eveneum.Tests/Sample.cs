@@ -13,6 +13,13 @@
         public NestedContent Nested { get; set; }
     }
 
+    public struct SampleSnapshot
+    {
+        public int Version { get; set; }
+        public double Number { get; set; }
+        public NestedContent Nested { get; set; }
+    }
+
     public struct NestedContent
     {
         public string Content;

@@ -84,6 +84,22 @@ namespace Eveneum
 
         public async Task WriteSnapshot(string streamId, ulong version, object snapshot, object metadata = null, bool deleteOlderSnapshots = false)
         {
+            var headerUri = UriFactory.CreateDocumentUri(this.Database, this.Collection, HeaderDocument.GenerateId(streamId));
+
+            HeaderDocument header;
+
+            try
+            {
+                header = await this.Client.ReadDocumentAsync<HeaderDocument>(headerUri, new RequestOptions { PartitionKey = this.PartitionKey });
+            }
+            catch (DocumentClientException ex) when (ex.Error.Code == nameof(System.Net.HttpStatusCode.NotFound))
+            {
+                throw new StreamNotFoundException(streamId);
+            }
+
+            if (header.Version < version)
+                throw new OptimisticConcurrencyException(streamId, version, header.Version);
+
             var document = new SnapshotDocument
             {
                 Partition = this.Partition,
