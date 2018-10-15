@@ -56,6 +56,21 @@ namespace Eveneum.Tests
                 Assert.IsTrue(eventDocument.Deleted);
         }
 
+        [Then(@"all snapshots are soft-deleted")]
+        public async Task ThenAllSnapshotsAreSoft_Deleted()
+        {
+            var streamId = ScenarioContext.Current.GetStreamId();
+            var currentDocuments = await CosmosSetup.QueryAllDocuments(this.Context.Client, this.Context.Database, this.Context.Collection);
+
+            var snapshotDocuments = currentDocuments
+                .OfType<SnapshotDocument>()
+                .Where(x => x.Partition == this.Context.Partition && x.StreamId == streamId)
+                .ToList();
+
+            foreach (var snapshotDocument in snapshotDocuments)
+                Assert.IsTrue(snapshotDocument.Deleted);
+        }
+
         [Then(@"stream (.*) is not soft-deleted")]
         public async Task ThenStreamIsNotSoft_Deleted(string streamId)
         {

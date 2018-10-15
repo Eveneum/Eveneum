@@ -25,3 +25,20 @@ Scenario Outline: Deleting stream with some events
 		| partitioned     |
 		| partitioned     |
 		| non-partitioned |
+	
+Scenario Outline: Deleting stream with some events and snapshots
+	Given an event store backed by <partitioned> collection
+	And an existing stream P with 10 events
+	And an existing snapshot for version 5
+	And an existing stream S with 5 events
+	And an existing snapshot for version 1
+	And an existing snapshot for version 3
+	When I delete stream S in expected version 5
+	Then the header is soft-deleted
+	And all events are soft-deleted
+	And all snapshots are soft-deleted
+	And stream P is not soft-deleted
+	Examples:
+		| partitioned     |
+		| partitioned     |
+		| non-partitioned |

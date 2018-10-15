@@ -123,6 +123,42 @@ this.ScenarioInitialize(scenarioInfo);
 #line hidden
             this.ScenarioCleanup();
         }
+        
+        [NUnit.Framework.TestAttribute()]
+        [NUnit.Framework.DescriptionAttribute("Deleting stream with some events and snapshots")]
+        [NUnit.Framework.TestCaseAttribute("partitioned", null)]
+        [NUnit.Framework.TestCaseAttribute("non-partitioned", null)]
+        public virtual void DeletingStreamWithSomeEventsAndSnapshots(string partitioned, string[] exampleTags)
+        {
+            TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Deleting stream with some events and snapshots", null, exampleTags);
+#line 29
+this.ScenarioInitialize(scenarioInfo);
+            this.ScenarioStart();
+#line 30
+ testRunner.Given(string.Format("an event store backed by {0} collection", partitioned), ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Given ");
+#line 31
+ testRunner.And("an existing stream P with 10 events", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
+#line 32
+ testRunner.And("an existing snapshot for version 5", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
+#line 33
+ testRunner.And("an existing stream S with 5 events", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
+#line 34
+ testRunner.And("an existing snapshot for version 1", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
+#line 35
+ testRunner.And("an existing snapshot for version 3", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
+#line 36
+ testRunner.When("I delete stream S in expected version 5", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
+#line 37
+ testRunner.Then("the header is soft-deleted", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
+#line 38
+ testRunner.And("all events are soft-deleted", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
+#line 39
+ testRunner.And("all snapshots are soft-deleted", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
+#line 40
+ testRunner.And("stream P is not soft-deleted", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
+#line hidden
+            this.ScenarioCleanup();
+        }
     }
 }
 #pragma warning restore
