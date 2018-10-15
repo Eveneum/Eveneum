@@ -16,6 +16,9 @@ namespace Eveneum.Tests.Infrastrature
         public static void SetSnapshot(this ScenarioContext context, SampleSnapshot snapshot) => context.Set(snapshot, nameof(GetSnapshot));
         public static SampleSnapshot GetSnapshot(this ScenarioContext context) => TryGetValue<SampleSnapshot>(context, nameof(GetSnapshot));
 
+        public static void SetSnapshotMetadata(this ScenarioContext context, SampleMetadata metadata) => context.Set(metadata, nameof(GetSnapshotMetadata));
+        public static SampleMetadata GetSnapshotMetadata(this ScenarioContext context) => TryGetValue<SampleMetadata>(context, nameof(GetSnapshotMetadata));
+
         public static void SetNewEvents(this ScenarioContext context, EventData[] events) => context.Set(events, nameof(GetNewEvents));
         public static EventData[] GetNewEvents(this ScenarioContext context) => TryGetValue<EventData[]>(context, nameof(GetNewEvents));
 

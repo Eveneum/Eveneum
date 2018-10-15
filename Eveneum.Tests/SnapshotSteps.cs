@@ -20,12 +20,26 @@ namespace Eveneum.Tests
             this.Context = context;
         }
 
+        [Given(@"an existing snapshot for version (\d+)")]
+        public async Task GivenAnExistingSnapshotForVersion(ulong version)
+        {
+            await this.Context.EventStore.WriteSnapshot(ScenarioContext.Current.GetStreamId(), version, TestSetup.GetSnapshot());
+        }
+
         [When(@"I create snapshot for stream (.*) in version (\d+)")]
         public async Task WhenICreateSnapshotForStreamInVersion(string streamId, ulong version)
         {
             ScenarioContext.Current.SetSnapshot(TestSetup.GetSnapshot());
 
-            await this.Context.EventStore.WriteSnapshot(streamId, version, ScenarioContext.Current.GetSnapshot());
+            await this.Context.EventStore.WriteSnapshot(streamId, version, ScenarioContext.Current.GetSnapshot(), ScenarioContext.Current.GetSnapshotMetadata());
+        }
+
+        [When(@"I create snapshot with metadata for stream (.*) in version (\d+)")]
+        public async Task WhenICreateSnapshotWithMetadataForStreamInVersion(string streamId, ulong version)
+        {
+            ScenarioContext.Current.SetSnapshotMetadata(TestSetup.GetMetadata());
+
+            await WhenICreateSnapshotForStreamInVersion(streamId, version);
         }
 
         [Then(@"the snapshot for version (\d+) is persisted")]
@@ -40,14 +54,25 @@ namespace Eveneum.Tests
             Assert.IsNotNull(snapshotDocumentResponse.Document);
 
             var snapshotDocument = snapshotDocumentResponse.Document;
+            var snapshotMetadata = ScenarioContext.Current.GetSnapshotMetadata();
 
             Assert.AreEqual(this.Context.Partition, snapshotDocument.Partition);
             Assert.AreEqual(DocumentType.Snapshot, snapshotDocument.DocumentType);
             Assert.AreEqual(streamId, snapshotDocument.StreamId);
             Assert.AreEqual(version, snapshotDocument.Version);
             Assert.AreEqual(version + EveneumDocument.GetOrderingFraction(DocumentType.Snapshot), snapshotDocument.SortOrder);
-            Assert.IsNull(snapshotDocument.MetadataType);
-            Assert.IsFalse(snapshotDocument.Metadata.HasValues);
+
+            if (snapshotMetadata == null)
+            {
+                Assert.IsNull(snapshotDocument.MetadataType);
+                Assert.IsFalse(snapshotDocument.Metadata.HasValues);
+            }
+            else
+            {
+                Assert.AreEqual(snapshotMetadata.GetType().AssemblyQualifiedName, snapshotDocument.MetadataType);
+                Assert.AreEqual(JToken.FromObject(snapshotMetadata), snapshotDocument.Metadata);
+            }
+
             Assert.AreEqual(snapshot.GetType().AssemblyQualifiedName, snapshotDocument.BodyType);
             Assert.AreEqual(JToken.FromObject(snapshot), snapshotDocument.Body);
             Assert.False(snapshotDocument.Deleted);

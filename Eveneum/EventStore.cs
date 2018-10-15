@@ -109,6 +109,12 @@ namespace Eveneum
                 Body = JToken.FromObject(snapshot)
             };
 
+            if (metadata != null)
+            {
+                document.Metadata = JToken.FromObject(metadata);
+                document.MetadataType = metadata.GetType().AssemblyQualifiedName;
+            }
+
             await this.Client.UpsertDocumentAsync(this.DocumentCollectionUri, document, new RequestOptions { PartitionKey = this.PartitionKey }, true);
 
             if (deleteOlderSnapshots)
