@@ -134,6 +134,11 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>DeletingNonExistentStream.feature</DependentUpon>
     </Compile>
+    <Compile Include="DeletingOlderSnapshots.feature.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>DeletingOlderSnapshots.feature</DependentUpon>
+    </Compile>
     <Compile Include="DeletingStream.feature.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -202,6 +207,10 @@
     <None Include="DeletingNonExistentStream.feature">
       <Generator>SpecFlowSingleFileGenerator</Generator>
       <LastGenOutput>DeletingNonExistentStream.feature.cs</LastGenOutput>
+    </None>
+    <None Include="DeletingOlderSnapshots.feature">
+      <Generator>SpecFlowSingleFileGenerator</Generator>
+      <LastGenOutput>DeletingOlderSnapshots.feature.cs</LastGenOutput>
     </None>
     <None Include="DeletingStream.feature">
       <Generator>SpecFlowSingleFileGenerator</Generator>
