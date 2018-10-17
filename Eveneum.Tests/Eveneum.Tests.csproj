@@ -139,6 +139,11 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>DeletingOlderSnapshots.feature</DependentUpon>
     </Compile>
+    <Compile Include="DeletingSnapshots.feature.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>DeletingSnapshots.feature</DependentUpon>
+    </Compile>
     <Compile Include="DeletingStream.feature.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -211,6 +216,10 @@
     <None Include="DeletingOlderSnapshots.feature">
       <Generator>SpecFlowSingleFileGenerator</Generator>
       <LastGenOutput>DeletingOlderSnapshots.feature.cs</LastGenOutput>
+    </None>
+    <None Include="DeletingSnapshots.feature">
+      <Generator>SpecFlowSingleFileGenerator</Generator>
+      <LastGenOutput>DeletingSnapshots.feature.cs</LastGenOutput>
     </None>
     <None Include="DeletingStream.feature">
       <Generator>SpecFlowSingleFileGenerator</Generator>

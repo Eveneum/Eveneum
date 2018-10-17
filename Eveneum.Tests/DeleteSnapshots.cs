@@ -14,60 +14,6 @@ namespace Eveneum.Tests
     {
         [TestCase(true)]
         [TestCase(false)]
-        public async Task DeletesAllSnapshots(bool partitioned)
-        {
-            // Arrange
-            var partition = partitioned ? Guid.NewGuid().ToString() : null;
-
-            var client = await CosmosSetup.GetClient(this.Database, this.Collection, partitioned: partitioned);
-            var store = new EventStore(client, this.Database, this.Collection, partition);
-
-            var streamId = Guid.NewGuid().ToString();
-            var events = TestSetup.GetEvents(10);
-
-            await store.WriteToStream(streamId, events);
-            await store.WriteSnapshot(streamId, 2, 2);
-            await store.WriteSnapshot(streamId, 4, 4);
-            await store.WriteSnapshot(streamId, 8, 8);
-
-            // Act
-            await store.DeleteSnapshots(streamId, ulong.MaxValue);
-
-            // Assert
-            var allDocuments = await CosmosSetup.QueryAllDocuments(client, this.Database, this.Collection);
-
-            Assert.AreEqual(1 + events.Length, allDocuments.Where(x => !x.Deleted).Count());
-        }
-
-        [TestCase(true)]
-        [TestCase(false)]
-        public async Task DeletesPreviousSnapshots(bool partitioned)
-        {
-            // Arrange
-            var partition = partitioned ? Guid.NewGuid().ToString() : null;
-
-            var client = await CosmosSetup.GetClient(this.Database, this.Collection, partitioned: partitioned);
-            var store = new EventStore(client, this.Database, this.Collection, partition);
-
-            var streamId = Guid.NewGuid().ToString();
-            var events = TestSetup.GetEvents(10);
-
-            await store.WriteToStream(streamId, events);
-            await store.WriteSnapshot(streamId, 2, 2);
-            await store.WriteSnapshot(streamId, 4, 4);
-            await store.WriteSnapshot(streamId, 8, 8);
-
-            // Act
-            await store.DeleteSnapshots(streamId, 8);
-
-            // Assert
-            var allDocuments = await CosmosSetup.QueryAllDocuments(client, this.Database, this.Collection);
-
-            Assert.AreEqual(1 + events.Length + 1, allDocuments.Where(x => !x.Deleted).Count());
-        }
-
-        [TestCase(true)]
-        [TestCase(false)]
         public async Task DeletedSnapshotAppearsInChangeFeed(bool partitioned)
         {
             // Arrange

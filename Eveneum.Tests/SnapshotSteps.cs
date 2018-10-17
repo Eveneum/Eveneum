@@ -50,6 +50,12 @@ namespace Eveneum.Tests
             await this.Context.EventStore.WriteSnapshot(streamId, version, ScenarioContext.Current.GetSnapshot(), deleteOlderSnapshots: true);
         }
 
+        [When(@"I delete snapshots older than version (\d+) from stream (.*)")]
+        public async Task WhenIDeleteSnapshotsOlderThanVersionFromStream(ulong version, string streamId)
+        {
+            await this.Context.EventStore.DeleteSnapshots(streamId, version);
+        }
+
         [Then(@"the snapshot for version (\d+) is persisted")]
         public async Task ThenTheSnapshotForVersionIsPersisted(ulong version)
         {
@@ -102,6 +108,24 @@ namespace Eveneum.Tests
             foreach(var olderSnapshotDocument in olderSnapshotDocuments)
             {
                 Assert.IsTrue(olderSnapshotDocument.Deleted);
+            }
+        }
+
+        [Then(@"snapshots (\d+) and newer are not soft-deleted")]
+        public async Task ThenSnapshotsAndNewerAreNotSoft_Deleted(ulong version)
+        {
+            var streamId = ScenarioContext.Current.GetStreamId();
+            var currentDocuments = await CosmosSetup.QueryAllDocuments(this.Context.Client, this.Context.Database, this.Context.Collection);
+
+            var olderSnapshotDocuments = currentDocuments
+                .OfType<SnapshotDocument>()
+                .Where(x => x.Partition == this.Context.Partition && x.StreamId == streamId)
+                .Where(x => x.Version >= version)
+                .ToList();
+
+            foreach (var olderSnapshotDocument in olderSnapshotDocuments)
+            {
+                Assert.IsFalse(olderSnapshotDocument.Deleted);
             }
         }
     }

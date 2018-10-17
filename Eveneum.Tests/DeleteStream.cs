@@ -13,33 +13,6 @@ namespace Eveneum.Tests
     {
         [TestCase(true)]
         [TestCase(false)]
-        public async Task DeletesWholeStreamWithSnapshots(bool partitioned)
-        {
-            // Arrange
-            var partition = partitioned ? Guid.NewGuid().ToString() : null;
-
-            var client = await CosmosSetup.GetClient(this.Database, this.Collection, partitioned: partitioned);
-            var store = new EventStore(client, this.Database, this.Collection, partition);
-
-            var streamId = Guid.NewGuid().ToString();
-            var events = TestSetup.GetEvents(200);
-
-            await store.WriteToStream(streamId, events);
-            await store.WriteSnapshot(streamId, 10, 10);
-            await store.WriteSnapshot(streamId, 100, 100);
-            await store.WriteSnapshot(streamId, 150, 150);
-
-            // Act
-            await store.DeleteStream(streamId, (ulong)events.Length);
-
-            // Assert
-            var allDocuments = await CosmosSetup.QueryAllDocuments(client, this.Database, this.Collection);
-
-            Assert.AreEqual(0, allDocuments.Where(x => !x.Deleted).Count());
-        }
-
-        [TestCase(true)]
-        [TestCase(false)]
         public async Task DeletedDocumentsAppearInChangeFeed(bool partitioned)
         {
             // Arrange
