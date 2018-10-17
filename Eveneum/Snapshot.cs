@@ -1,6 +1,4 @@
-﻿using Newtonsoft.Json.Linq;
-
-namespace Eveneum
+﻿namespace Eveneum
 {
     public class Snapshot
     {

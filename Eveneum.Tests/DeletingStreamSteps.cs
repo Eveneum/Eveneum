@@ -1,11 +1,9 @@
-﻿using System;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using NUnit.Framework;
 using TechTalk.SpecFlow;
 using Eveneum.Tests.Infrastrature;
 using Eveneum.Documents;
 using Microsoft.Azure.Documents.Client;
-using Newtonsoft.Json.Linq;
 using System.Linq;
 
 namespace Eveneum.Tests
