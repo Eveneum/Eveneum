@@ -7,6 +7,7 @@ using Microsoft.Azure.Documents.Client;
 using Microsoft.Azure.Documents.Linq;
 using Newtonsoft.Json.Linq;
 using Eveneum.Documents;
+using System.Threading;
 
 namespace Eveneum
 {
@@ -33,7 +34,7 @@ namespace Eveneum
 
         private Uri HeaderDocumentUri(string streamId) => UriFactory.CreateDocumentUri(this.Database, this.Collection, HeaderDocument.GenerateId(streamId));
 
-        public async Task<Stream> ReadStream(string streamId)
+        public async Task<Stream> ReadStream(string streamId, CancellationToken cancellationToken = default)
         {
             if (streamId == null)
                 throw new ArgumentNullException(nameof(streamId));
@@ -41,7 +42,7 @@ namespace Eveneum
             var sql = $"SELECT * FROM x WHERE x.{nameof(EveneumDocument.StreamId)} = '{streamId}' ORDER BY x.{nameof(EveneumDocument.SortOrder)} DESC";
             var query = this.Client.CreateDocumentQuery<Document>(this.DocumentCollectionUri, sql, new FeedOptions { PartitionKey = this.PartitionKey }).AsDocumentQuery();
 
-            var page = await query.ExecuteNextAsync<Document>();
+            var page = await query.ExecuteNextAsync<Document>(cancellationToken);
             
             if (page.Count == 0)
                 throw new StreamNotFoundException(streamId);
@@ -73,7 +74,7 @@ namespace Eveneum
                 if (finishLoading)
                     break;
 
-                page = await query.ExecuteNextAsync<Document>();
+                page = await query.ExecuteNextAsync<Document>(cancellationToken);
             }
             while (query.HasMoreResults);
 
@@ -84,14 +85,14 @@ namespace Eveneum
             return new Stream(streamId, headerDocument.Version, headerDocument.Metadata.ToObject(Type.GetType(headerDocument.MetadataType)), events, snapshot);
         }
 
-        public async Task WriteToStream(string streamId, EventData[] events, ulong? expectedVersion = null, object metadata = null)
+        public async Task WriteToStream(string streamId, EventData[] events, ulong? expectedVersion = null, object metadata = null, CancellationToken cancellationToken = default)
         {
             HeaderDocument header;
 
             // Existing stream
             if (expectedVersion.HasValue)
             {
-                header = await this.ReadHeader(streamId);
+                header = await this.ReadHeader(streamId, cancellationToken);
 
                 if (header.Version != expectedVersion)
                     throw new OptimisticConcurrencyException(streamId, expectedVersion.Value, header.Version);
@@ -117,7 +118,7 @@ namespace Eveneum
             {
                 try
                 {
-                    await this.Client.CreateDocumentAsync(this.DocumentCollectionUri, header, new RequestOptions { PartitionKey = this.PartitionKey });
+                    await this.Client.CreateDocumentAsync(this.DocumentCollectionUri, header, new RequestOptions { PartitionKey = this.PartitionKey }, disableAutomaticIdGeneration: true, cancellationToken);
                 }
                 catch (DocumentClientException ex) when (ex.Error.Code == nameof(System.Net.HttpStatusCode.Conflict))
                 {
@@ -126,7 +127,7 @@ namespace Eveneum
             }
             else
             {
-                await this.Client.ReplaceDocumentAsync(this.HeaderDocumentUri(streamId), header, new RequestOptions { PartitionKey = this.PartitionKey, AccessCondition = new AccessCondition { Type = AccessConditionType.IfMatch, Condition = header.ETag } });
+                await this.Client.ReplaceDocumentAsync(this.HeaderDocumentUri(streamId), header, new RequestOptions { PartitionKey = this.PartitionKey, AccessCondition = new AccessCondition { Type = AccessConditionType.IfMatch, Condition = header.ETag } }, cancellationToken);
             }
 
             var eventDocuments = (events ?? Enumerable.Empty<EventData>())
@@ -140,10 +141,10 @@ namespace Eveneum
                 });
 
             foreach (var eventDocument in eventDocuments)
-                await this.Client.CreateDocumentAsync(this.DocumentCollectionUri, eventDocument, new RequestOptions { PartitionKey = this.PartitionKey });
+                await this.Client.CreateDocumentAsync(this.DocumentCollectionUri, eventDocument, new RequestOptions { PartitionKey = this.PartitionKey }, disableAutomaticIdGeneration: true, cancellationToken);
         }
 
-        public async Task DeleteStream(string streamId, ulong expectedVersion)
+        public async Task DeleteStream(string streamId, ulong expectedVersion, CancellationToken cancellationToken = default)
         {
             var header = new HeaderDocument
             {
@@ -152,7 +153,7 @@ namespace Eveneum
                 Version = expectedVersion
             };
 
-            var existingHeader = await this.ReadHeader(streamId);
+            var existingHeader = await this.ReadHeader(streamId, cancellationToken);
 
             if (existingHeader.Deleted)
                 throw new StreamNotFoundException(streamId);
@@ -169,21 +170,21 @@ namespace Eveneum
 
             while (query.HasMoreResults)
             {
-                var page = await query.ExecuteNextAsync<Document>();
+                var page = await query.ExecuteNextAsync<Document>(cancellationToken);
 
                 foreach (var document in page)
                 {
                     var doc = EveneumDocument.Parse(document);
                     doc.Deleted = true;
 
-                    await this.Client.UpsertDocumentAsync(this.DocumentCollectionUri, doc, new RequestOptions { PartitionKey = this.PartitionKey });
+                    await this.Client.UpsertDocumentAsync(this.DocumentCollectionUri, doc, new RequestOptions { PartitionKey = this.PartitionKey }, disableAutomaticIdGeneration: true, cancellationToken);
                 }
             }
         }
 
-        public async Task CreateSnapshot(string streamId, ulong version, object snapshot, object metadata = null, bool deleteOlderSnapshots = false)
+        public async Task CreateSnapshot(string streamId, ulong version, object snapshot, object metadata = null, bool deleteOlderSnapshots = false, CancellationToken cancellationToken = default)
         {
-            var header = await this.ReadHeader(streamId);
+            var header = await this.ReadHeader(streamId, cancellationToken);
 
             if (header.Version < version)
                 throw new OptimisticConcurrencyException(streamId, version, header.Version);
@@ -203,15 +204,15 @@ namespace Eveneum
                 document.MetadataType = metadata.GetType().AssemblyQualifiedName;
             }
 
-            await this.Client.UpsertDocumentAsync(this.DocumentCollectionUri, document, new RequestOptions { PartitionKey = this.PartitionKey }, true);
+            await this.Client.UpsertDocumentAsync(this.DocumentCollectionUri, document, new RequestOptions { PartitionKey = this.PartitionKey }, disableAutomaticIdGeneration: true, cancellationToken);
 
             if (deleteOlderSnapshots)
-                await this.DeleteSnapshots(streamId, version);
+                await this.DeleteSnapshots(streamId, version, cancellationToken);
         }
 
-        public async Task DeleteSnapshots(string streamId, ulong olderThanVersion)
+        public async Task DeleteSnapshots(string streamId, ulong olderThanVersion, CancellationToken cancellationToken = default)
         {
-            await this.ReadHeader(streamId);
+            await this.ReadHeader(streamId, cancellationToken);
 
             var query = this.Client.CreateDocumentQuery<SnapshotDocument>(this.DocumentCollectionUri, new FeedOptions { PartitionKey = this.PartitionKey })
                 .Where(x => x.StreamId == streamId)
@@ -223,7 +224,7 @@ namespace Eveneum
 
             while(query.HasMoreResults)
             {
-                var page = await query.ExecuteNextAsync<SnapshotDocument>();
+                var page = await query.ExecuteNextAsync<SnapshotDocument>(cancellationToken);
                 documents.AddRange(page);
             }
 
@@ -231,17 +232,17 @@ namespace Eveneum
             {
                 document.Deleted = true;
                 
-                await this.Client.UpsertDocumentAsync(this.DocumentCollectionUri, document,new RequestOptions { PartitionKey = this.PartitionKey });
+                await this.Client.UpsertDocumentAsync(this.DocumentCollectionUri, document,new RequestOptions { PartitionKey = this.PartitionKey }, disableAutomaticIdGeneration: true, cancellationToken);
             });
 
             await Task.WhenAll(tasks);
         }
 
-        private async Task<HeaderDocument> ReadHeader(string streamId)
+        private async Task<HeaderDocument> ReadHeader(string streamId, CancellationToken cancellationToken = default)
         {
             try
             {
-                return await this.Client.ReadDocumentAsync<HeaderDocument>(this.HeaderDocumentUri(streamId), new RequestOptions { PartitionKey = this.PartitionKey });
+                return await this.Client.ReadDocumentAsync<HeaderDocument>(this.HeaderDocumentUri(streamId), new RequestOptions { PartitionKey = this.PartitionKey }, cancellationToken);
             }
             catch (DocumentClientException ex) when (ex.Error.Code == nameof(System.Net.HttpStatusCode.NotFound))
             {
