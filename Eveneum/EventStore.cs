@@ -86,21 +86,12 @@ namespace Eveneum
 
         public async Task WriteToStream(string streamId, EventData[] events, ulong? expectedVersion = null, object metadata = null)
         {
-            var headerUri = this.HeaderDocumentUri(streamId);
-
             HeaderDocument header;
 
             // Existing stream
             if (expectedVersion.HasValue)
             {
-                try
-                {
-                    header = await this.Client.ReadDocumentAsync<HeaderDocument>(headerUri, new RequestOptions { PartitionKey = this.PartitionKey });
-                }
-                catch (DocumentClientException ex) when (ex.Error.Code == nameof(System.Net.HttpStatusCode.NotFound))
-                {
-                    throw new StreamNotFoundException(streamId);
-                }
+                header = await this.ReadHeader(streamId);
 
                 if (header.Version != expectedVersion)
                     throw new OptimisticConcurrencyException(streamId, expectedVersion.Value, header.Version);
@@ -135,7 +126,7 @@ namespace Eveneum
             }
             else
             {
-                await this.Client.ReplaceDocumentAsync(headerUri, header, new RequestOptions { PartitionKey = this.PartitionKey, AccessCondition = new AccessCondition { Type = AccessConditionType.IfMatch, Condition = header.ETag } });
+                await this.Client.ReplaceDocumentAsync(this.HeaderDocumentUri(streamId), header, new RequestOptions { PartitionKey = this.PartitionKey, AccessCondition = new AccessCondition { Type = AccessConditionType.IfMatch, Condition = header.ETag } });
             }
 
             var eventDocuments = (events ?? Enumerable.Empty<EventData>())
@@ -161,16 +152,7 @@ namespace Eveneum
                 Version = expectedVersion
             };
 
-            HeaderDocument existingHeader;
-
-            try
-            {
-                existingHeader = await this.Client.ReadDocumentAsync<HeaderDocument>(this.HeaderDocumentUri(streamId), new RequestOptions { PartitionKey = this.PartitionKey });
-            }
-            catch (DocumentClientException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
-            {
-                throw new StreamNotFoundException(streamId);
-            }
+            var existingHeader = await this.ReadHeader(streamId);
 
             if (existingHeader.Deleted)
                 throw new StreamNotFoundException(streamId);
@@ -201,16 +183,7 @@ namespace Eveneum
 
         public async Task CreateSnapshot(string streamId, ulong version, object snapshot, object metadata = null, bool deleteOlderSnapshots = false)
         {
-            HeaderDocument header;
-
-            try
-            {
-                header = await this.Client.ReadDocumentAsync<HeaderDocument>(this.HeaderDocumentUri(streamId), new RequestOptions { PartitionKey = this.PartitionKey });
-            }
-            catch (DocumentClientException ex) when (ex.Error.Code == nameof(System.Net.HttpStatusCode.NotFound))
-            {
-                throw new StreamNotFoundException(streamId);
-            }
+            var header = await this.ReadHeader(streamId);
 
             if (header.Version < version)
                 throw new OptimisticConcurrencyException(streamId, version, header.Version);
@@ -238,14 +211,7 @@ namespace Eveneum
 
         public async Task DeleteSnapshots(string streamId, ulong olderThanVersion)
         {
-            try
-            {
-                await this.Client.ReadDocumentAsync<HeaderDocument>(this.HeaderDocumentUri(streamId), new RequestOptions { PartitionKey = this.PartitionKey });
-            }
-            catch (DocumentClientException ex) when (ex.Error.Code == nameof(System.Net.HttpStatusCode.NotFound))
-            {
-                throw new StreamNotFoundException(streamId);
-            }
+            await this.ReadHeader(streamId);
 
             var query = this.Client.CreateDocumentQuery<SnapshotDocument>(this.DocumentCollectionUri, new FeedOptions { PartitionKey = this.PartitionKey })
                 .Where(x => x.StreamId == streamId)
@@ -269,6 +235,18 @@ namespace Eveneum
             });
 
             await Task.WhenAll(tasks);
+        }
+
+        private async Task<HeaderDocument> ReadHeader(string streamId)
+        {
+            try
+            {
+                return await this.Client.ReadDocumentAsync<HeaderDocument>(this.HeaderDocumentUri(streamId), new RequestOptions { PartitionKey = this.PartitionKey });
+            }
+            catch (DocumentClientException ex) when (ex.Error.Code == nameof(System.Net.HttpStatusCode.NotFound))
+            {
+                throw new StreamNotFoundException(streamId);
+            }
         }
     }
 }
