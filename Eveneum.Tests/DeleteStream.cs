@@ -24,9 +24,9 @@ namespace Eveneum.Tests
             var events = TestSetup.GetEvents(10);
 
             await store.WriteToStream(streamId, events);
-            await store.WriteSnapshot(streamId, 2, 2);
-            await store.WriteSnapshot(streamId, 4, 4);
-            await store.WriteSnapshot(streamId, 8, 8);
+            await store.CreateSnapshot(streamId, 2, 2);
+            await store.CreateSnapshot(streamId, 4, 4);
+            await store.CreateSnapshot(streamId, 8, 8);
 
             // Act           
             var token = await this.GetCurrentChangeFeedToken(client, partition);

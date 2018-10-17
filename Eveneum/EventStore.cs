@@ -31,6 +31,8 @@ namespace Eveneum
             this.DocumentCollectionUri = UriFactory.CreateDocumentCollectionUri(this.Database, this.Collection);
         }
 
+        private Uri HeaderDocumentUri(string streamId) => UriFactory.CreateDocumentUri(this.Database, this.Collection, HeaderDocument.GenerateId(streamId));
+
         public async Task<Stream> ReadStream(string streamId)
         {
             if (streamId == null)
@@ -82,85 +84,9 @@ namespace Eveneum
             return new Stream(streamId, headerDocument.Version, headerDocument.Metadata.ToObject(Type.GetType(headerDocument.MetadataType)), events, snapshot);
         }
 
-        public async Task WriteSnapshot(string streamId, ulong version, object snapshot, object metadata = null, bool deleteOlderSnapshots = false)
-        {
-            var headerUri = UriFactory.CreateDocumentUri(this.Database, this.Collection, HeaderDocument.GenerateId(streamId));
-
-            HeaderDocument header;
-
-            try
-            {
-                header = await this.Client.ReadDocumentAsync<HeaderDocument>(headerUri, new RequestOptions { PartitionKey = this.PartitionKey });
-            }
-            catch (DocumentClientException ex) when (ex.Error.Code == nameof(System.Net.HttpStatusCode.NotFound))
-            {
-                throw new StreamNotFoundException(streamId);
-            }
-
-            if (header.Version < version)
-                throw new OptimisticConcurrencyException(streamId, version, header.Version);
-
-            var document = new SnapshotDocument
-            {
-                Partition = this.Partition,
-                StreamId = streamId,
-                Version = version,
-                BodyType = snapshot.GetType().AssemblyQualifiedName,
-                Body = JToken.FromObject(snapshot)
-            };
-
-            if (metadata != null)
-            {
-                document.Metadata = JToken.FromObject(metadata);
-                document.MetadataType = metadata.GetType().AssemblyQualifiedName;
-            }
-
-            await this.Client.UpsertDocumentAsync(this.DocumentCollectionUri, document, new RequestOptions { PartitionKey = this.PartitionKey }, true);
-
-            if (deleteOlderSnapshots)
-                await this.DeleteSnapshots(streamId, version);
-        }
-
-        public async Task DeleteSnapshots(string streamId, ulong olderThanVersion)
-        {
-            try
-            {
-                var headerUri = UriFactory.CreateDocumentUri(this.Database, this.Collection, HeaderDocument.GenerateId(streamId));
-
-                await this.Client.ReadDocumentAsync<HeaderDocument>(headerUri, new RequestOptions { PartitionKey = this.PartitionKey });
-            }
-            catch (DocumentClientException ex) when (ex.Error.Code == nameof(System.Net.HttpStatusCode.NotFound))
-            {
-                throw new StreamNotFoundException(streamId);
-            }
-
-            var query = this.Client.CreateDocumentQuery<SnapshotDocument>(this.DocumentCollectionUri, new FeedOptions { PartitionKey = this.PartitionKey })
-                .Where(x => x.StreamId == streamId)
-                .Where(x => x.DocumentType == DocumentType.Snapshot)
-                .Where(x => x.Version < olderThanVersion)
-                .AsDocumentQuery();
-
-            var documents = new List<SnapshotDocument>();
-
-            while(query.HasMoreResults)
-            {
-                var page = await query.ExecuteNextAsync<SnapshotDocument>();
-                documents.AddRange(page);
-            }
-
-            var tasks = documents.Select(async document =>
-            {
-                document.Deleted = true;
-                
-                await this.Client.UpsertDocumentAsync(this.DocumentCollectionUri, document,new RequestOptions { PartitionKey = this.PartitionKey });
-            });
-
-            await Task.WhenAll(tasks);
-        }
-
         public async Task WriteToStream(string streamId, EventData[] events, ulong? expectedVersion = null, object metadata = null)
         {
-            var headerUri = UriFactory.CreateDocumentUri(this.Database, this.Collection, HeaderDocument.GenerateId(streamId));
+            var headerUri = this.HeaderDocumentUri(streamId);
 
             HeaderDocument header;
 
@@ -202,7 +128,7 @@ namespace Eveneum
                 {
                     await this.Client.CreateDocumentAsync(this.DocumentCollectionUri, header, new RequestOptions { PartitionKey = this.PartitionKey });
                 }
-                catch(DocumentClientException ex) when (ex.Error.Code == nameof(System.Net.HttpStatusCode.Conflict))
+                catch (DocumentClientException ex) when (ex.Error.Code == nameof(System.Net.HttpStatusCode.Conflict))
                 {
                     throw new StreamAlreadyExistsException(streamId);
                 }
@@ -214,7 +140,7 @@ namespace Eveneum
 
             var eventDocuments = (events ?? Enumerable.Empty<EventData>())
                 .Select(@event => new EventDocument
-                {                    
+                {
                     Partition = this.Partition,
                     StreamId = streamId,
                     Version = @event.Version,
@@ -222,7 +148,7 @@ namespace Eveneum
                     Body = JToken.FromObject(@event.Body)
                 });
 
-            foreach(var eventDocument in eventDocuments)
+            foreach (var eventDocument in eventDocuments)
                 await this.Client.CreateDocumentAsync(this.DocumentCollectionUri, eventDocument, new RequestOptions { PartitionKey = this.PartitionKey });
         }
 
@@ -235,15 +161,13 @@ namespace Eveneum
                 Version = expectedVersion
             };
 
-            var headerUri = UriFactory.CreateDocumentUri(this.Database, this.Collection, header.Id);
-
             HeaderDocument existingHeader;
 
             try
             {
-                existingHeader = await this.Client.ReadDocumentAsync<HeaderDocument>(headerUri, new RequestOptions { PartitionKey = this.PartitionKey });
+                existingHeader = await this.Client.ReadDocumentAsync<HeaderDocument>(this.HeaderDocumentUri(streamId), new RequestOptions { PartitionKey = this.PartitionKey });
             }
-            catch(DocumentClientException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
+            catch (DocumentClientException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
             {
                 throw new StreamNotFoundException(streamId);
             }
@@ -265,7 +189,7 @@ namespace Eveneum
             {
                 var page = await query.ExecuteNextAsync<Document>();
 
-                foreach(var document in page)
+                foreach (var document in page)
                 {
                     var doc = EveneumDocument.Parse(document);
                     doc.Deleted = true;
@@ -273,6 +197,78 @@ namespace Eveneum
                     await this.Client.UpsertDocumentAsync(this.DocumentCollectionUri, doc, new RequestOptions { PartitionKey = this.PartitionKey });
                 }
             }
+        }
+
+        public async Task CreateSnapshot(string streamId, ulong version, object snapshot, object metadata = null, bool deleteOlderSnapshots = false)
+        {
+            HeaderDocument header;
+
+            try
+            {
+                header = await this.Client.ReadDocumentAsync<HeaderDocument>(this.HeaderDocumentUri(streamId), new RequestOptions { PartitionKey = this.PartitionKey });
+            }
+            catch (DocumentClientException ex) when (ex.Error.Code == nameof(System.Net.HttpStatusCode.NotFound))
+            {
+                throw new StreamNotFoundException(streamId);
+            }
+
+            if (header.Version < version)
+                throw new OptimisticConcurrencyException(streamId, version, header.Version);
+
+            var document = new SnapshotDocument
+            {
+                Partition = this.Partition,
+                StreamId = streamId,
+                Version = version,
+                BodyType = snapshot.GetType().AssemblyQualifiedName,
+                Body = JToken.FromObject(snapshot)
+            };
+
+            if (metadata != null)
+            {
+                document.Metadata = JToken.FromObject(metadata);
+                document.MetadataType = metadata.GetType().AssemblyQualifiedName;
+            }
+
+            await this.Client.UpsertDocumentAsync(this.DocumentCollectionUri, document, new RequestOptions { PartitionKey = this.PartitionKey }, true);
+
+            if (deleteOlderSnapshots)
+                await this.DeleteSnapshots(streamId, version);
+        }
+
+        public async Task DeleteSnapshots(string streamId, ulong olderThanVersion)
+        {
+            try
+            {
+                await this.Client.ReadDocumentAsync<HeaderDocument>(this.HeaderDocumentUri(streamId), new RequestOptions { PartitionKey = this.PartitionKey });
+            }
+            catch (DocumentClientException ex) when (ex.Error.Code == nameof(System.Net.HttpStatusCode.NotFound))
+            {
+                throw new StreamNotFoundException(streamId);
+            }
+
+            var query = this.Client.CreateDocumentQuery<SnapshotDocument>(this.DocumentCollectionUri, new FeedOptions { PartitionKey = this.PartitionKey })
+                .Where(x => x.StreamId == streamId)
+                .Where(x => x.DocumentType == DocumentType.Snapshot)
+                .Where(x => x.Version < olderThanVersion)
+                .AsDocumentQuery();
+
+            var documents = new List<SnapshotDocument>();
+
+            while(query.HasMoreResults)
+            {
+                var page = await query.ExecuteNextAsync<SnapshotDocument>();
+                documents.AddRange(page);
+            }
+
+            var tasks = documents.Select(async document =>
+            {
+                document.Deleted = true;
+                
+                await this.Client.UpsertDocumentAsync(this.DocumentCollectionUri, document,new RequestOptions { PartitionKey = this.PartitionKey });
+            });
+
+            await Task.WhenAll(tasks);
         }
     }
 }
