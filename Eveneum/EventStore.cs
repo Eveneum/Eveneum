@@ -123,6 +123,17 @@ namespace Eveneum
 
         public async Task DeleteSnapshots(string streamId, ulong olderThanVersion)
         {
+            try
+            {
+                var headerUri = UriFactory.CreateDocumentUri(this.Database, this.Collection, HeaderDocument.GenerateId(streamId));
+
+                await this.Client.ReadDocumentAsync<HeaderDocument>(headerUri, new RequestOptions { PartitionKey = this.PartitionKey });
+            }
+            catch (DocumentClientException ex) when (ex.Error.Code == nameof(System.Net.HttpStatusCode.NotFound))
+            {
+                throw new StreamNotFoundException(streamId);
+            }
+
             var query = this.Client.CreateDocumentQuery<SnapshotDocument>(this.DocumentCollectionUri, new FeedOptions { PartitionKey = this.PartitionKey })
                 .Where(x => x.StreamId == streamId)
                 .Where(x => x.DocumentType == DocumentType.Snapshot)
