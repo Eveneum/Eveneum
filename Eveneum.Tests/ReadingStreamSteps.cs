@@ -71,6 +71,20 @@ namespace Eveneum.Tests
             Assert.IsTrue(stream.Value.Snapshot.HasValue);
             Assert.AreEqual(version, stream.Value.Snapshot.Value.Version);
             Assert.AreEqual(JToken.FromObject(ScenarioContext.Current.GetSnapshot()), JToken.FromObject(stream.Value.Snapshot.Value.Data));
+            Assert.IsNull(stream.Value.Snapshot.Value.Metadata);
+        }
+
+        [Then(@"a snapshot with metadata for version (\d+) is returned")]
+        public void ThenASnapshotWithMetadataForVersionIsReturned(ulong version)
+        {
+            var stream = ScenarioContext.Current.GetStream();
+
+            Assert.IsTrue(stream.HasValue);
+            Assert.IsTrue(stream.Value.Snapshot.HasValue);
+            Assert.AreEqual(version, stream.Value.Snapshot.Value.Version);
+            Assert.AreEqual(JToken.FromObject(ScenarioContext.Current.GetSnapshot()), JToken.FromObject(stream.Value.Snapshot.Value.Data));
+            Assert.IsNotNull(stream.Value.Snapshot.Value.Metadata);
+            Assert.AreEqual(JToken.FromObject(ScenarioContext.Current.GetSnapshotMetadata()), JToken.FromObject(stream.Value.Snapshot.Value.Metadata));
         }
 
         [Then(@"no events are returned")]

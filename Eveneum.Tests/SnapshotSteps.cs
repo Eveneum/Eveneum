@@ -24,7 +24,15 @@ namespace Eveneum.Tests
         {
             ScenarioContext.Current.SetSnapshot(TestSetup.GetSnapshot());
 
-            await this.Context.EventStore.CreateSnapshot(ScenarioContext.Current.GetStreamId(), version, ScenarioContext.Current.GetSnapshot());
+            await this.Context.EventStore.CreateSnapshot(ScenarioContext.Current.GetStreamId(), version, ScenarioContext.Current.GetSnapshot(), ScenarioContext.Current.GetSnapshotMetadata());
+        }
+
+        [Given(@"an existing snapshot with metadata for version (\d+)")]
+        public async Task GivenAnExistingSnapshotWithMetadataForVersion(ulong version)
+        {
+            ScenarioContext.Current.SetSnapshotMetadata(TestSetup.GetMetadata());
+
+            await this.GivenAnExistingSnapshotForVersion(version);
         }
 
         [When(@"I create snapshot for stream ([^\s-]) in version (\d+)")]

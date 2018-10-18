@@ -80,7 +80,15 @@ namespace Eveneum
 
             var headerDocument = documents.First() as HeaderDocument;
             var events = documents.OfType<EventDocument>().Select(x => x.Body.ToObject(Type.GetType(x.BodyType))).Reverse().ToArray();
-            var snapshot = documents.OfType<SnapshotDocument>().Select(x => new Snapshot(x.Body.ToObject(Type.GetType(x.BodyType)), x.Version) as Snapshot?).FirstOrDefault();
+            var snapshot = documents.OfType<SnapshotDocument>().Select(x =>
+            {
+                object snapshotMetadata = null;
+
+                if (!string.IsNullOrEmpty(x.MetadataType))
+                    snapshotMetadata = x.Metadata.ToObject(Type.GetType(x.MetadataType));
+
+                return new Snapshot(x.Body.ToObject(Type.GetType(x.BodyType)), snapshotMetadata, x.Version) as Snapshot?;
+            }).FirstOrDefault();
 
             object metadata = null;
 

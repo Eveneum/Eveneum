@@ -446,6 +446,262 @@ this.ScenarioInitialize(scenarioInfo);
 #line hidden
             this.ScenarioCleanup();
         }
+        
+        [NUnit.Framework.TestAttribute()]
+        [NUnit.Framework.DescriptionAttribute("Reading stream with no metadata, some events and snapshot with metadata in the mi" +
+            "ddle of the stream")]
+        [NUnit.Framework.TestCaseAttribute("partitioned", null)]
+        [NUnit.Framework.TestCaseAttribute("non-partitioned", null)]
+        public virtual void ReadingStreamWithNoMetadataSomeEventsAndSnapshotWithMetadataInTheMiddleOfTheStream(string partitioned, string[] exampleTags)
+        {
+            TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Reading stream with no metadata, some events and snapshot with metadata in the mi" +
+                    "ddle of the stream", null, exampleTags);
+#line 176
+this.ScenarioInitialize(scenarioInfo);
+            this.ScenarioStart();
+#line 177
+ testRunner.Given(string.Format("an event store backed by {0} collection", partitioned), ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Given ");
+#line 178
+ testRunner.And("an existing stream S with 10 events", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
+#line 179
+ testRunner.And("an existing snapshot with metadata for version 3", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
+#line 180
+ testRunner.When("I read stream S", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
+#line 181
+ testRunner.Then("the stream S in version 10 is returned", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
+#line 182
+ testRunner.And("a snapshot with metadata for version 3 is returned", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
+#line 183
+ testRunner.And("events from version 4 to 10 are returned", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
+#line hidden
+            this.ScenarioCleanup();
+        }
+        
+        [NUnit.Framework.TestAttribute()]
+        [NUnit.Framework.DescriptionAttribute("Reading stream with metadata, some events and snapshot with metadata in the middl" +
+            "e of the stream")]
+        [NUnit.Framework.TestCaseAttribute("partitioned", null)]
+        [NUnit.Framework.TestCaseAttribute("non-partitioned", null)]
+        public virtual void ReadingStreamWithMetadataSomeEventsAndSnapshotWithMetadataInTheMiddleOfTheStream(string partitioned, string[] exampleTags)
+        {
+            TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Reading stream with metadata, some events and snapshot with metadata in the middl" +
+                    "e of the stream", null, exampleTags);
+#line 189
+this.ScenarioInitialize(scenarioInfo);
+            this.ScenarioStart();
+#line 190
+ testRunner.Given(string.Format("an event store backed by {0} collection", partitioned), ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Given ");
+#line 191
+ testRunner.And("an existing stream S with metadata and 10 events", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
+#line 192
+ testRunner.And("an existing snapshot with metadata for version 3", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
+#line 193
+ testRunner.When("I read stream S", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
+#line 194
+ testRunner.Then("the stream S with metadata in version 10 is returned", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
+#line 195
+ testRunner.And("a snapshot with metadata for version 3 is returned", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
+#line 196
+ testRunner.And("events from version 4 to 10 are returned", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
+#line hidden
+            this.ScenarioCleanup();
+        }
+        
+        [NUnit.Framework.TestAttribute()]
+        [NUnit.Framework.DescriptionAttribute("Reading stream with no metadata, some events and snapshot with metadata at the en" +
+            "d of the stream")]
+        [NUnit.Framework.TestCaseAttribute("partitioned", null)]
+        [NUnit.Framework.TestCaseAttribute("non-partitioned", null)]
+        public virtual void ReadingStreamWithNoMetadataSomeEventsAndSnapshotWithMetadataAtTheEndOfTheStream(string partitioned, string[] exampleTags)
+        {
+            TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Reading stream with no metadata, some events and snapshot with metadata at the en" +
+                    "d of the stream", null, exampleTags);
+#line 202
+this.ScenarioInitialize(scenarioInfo);
+            this.ScenarioStart();
+#line 203
+ testRunner.Given(string.Format("an event store backed by {0} collection", partitioned), ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Given ");
+#line 204
+ testRunner.And("an existing stream S with 10 events", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
+#line 205
+ testRunner.And("an existing snapshot with metadata for version 10", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
+#line 206
+ testRunner.When("I read stream S", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
+#line 207
+ testRunner.Then("the stream S in version 10 is returned", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
+#line 208
+ testRunner.And("a snapshot with metadata for version 10 is returned", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
+#line 209
+ testRunner.And("no events are returned", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
+#line hidden
+            this.ScenarioCleanup();
+        }
+        
+        [NUnit.Framework.TestAttribute()]
+        [NUnit.Framework.DescriptionAttribute("Reading stream with metadata, some events and snapshot with metadata and the end " +
+            "of the stream")]
+        [NUnit.Framework.TestCaseAttribute("partitioned", null)]
+        [NUnit.Framework.TestCaseAttribute("non-partitioned", null)]
+        public virtual void ReadingStreamWithMetadataSomeEventsAndSnapshotWithMetadataAndTheEndOfTheStream(string partitioned, string[] exampleTags)
+        {
+            TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Reading stream with metadata, some events and snapshot with metadata and the end " +
+                    "of the stream", null, exampleTags);
+#line 215
+this.ScenarioInitialize(scenarioInfo);
+            this.ScenarioStart();
+#line 216
+ testRunner.Given(string.Format("an event store backed by {0} collection", partitioned), ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Given ");
+#line 217
+ testRunner.And("an existing stream S with metadata and 10 events", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
+#line 218
+ testRunner.And("an existing snapshot with metadata for version 10", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
+#line 219
+ testRunner.When("I read stream S", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
+#line 220
+ testRunner.Then("the stream S with metadata in version 10 is returned", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
+#line 221
+ testRunner.And("a snapshot with metadata for version 10 is returned", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
+#line 222
+ testRunner.And("no events are returned", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
+#line hidden
+            this.ScenarioCleanup();
+        }
+        
+        [NUnit.Framework.TestAttribute()]
+        [NUnit.Framework.DescriptionAttribute("Reading stream with no metadata, some events and snapshots with metadata in the m" +
+            "iddle of the stream")]
+        [NUnit.Framework.TestCaseAttribute("partitioned", null)]
+        [NUnit.Framework.TestCaseAttribute("non-partitioned", null)]
+        public virtual void ReadingStreamWithNoMetadataSomeEventsAndSnapshotsWithMetadataInTheMiddleOfTheStream(string partitioned, string[] exampleTags)
+        {
+            TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Reading stream with no metadata, some events and snapshots with metadata in the m" +
+                    "iddle of the stream", null, exampleTags);
+#line 228
+this.ScenarioInitialize(scenarioInfo);
+            this.ScenarioStart();
+#line 229
+ testRunner.Given(string.Format("an event store backed by {0} collection", partitioned), ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Given ");
+#line 230
+ testRunner.And("an existing stream S with 10 events", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
+#line 231
+ testRunner.And("an existing snapshot for version 3", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
+#line 232
+ testRunner.And("an existing snapshot for version 5", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
+#line 233
+ testRunner.And("an existing snapshot with metadata for version 7", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
+#line 234
+ testRunner.When("I read stream S", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
+#line 235
+ testRunner.Then("the stream S in version 10 is returned", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
+#line 236
+ testRunner.And("a snapshot with metadata for version 7 is returned", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
+#line 237
+ testRunner.And("events from version 8 to 10 are returned", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
+#line hidden
+            this.ScenarioCleanup();
+        }
+        
+        [NUnit.Framework.TestAttribute()]
+        [NUnit.Framework.DescriptionAttribute("Reading stream with metadata, some events and snapshots with metadata in the midd" +
+            "le of the stream")]
+        [NUnit.Framework.TestCaseAttribute("partitioned", null)]
+        [NUnit.Framework.TestCaseAttribute("non-partitioned", null)]
+        public virtual void ReadingStreamWithMetadataSomeEventsAndSnapshotsWithMetadataInTheMiddleOfTheStream(string partitioned, string[] exampleTags)
+        {
+            TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Reading stream with metadata, some events and snapshots with metadata in the midd" +
+                    "le of the stream", null, exampleTags);
+#line 243
+this.ScenarioInitialize(scenarioInfo);
+            this.ScenarioStart();
+#line 244
+ testRunner.Given(string.Format("an event store backed by {0} collection", partitioned), ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Given ");
+#line 245
+ testRunner.And("an existing stream S with metadata and 10 events", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
+#line 246
+ testRunner.And("an existing snapshot for version 3", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
+#line 247
+ testRunner.And("an existing snapshot for version 5", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
+#line 248
+ testRunner.And("an existing snapshot with metadata for version 7", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
+#line 249
+ testRunner.When("I read stream S", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
+#line 250
+ testRunner.Then("the stream S with metadata in version 10 is returned", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
+#line 251
+ testRunner.And("a snapshot with metadata for version 7 is returned", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
+#line 252
+ testRunner.And("events from version 8 to 10 are returned", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
+#line hidden
+            this.ScenarioCleanup();
+        }
+        
+        [NUnit.Framework.TestAttribute()]
+        [NUnit.Framework.DescriptionAttribute("Reading stream with no metadata, some events and snapshots with metadata at the e" +
+            "nd of the stream")]
+        [NUnit.Framework.TestCaseAttribute("partitioned", null)]
+        [NUnit.Framework.TestCaseAttribute("non-partitioned", null)]
+        public virtual void ReadingStreamWithNoMetadataSomeEventsAndSnapshotsWithMetadataAtTheEndOfTheStream(string partitioned, string[] exampleTags)
+        {
+            TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Reading stream with no metadata, some events and snapshots with metadata at the e" +
+                    "nd of the stream", null, exampleTags);
+#line 258
+this.ScenarioInitialize(scenarioInfo);
+            this.ScenarioStart();
+#line 259
+ testRunner.Given(string.Format("an event store backed by {0} collection", partitioned), ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Given ");
+#line 260
+ testRunner.And("an existing stream S with 10 events", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
+#line 261
+ testRunner.And("an existing snapshot for version 5", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
+#line 262
+ testRunner.And("an existing snapshot for version 7", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
+#line 263
+ testRunner.And("an existing snapshot with metadata for version 10", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
+#line 264
+ testRunner.When("I read stream S", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
+#line 265
+ testRunner.Then("the stream S in version 10 is returned", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
+#line 266
+ testRunner.And("a snapshot with metadata for version 10 is returned", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
+#line 267
+ testRunner.And("no events are returned", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
+#line hidden
+            this.ScenarioCleanup();
+        }
+        
+        [NUnit.Framework.TestAttribute()]
+        [NUnit.Framework.DescriptionAttribute("Reading stream with metadata, some events and snapshots with metadata and the end" +
+            " of the stream")]
+        [NUnit.Framework.TestCaseAttribute("partitioned", null)]
+        [NUnit.Framework.TestCaseAttribute("non-partitioned", null)]
+        public virtual void ReadingStreamWithMetadataSomeEventsAndSnapshotsWithMetadataAndTheEndOfTheStream(string partitioned, string[] exampleTags)
+        {
+            TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Reading stream with metadata, some events and snapshots with metadata and the end" +
+                    " of the stream", null, exampleTags);
+#line 273
+this.ScenarioInitialize(scenarioInfo);
+            this.ScenarioStart();
+#line 274
+ testRunner.Given(string.Format("an event store backed by {0} collection", partitioned), ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Given ");
+#line 275
+ testRunner.And("an existing stream S with metadata and 10 events", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
+#line 276
+ testRunner.And("an existing snapshot for version 5", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
+#line 277
+ testRunner.And("an existing snapshot for version 7", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
+#line 278
+ testRunner.And("an existing snapshot with metadata for version 10", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
+#line 279
+ testRunner.When("I read stream S", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
+#line 280
+ testRunner.Then("the stream S with metadata in version 10 is returned", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
+#line 281
+ testRunner.And("a snapshot with metadata for version 10 is returned", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
+#line 282
+ testRunner.And("no events are returned", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
+#line hidden
+            this.ScenarioCleanup();
+        }
     }
 }
 #pragma warning restore
