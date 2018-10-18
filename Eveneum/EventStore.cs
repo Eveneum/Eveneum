@@ -8,6 +8,7 @@ using Microsoft.Azure.Documents.Linq;
 using Newtonsoft.Json.Linq;
 using Eveneum.Documents;
 using System.Threading;
+using System.Collections.Concurrent;
 
 namespace Eveneum
 {
@@ -20,6 +21,8 @@ namespace Eveneum
         public readonly PartitionKey PartitionKey;
 
         private readonly Uri DocumentCollectionUri;
+
+        private readonly TypeCache TypeCache = new TypeCache();
 
         public EventStore(DocumentClient client, string database, string collection, string partition = null)
         {
@@ -79,21 +82,21 @@ namespace Eveneum
             while (query.HasMoreResults);
 
             var headerDocument = documents.First() as HeaderDocument;
-            var events = documents.OfType<EventDocument>().Select(x => x.Body.ToObject(Type.GetType(x.BodyType))).Reverse().ToArray();
+            var events = documents.OfType<EventDocument>().Select(x => x.Body.ToObject(this.TypeCache.Resolve(x.BodyType))).Reverse().ToArray();
             var snapshot = documents.OfType<SnapshotDocument>().Select(x =>
             {
                 object snapshotMetadata = null;
 
                 if (!string.IsNullOrEmpty(x.MetadataType))
-                    snapshotMetadata = x.Metadata.ToObject(Type.GetType(x.MetadataType));
+                    snapshotMetadata = x.Metadata.ToObject(this.TypeCache.Resolve(x.MetadataType));
 
-                return new Snapshot(x.Body.ToObject(Type.GetType(x.BodyType)), snapshotMetadata, x.Version) as Snapshot?;
+                return new Snapshot(x.Body.ToObject(this.TypeCache.Resolve(x.BodyType)), snapshotMetadata, x.Version) as Snapshot?;
             }).FirstOrDefault();
 
             object metadata = null;
 
             if (!string.IsNullOrEmpty(headerDocument.MetadataType))
-                metadata = headerDocument.Metadata.ToObject(Type.GetType(headerDocument.MetadataType));
+                metadata = headerDocument.Metadata.ToObject(this.TypeCache.Resolve(headerDocument.MetadataType));
 
             return new Stream(streamId, headerDocument.Version, metadata, events, snapshot);
         }
