@@ -34,7 +34,7 @@ namespace Eveneum
 
         private Uri HeaderDocumentUri(string streamId) => UriFactory.CreateDocumentUri(this.Database, this.Collection, HeaderDocument.GenerateId(streamId));
 
-        public async Task<Stream> ReadStream(string streamId, CancellationToken cancellationToken = default)
+        public async Task<Stream?> ReadStream(string streamId, CancellationToken cancellationToken = default)
         {
             if (streamId == null)
                 throw new ArgumentNullException(nameof(streamId));
@@ -43,9 +43,9 @@ namespace Eveneum
             var query = this.Client.CreateDocumentQuery<Document>(this.DocumentCollectionUri, sql, new FeedOptions { PartitionKey = this.PartitionKey }).AsDocumentQuery();
 
             var page = await query.ExecuteNextAsync<Document>(cancellationToken);
-            
+
             if (page.Count == 0)
-                throw new StreamNotFoundException(streamId);
+                return null;
 
             var documents = new List<EveneumDocument>();
             var finishLoading = false;
@@ -80,9 +80,14 @@ namespace Eveneum
 
             var headerDocument = documents.First() as HeaderDocument;
             var events = documents.OfType<EventDocument>().Select(x => x.Body.ToObject(Type.GetType(x.BodyType))).Reverse().ToArray();
-            var snapshot = documents.OfType<SnapshotDocument>().Select(x => new Snapshot(x.Body.ToObject(Type.GetType(x.BodyType)), x.Version)).FirstOrDefault();
+            var snapshot = documents.OfType<SnapshotDocument>().Select(x => new Snapshot(x.Body.ToObject(Type.GetType(x.BodyType)), x.Version) as Snapshot?).FirstOrDefault();
 
-            return new Stream(streamId, headerDocument.Version, headerDocument.Metadata.ToObject(Type.GetType(headerDocument.MetadataType)), events, snapshot);
+            object metadata = null;
+
+            if (!string.IsNullOrEmpty(headerDocument.MetadataType))
+                metadata = headerDocument.Metadata.ToObject(Type.GetType(headerDocument.MetadataType));
+
+            return new Stream(streamId, headerDocument.Version, metadata, events, snapshot);
         }
 
         public async Task WriteToStream(string streamId, EventData[] events, ulong? expectedVersion = null, object metadata = null, CancellationToken cancellationToken = default)

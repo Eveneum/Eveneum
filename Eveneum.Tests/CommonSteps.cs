@@ -32,7 +32,7 @@ namespace Eveneum.Tests
             await this.Context.Initialize();
         }
 
-        [Given(@"an existing stream (.*) with (\d+) events")]
+        [Given(@"an existing stream ([^\s-]) with (\d+) events")]
         public async Task GivenAnExistingStream(string streamId, ushort events)
         {
             ScenarioContext.Current.SetStreamId(streamId);
@@ -40,21 +40,22 @@ namespace Eveneum.Tests
             await this.Context.EventStore.WriteToStream(streamId, TestSetup.GetEvents(events));
         }
 
-        [Given(@"a deleted stream (.*) with (\d+) events")]
+        [Given(@"an existing stream ([^\s-]) with metadata and (\d+) events")]
+        public async Task GivenAnExistingStreamWithMetadataAndEvents(string streamId, ushort events)
+        {
+            ScenarioContext.Current.SetStreamId(streamId);
+            ScenarioContext.Current.SetHeaderMetadata(TestSetup.GetMetadata());
+
+            await this.Context.EventStore.WriteToStream(streamId, TestSetup.GetEvents(events), metadata: ScenarioContext.Current.GetHeaderMetadata());
+        }
+
+        [Given(@"a deleted stream ([^\s-]) with (\d+) events")]
         public async Task GivenADeletedStream(string streamId, ushort events)
         {
             var eventData = TestSetup.GetEvents(events);
 
             await this.Context.EventStore.WriteToStream(streamId, eventData);
             await this.Context.EventStore.DeleteStream(streamId, (ulong)eventData.Length);
-        }
-
-        [Given(@"an existing stream (.*) with metadata and (\d+) events")]
-        public async Task GivenAnExistingStreamWithMetadataAndEvents(string streamId, ushort events)
-        {
-            ScenarioContext.Current.SetHeaderMetadata(TestSetup.GetMetadata());
-
-            await this.Context.EventStore.WriteToStream(streamId, TestSetup.GetEvents(events), metadata: ScenarioContext.Current.GetHeaderMetadata());
         }
     }
 }

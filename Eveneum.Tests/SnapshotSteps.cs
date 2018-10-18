@@ -22,10 +22,12 @@ namespace Eveneum.Tests
         [Given(@"an existing snapshot for version (\d+)")]
         public async Task GivenAnExistingSnapshotForVersion(ulong version)
         {
-            await this.Context.EventStore.CreateSnapshot(ScenarioContext.Current.GetStreamId(), version, TestSetup.GetSnapshot());
+            ScenarioContext.Current.SetSnapshot(TestSetup.GetSnapshot());
+
+            await this.Context.EventStore.CreateSnapshot(ScenarioContext.Current.GetStreamId(), version, ScenarioContext.Current.GetSnapshot());
         }
 
-        [When(@"I create snapshot for stream (.*) in version (\d+)")]
+        [When(@"I create snapshot for stream ([^\s-]) in version (\d+)")]
         public async Task WhenICreateSnapshotForStreamInVersion(string streamId, ulong version)
         {
             ScenarioContext.Current.SetSnapshot(TestSetup.GetSnapshot());
@@ -33,7 +35,7 @@ namespace Eveneum.Tests
             await this.Context.EventStore.CreateSnapshot(streamId, version, ScenarioContext.Current.GetSnapshot(), ScenarioContext.Current.GetSnapshotMetadata());
         }
 
-        [When(@"I create snapshot with metadata for stream (.*) in version (\d+)")]
+        [When(@"I create snapshot with metadata for stream ([^\s-]) in version (\d+)")]
         public async Task WhenICreateSnapshotWithMetadataForStreamInVersion(string streamId, ulong version)
         {
             ScenarioContext.Current.SetSnapshotMetadata(TestSetup.GetMetadata());
@@ -41,7 +43,7 @@ namespace Eveneum.Tests
             await WhenICreateSnapshotForStreamInVersion(streamId, version);
         }
 
-        [When(@"I create snapshot for stream (.*) in version (\d+) and delete older snapshots")]
+        [When(@"I create snapshot for stream ([^\s-]) in version (\d+) and delete older snapshots")]
         public async Task WhenICreateSnapshotForStreamInVersionAndDeleteOlderSnapshots(string streamId, ulong version)
         {
             ScenarioContext.Current.SetSnapshot(TestSetup.GetSnapshot());
@@ -49,7 +51,7 @@ namespace Eveneum.Tests
             await this.Context.EventStore.CreateSnapshot(streamId, version, ScenarioContext.Current.GetSnapshot(), deleteOlderSnapshots: true);
         }
 
-        [When(@"I delete snapshots older than version (\d+) from stream (.*)")]
+        [When(@"I delete snapshots older than version (\d+) from stream ([^\s-])")]
         public async Task WhenIDeleteSnapshotsOlderThanVersionFromStream(ulong version, string streamId)
         {
             await this.Context.EventStore.DeleteSnapshots(streamId, version);

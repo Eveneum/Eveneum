@@ -18,7 +18,7 @@ namespace Eveneum.Tests
             this.Context = context;
         }
 
-        [When(@"I delete stream (.*) in expected version (\d+)")]
+        [When(@"I delete stream ([^\s-]) in expected version (\d+)")]
         public async Task WhenIDeleteStreamInExpectedVersion(string streamId, ulong expectedVersion)
         {
             ScenarioContext.Current.SetStreamId(streamId);
@@ -69,7 +69,7 @@ namespace Eveneum.Tests
                 Assert.IsTrue(snapshotDocument.Deleted);
         }
 
-        [Then(@"stream (.*) is not soft-deleted")]
+        [Then(@"stream ([^\s-]) is not soft-deleted")]
         public async Task ThenStreamIsNotSoft_Deleted(string streamId)
         {
             var currentDocuments = await CosmosSetup.QueryAllDocuments(this.Context.Client, this.Context.Database, this.Context.Collection);

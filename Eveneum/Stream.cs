@@ -1,8 +1,8 @@
 ﻿namespace Eveneum
 {
-    public class Stream
+    public struct Stream
     {
-        internal Stream(string streamId, ulong version, object metadata, object[] events, Snapshot snapshot = null)
+        internal Stream(string streamId, ulong version, object metadata, object[] events, Snapshot? snapshot = null)
         {
             this.StreamId = streamId;
             this.Version = version;
@@ -11,12 +11,10 @@
             this.Snapshot = snapshot;
         }
 
-        public string StreamId { get; }
-        public ulong Version { get; }
-        public object Metadata { get; }
-        public object[] Events { get; }
-        public Snapshot Snapshot { get; }
-
-        public bool HasSnapshot => this.Snapshot != null;
+        public string StreamId;
+        public ulong Version;
+        public object Metadata;
+        public object[] Events;
+        public Snapshot? Snapshot;
     }
 }

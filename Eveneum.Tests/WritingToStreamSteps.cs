@@ -19,7 +19,7 @@ namespace Eveneum.Tests
             this.Context = context;
         }
 
-        [When(@"I write a new stream (.*) with (\d+) events")]
+        [When(@"I write a new stream ([^\s-]) with (\d+) events")]
         public async Task WhenIWriteNewStreamWithEvents(string streamId, int events)
         {
             ScenarioContext.Current.SetStreamId(streamId);
@@ -29,7 +29,7 @@ namespace Eveneum.Tests
             await this.Context.EventStore.WriteToStream(ScenarioContext.Current.GetStreamId(), ScenarioContext.Current.GetNewEvents(), metadata: ScenarioContext.Current.GetHeaderMetadata());
         }
 
-        [When(@"I write a new stream (.*) with metadata and (\d+) events")]
+        [When(@"I write a new stream ([^\s-]) with metadata and (\d+) events")]
         public async Task WhenIWriteNewStreamWithMetadataAndNoEvents(string streamId, int events)
         {
             ScenarioContext.Current.SetHeaderMetadata(TestSetup.GetMetadata());
@@ -37,7 +37,7 @@ namespace Eveneum.Tests
             await WhenIWriteNewStreamWithEvents(streamId, events);
         }
 
-        [When(@"I append (\d+) events to stream (.*) in expected version (\d+)")]
+        [When(@"I append (\d+) events to stream ([^\s-]) in expected version (\d+)")]
         public async Task WhenIAppendEventsToStreamInExpectedVersion(int events, string streamId, ushort expectedVersion)
         {
             ScenarioContext.Current.SetStreamId(streamId);
@@ -88,7 +88,7 @@ namespace Eveneum.Tests
             Assert.False(headerDocument.Deleted);
         }
 
-        [Then(@"the action fails as stream (.*) already exists")]
+        [Then(@"the action fails as stream ([^\s-]) already exists")]
         public void ThenTheActionFailsAsStreamAlreadyExists(string streamId)
         {
             Assert.NotNull(ScenarioContext.Current.TestError);
@@ -98,7 +98,7 @@ namespace Eveneum.Tests
             Assert.AreEqual(streamId, exception.StreamId);
         }
 
-        [Then(@"the action fails as stream (.*) doesn't exist")]
+        [Then(@"the action fails as stream ([^\s-]) doesn't exist")]
         public void ThenTheActionFailsAsStreamDoesnTExist(string streamId)
         {
             Assert.NotNull(ScenarioContext.Current.TestError);
@@ -108,7 +108,7 @@ namespace Eveneum.Tests
             Assert.AreEqual(streamId, exception.StreamId);
         }
 
-        [Then(@"the action fails as expected version (\d+) doesn't match the current version (\d+) of stream (.*)")]
+        [Then(@"the action fails as expected version (\d+) doesn't match the current version (\d+) of stream ([^\s-])")]
         public void ThenTheActionFailsAsExpectedVersionDoesnTMatchTheCurrentVersionOfStream(ulong expectedVersion, ulong currentVersion, string streamId)
         {
             Assert.NotNull(ScenarioContext.Current.TestError);

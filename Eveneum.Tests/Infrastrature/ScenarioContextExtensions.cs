@@ -7,6 +7,9 @@ namespace Eveneum.Tests.Infrastrature
 {
     static class ScenarioContextExtensions
     {
+        public static void SetStream(this ScenarioContext context, Stream? stream) => context.Set(stream, nameof(GetStream));
+        public static Stream? GetStream(this ScenarioContext context) => TryGetValue<Stream?>(context, nameof(GetStream));
+
         public static void SetStreamId(this ScenarioContext context, string streamId) => context.Set(streamId, nameof(GetStreamId));
         public static string GetStreamId(this ScenarioContext context) => TryGetValue<string>(context, nameof(GetStreamId));
 
