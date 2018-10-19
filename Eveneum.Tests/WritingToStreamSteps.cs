@@ -124,13 +124,10 @@ namespace Eveneum.Tests
         public async Task ThenNoEventsAreAppended()
         {
             var streamId = ScenarioContext.Current.GetStreamId();
-            var currentDocuments = await CosmosSetup.QueryAllDocuments(this.Context.Client, this.Context.Database, this.Context.Collection);
+            var currentDocuments = await CosmosSetup.QueryAllDocumentsInStream<EventDocument>(this.Context.Client, this.Context.Database, this.Context.Collection, this.Context.PartitionKey, streamId);
             var existingDocumentIds = ScenarioContext.Current.GetExistingDocuments().Select(x => x.Id);
 
-            var newEventDocuments = currentDocuments
-                .OfType<EventDocument>()
-                .Where(x => x.Partition == this.Context.Partition && x.StreamId == streamId)
-                .Where(x => !existingDocumentIds.Contains(x.Id));
+            var newEventDocuments = currentDocuments.Where(x => !existingDocumentIds.Contains(x.Id));
 
             Assert.IsEmpty(newEventDocuments);
         }
@@ -139,14 +136,10 @@ namespace Eveneum.Tests
         public async Task ThenNewEventsAreAppended()
         {
             var streamId = ScenarioContext.Current.GetStreamId();
-            var currentDocuments = await CosmosSetup.QueryAllDocuments(this.Context.Client, this.Context.Database, this.Context.Collection);
+            var currentDocuments = await CosmosSetup.QueryAllDocumentsInStream<EventDocument>(this.Context.Client, this.Context.Database, this.Context.Collection, this.Context.PartitionKey, streamId);
             var existingDocumentIds = ScenarioContext.Current.GetExistingDocuments().Select(x => x.Id);
 
-            var newEventDocuments = currentDocuments
-                .OfType<EventDocument>()
-                .Where(x => x.Partition == this.Context.Partition && x.StreamId == streamId)
-                .Where(x => !existingDocumentIds.Contains(x.Id))
-                .ToList();
+            var newEventDocuments = currentDocuments.Where(x => !existingDocumentIds.Contains(x.Id)).ToList();
 
             var newEvents = ScenarioContext.Current.GetNewEvents();
 

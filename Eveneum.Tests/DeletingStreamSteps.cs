@@ -43,12 +43,7 @@ namespace Eveneum.Tests
         public async Task ThenAllEventsAreSoft_Deleted()
         {
             var streamId = ScenarioContext.Current.GetStreamId();
-            var currentDocuments = await CosmosSetup.QueryAllDocuments(this.Context.Client, this.Context.Database, this.Context.Collection);
-
-            var eventDocuments = currentDocuments
-                .OfType<EventDocument>()
-                .Where(x => x.Partition == this.Context.Partition && x.StreamId == streamId)
-                .ToList();
+            var eventDocuments = await CosmosSetup.QueryAllDocumentsInStream<EventDocument>(this.Context.Client, this.Context.Database, this.Context.Collection, this.Context.PartitionKey, streamId);
 
             foreach (var eventDocument in eventDocuments)
                 Assert.IsTrue(eventDocument.Deleted);
@@ -58,12 +53,7 @@ namespace Eveneum.Tests
         public async Task ThenAllSnapshotsAreSoft_Deleted()
         {
             var streamId = ScenarioContext.Current.GetStreamId();
-            var currentDocuments = await CosmosSetup.QueryAllDocuments(this.Context.Client, this.Context.Database, this.Context.Collection);
-
-            var snapshotDocuments = currentDocuments
-                .OfType<SnapshotDocument>()
-                .Where(x => x.Partition == this.Context.Partition && x.StreamId == streamId)
-                .ToList();
+            var snapshotDocuments = await CosmosSetup.QueryAllDocumentsInStream<SnapshotDocument>(this.Context.Client, this.Context.Database, this.Context.Collection, this.Context.PartitionKey, streamId);
 
             foreach (var snapshotDocument in snapshotDocuments)
                 Assert.IsTrue(snapshotDocument.Deleted);
@@ -72,11 +62,7 @@ namespace Eveneum.Tests
         [Then(@"stream ([^\s-]) is not soft-deleted")]
         public async Task ThenStreamIsNotSoft_Deleted(string streamId)
         {
-            var currentDocuments = await CosmosSetup.QueryAllDocuments(this.Context.Client, this.Context.Database, this.Context.Collection);
-
-            var documents = currentDocuments
-                .Where(x => x.Partition == this.Context.Partition && x.StreamId == streamId)
-                .ToList();
+            var documents = await CosmosSetup.QueryAllDocumentsInStream<EveneumDocument>(this.Context.Client, this.Context.Database, this.Context.Collection, this.Context.PartitionKey, streamId);
 
             foreach (var document in documents)
                 Assert.IsFalse(document.Deleted);

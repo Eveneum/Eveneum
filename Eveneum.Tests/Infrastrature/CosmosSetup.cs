@@ -38,18 +38,26 @@ namespace Eveneum.Tests.Infrastrature
             return client;
         }
 
-        public static async Task<List<EveneumDocument>> QueryAllDocuments(DocumentClient client, string database, string collection)
-        {
-            var query = client.CreateDocumentQuery<Document>(UriFactory.CreateDocumentCollectionUri(database, collection), "SELECT * FROM x", new FeedOptions { EnableCrossPartitionQuery = true }).AsDocumentQuery();
+        public static Task<List<EveneumDocument>> QueryAllDocuments(DocumentClient client, string database, string collection)
+            => Query<EveneumDocument>(client, database, collection, "SELECT * FROM x", new FeedOptions { EnableCrossPartitionQuery = true });
 
-            var documents = new List<EveneumDocument>();
+        public static Task<List<TDocument>> QueryAllDocumentsInStream<TDocument>(DocumentClient client, string database, string collection, PartitionKey partitionKey, string streamId)
+            where TDocument : EveneumDocument
+            => Query<TDocument>(client, database, collection, $"SELECT * FROM x WHERE x.{nameof(EveneumDocument.StreamId)} = '{streamId}'", new FeedOptions { PartitionKey = partitionKey });
+
+        private static async Task<List<TDocument>> Query<TDocument>(DocumentClient client, string database, string collection, string query, FeedOptions feedOptions)
+            where TDocument : EveneumDocument
+        {
+            var documentQuery = client.CreateDocumentQuery<Document>(UriFactory.CreateDocumentCollectionUri(database, collection), query, feedOptions).AsDocumentQuery();
+
+            var documents = new List<TDocument>();
 
             do
             {
-                var page = await query.ExecuteNextAsync<Document>();
-                documents.AddRange(page.Select(EveneumDocument.Parse));
+                var page = await documentQuery.ExecuteNextAsync<Document>();
+                documents.AddRange(page.Select(EveneumDocument.Parse).OfType<TDocument>());
             }
-            while (query.HasMoreResults);
+            while (documentQuery.HasMoreResults);
 
             return documents;
         }

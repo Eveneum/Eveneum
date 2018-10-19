@@ -106,36 +106,22 @@ namespace Eveneum.Tests
         public async Task ThenTheSnapshotsOlderThanAreSoft_Deleted(ulong version)
         {
             var streamId = ScenarioContext.Current.GetStreamId();
-            var currentDocuments = await CosmosSetup.QueryAllDocuments(this.Context.Client, this.Context.Database, this.Context.Collection);
-
-            var olderSnapshotDocuments = currentDocuments
-                .OfType<SnapshotDocument>()
-                .Where(x => x.Partition == this.Context.Partition && x.StreamId == streamId)
-                .Where(x => x.Version < version)
-                .ToList();
+            var currentDocuments = await CosmosSetup.QueryAllDocumentsInStream<SnapshotDocument>(this.Context.Client, this.Context.Database, this.Context.Collection, this.Context.PartitionKey, streamId);
+            var olderSnapshotDocuments = currentDocuments.Where(x => x.Version < version);
 
             foreach(var olderSnapshotDocument in olderSnapshotDocuments)
-            {
                 Assert.IsTrue(olderSnapshotDocument.Deleted);
-            }
         }
 
         [Then(@"snapshots (\d+) and newer are not soft-deleted")]
         public async Task ThenSnapshotsAndNewerAreNotSoft_Deleted(ulong version)
         {
             var streamId = ScenarioContext.Current.GetStreamId();
-            var currentDocuments = await CosmosSetup.QueryAllDocuments(this.Context.Client, this.Context.Database, this.Context.Collection);
+            var currentDocuments = await CosmosSetup.QueryAllDocumentsInStream<SnapshotDocument>(this.Context.Client, this.Context.Database, this.Context.Collection, this.Context.PartitionKey, streamId);
+            var newerSnapshotDocuments = currentDocuments.Where(x => x.Version >= version);
 
-            var olderSnapshotDocuments = currentDocuments
-                .OfType<SnapshotDocument>()
-                .Where(x => x.Partition == this.Context.Partition && x.StreamId == streamId)
-                .Where(x => x.Version >= version)
-                .ToList();
-
-            foreach (var olderSnapshotDocument in olderSnapshotDocuments)
-            {
-                Assert.IsFalse(olderSnapshotDocument.Deleted);
-            }
+            foreach (var newerSnapshotDocument in newerSnapshotDocuments)
+                Assert.IsFalse(newerSnapshotDocument.Deleted);
         }
     }
 }
