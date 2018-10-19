@@ -82,25 +82,8 @@ namespace Eveneum
             while (query.HasMoreResults);
 
             var headerDocument = documents.First() as HeaderDocument;
-            var events = documents.OfType<EventDocument>().Select(x => 
-            {
-                object eventMetadata = null;
-
-                if (!string.IsNullOrEmpty(x.MetadataType))
-                    eventMetadata = x.Metadata.ToObject(this.TypeCache.Resolve(x.MetadataType));
-
-                return new EventData(x.Body.ToObject(this.TypeCache.Resolve(x.BodyType)), eventMetadata, x.Version);
-            }).Reverse().ToArray();
-            
-            var snapshot = documents.OfType<SnapshotDocument>().Select(x =>
-            {
-                object snapshotMetadata = null;
-
-                if (!string.IsNullOrEmpty(x.MetadataType))
-                    snapshotMetadata = x.Metadata.ToObject(this.TypeCache.Resolve(x.MetadataType));
-
-                return new Snapshot(x.Body.ToObject(this.TypeCache.Resolve(x.BodyType)), snapshotMetadata, x.Version) as Snapshot?;
-            }).FirstOrDefault();
+            var events = documents.OfType<EventDocument>().Select(this.Deserialize).Reverse().ToArray();
+            var snapshot = documents.OfType<SnapshotDocument>().Select(this.Deserialize).Cast<Snapshot?>().FirstOrDefault();
 
             object metadata = null;
 
@@ -155,25 +138,7 @@ namespace Eveneum
                 await this.Client.ReplaceDocumentAsync(this.HeaderDocumentUri(streamId), header, new RequestOptions { PartitionKey = this.PartitionKey, AccessCondition = new AccessCondition { Type = AccessConditionType.IfMatch, Condition = header.ETag } }, cancellationToken);
             }
 
-            var eventDocuments = (events ?? Enumerable.Empty<EventData>())
-                .Select(@event => {
-                    var document = new EventDocument
-                    {
-                        Partition = this.Partition,
-                        StreamId = streamId,
-                        Version = @event.Version,
-                        BodyType = @event.Body.GetType().AssemblyQualifiedName,
-                        Body = JToken.FromObject(@event.Body)
-                    };
-
-                    if (@event.Metadata != null)
-                    {
-                        document.MetadataType = @event.Metadata.GetType().AssemblyQualifiedName;
-                        document.Metadata = JToken.FromObject(@event.Metadata);
-                    }
-
-                    return document;
-                });
+            var eventDocuments = (events ?? Enumerable.Empty<EventData>()).Select(@event => this.Serialize(@event, streamId));
 
             foreach (var eventDocument in eventDocuments)
                 await this.Client.CreateDocumentAsync(this.DocumentCollectionUri, eventDocument, new RequestOptions { PartitionKey = this.PartitionKey }, disableAutomaticIdGeneration: true, cancellationToken);
@@ -224,20 +189,7 @@ namespace Eveneum
             if (header.Version < version)
                 throw new OptimisticConcurrencyException(streamId, version, header.Version);
 
-            var document = new SnapshotDocument
-            {
-                Partition = this.Partition,
-                StreamId = streamId,
-                Version = version,
-                BodyType = snapshot.GetType().AssemblyQualifiedName,
-                Body = JToken.FromObject(snapshot)
-            };
-
-            if (metadata != null)
-            {
-                document.Metadata = JToken.FromObject(metadata);
-                document.MetadataType = metadata.GetType().AssemblyQualifiedName;
-            }
+            var document = this.Serialize(snapshot, metadata, version, streamId);
 
             await this.Client.UpsertDocumentAsync(this.DocumentCollectionUri, document, new RequestOptions { PartitionKey = this.PartitionKey }, disableAutomaticIdGeneration: true, cancellationToken);
 
@@ -283,6 +235,66 @@ namespace Eveneum
             {
                 throw new StreamNotFoundException(streamId);
             }
+        }
+
+        private EventDocument Serialize(EventData @event, string streamId)
+        {
+            var document = new EventDocument
+            {
+                Partition = this.Partition,
+                StreamId = streamId,
+                Version = @event.Version,
+                BodyType = @event.Body.GetType().AssemblyQualifiedName,
+                Body = JToken.FromObject(@event.Body)
+            };
+
+            if (@event.Metadata != null)
+            {
+                document.MetadataType = @event.Metadata.GetType().AssemblyQualifiedName;
+                document.Metadata = JToken.FromObject(@event.Metadata);
+            }
+
+            return document;
+        }
+
+        private SnapshotDocument Serialize(object snapshot, object metadata, ulong version, string streamId)
+        {
+            var document = new SnapshotDocument
+            {
+                Partition = this.Partition,
+                StreamId = streamId,
+                Version = version,
+                BodyType = snapshot.GetType().AssemblyQualifiedName,
+                Body = JToken.FromObject(snapshot)
+            };
+
+            if (metadata != null)
+            {
+                document.Metadata = JToken.FromObject(metadata);
+                document.MetadataType = metadata.GetType().AssemblyQualifiedName;
+            }
+
+            return document;
+        }
+
+        private EventData Deserialize(EventDocument document)
+        {
+            object metadata = null;
+
+            if (!string.IsNullOrEmpty(document.MetadataType))
+                metadata = document.Metadata.ToObject(this.TypeCache.Resolve(document.MetadataType));
+
+            return new EventData(document.Body.ToObject(this.TypeCache.Resolve(document.BodyType)), metadata, document.Version);
+        }
+
+        private Snapshot Deserialize(SnapshotDocument document)
+        {
+            object metadata = null;
+
+            if (!string.IsNullOrEmpty(document.MetadataType))
+                metadata = document.Metadata.ToObject(this.TypeCache.Resolve(document.MetadataType));
+
+            return new Snapshot(document.Body.ToObject(this.TypeCache.Resolve(document.BodyType)), metadata, document.Version);
         }
     }
 }
