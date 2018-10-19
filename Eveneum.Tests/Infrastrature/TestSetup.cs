@@ -20,7 +20,7 @@ namespace Eveneum.Tests.Infrastrature
                         Content = strings()
                     }
                 })
-                .Select(x => new EventData((ulong)x.Version, x))
+                .Select(x => new EventData(x, GetMetadata(), (ulong)x.Version))
                 .ToArray();
         }
 

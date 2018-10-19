@@ -164,6 +164,18 @@ namespace Eveneum.Tests
                 Assert.AreEqual(JToken.FromObject(newEvent.Body), eventDocument.Body);
                 Assert.NotNull(eventDocument.ETag);
                 Assert.False(eventDocument.Deleted);
+
+                if(newEvent.Metadata == null)
+                {
+                    Assert.IsNull(eventDocument.MetadataType);
+                    Assert.IsNull(eventDocument.Metadata);
+                }
+                else
+                {
+                    Assert.AreEqual(newEvent.Metadata.GetType().AssemblyQualifiedName, eventDocument.MetadataType);
+                    Assert.NotNull(eventDocument.Metadata);
+                    Assert.AreEqual(JToken.FromObject(newEvent.Metadata), eventDocument.Metadata);
+                }
             }
         }
     }

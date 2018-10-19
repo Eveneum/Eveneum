@@ -2,15 +2,15 @@
 {
     public struct EventData
     {
-        public ulong Version;
         public object Body;
         public object Metadata;
+        public ulong Version;
 
-        public EventData(ulong version, object body, object metadata = null)
+        public EventData(object body, object metadata, ulong version)
         {
-            this.Version = version;
             this.Body = body;
             this.Metadata = metadata;
+            this.Version = version;
         }
     }
 }

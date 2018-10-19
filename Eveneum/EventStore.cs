@@ -82,7 +82,16 @@ namespace Eveneum
             while (query.HasMoreResults);
 
             var headerDocument = documents.First() as HeaderDocument;
-            var events = documents.OfType<EventDocument>().Select(x => x.Body.ToObject(this.TypeCache.Resolve(x.BodyType))).Reverse().ToArray();
+            var events = documents.OfType<EventDocument>().Select(x => 
+            {
+                object eventMetadata = null;
+
+                if (!string.IsNullOrEmpty(x.MetadataType))
+                    eventMetadata = x.Metadata.ToObject(this.TypeCache.Resolve(x.MetadataType));
+
+                return new EventData(x.Body.ToObject(this.TypeCache.Resolve(x.BodyType)), eventMetadata, x.Version);
+            }).Reverse().ToArray();
+            
             var snapshot = documents.OfType<SnapshotDocument>().Select(x =>
             {
                 object snapshotMetadata = null;
@@ -147,13 +156,23 @@ namespace Eveneum
             }
 
             var eventDocuments = (events ?? Enumerable.Empty<EventData>())
-                .Select(@event => new EventDocument
-                {
-                    Partition = this.Partition,
-                    StreamId = streamId,
-                    Version = @event.Version,
-                    BodyType = @event.Body.GetType().AssemblyQualifiedName,
-                    Body = JToken.FromObject(@event.Body)
+                .Select(@event => {
+                    var document = new EventDocument
+                    {
+                        Partition = this.Partition,
+                        StreamId = streamId,
+                        Version = @event.Version,
+                        BodyType = @event.Body.GetType().AssemblyQualifiedName,
+                        Body = JToken.FromObject(@event.Body)
+                    };
+
+                    if (@event.Metadata != null)
+                    {
+                        document.MetadataType = @event.Metadata.GetType().AssemblyQualifiedName;
+                        document.Metadata = JToken.FromObject(@event.Metadata);
+                    }
+
+                    return document;
                 });
 
             foreach (var eventDocument in eventDocuments)

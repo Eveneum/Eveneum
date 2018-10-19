@@ -3,6 +3,8 @@ using NUnit.Framework;
 using TechTalk.SpecFlow;
 using Eveneum.Tests.Infrastrature;
 using Newtonsoft.Json.Linq;
+using Eveneum.Documents;
+using System.Linq;
 
 namespace Eveneum.Tests
 {
@@ -97,9 +99,11 @@ namespace Eveneum.Tests
         }
 
         [Then(@"events from version (\d+) to (\d+) are returned")]
-        public void ThenEventsFromVersionToAreReturned(ulong fromVersion, ulong toVersion)
+        public async Task ThenEventsFromVersionToAreReturned(ulong fromVersion, ulong toVersion)
         {
             var stream = ScenarioContext.Current.GetStream();
+            var allDocuments = await CosmosSetup.QueryAllDocuments(this.Context.Client, this.Context.Database, this.Context.Collection);           
+            var eventDocuments = allDocuments.OfType<EventDocument>().Where(x => x.Partition == this.Context.Partition && x.StreamId == stream.Value.StreamId).ToDictionary(x => x.Version);
 
             Assert.IsTrue(stream.HasValue);
             Assert.IsNotEmpty(stream.Value.Events);
@@ -107,9 +111,14 @@ namespace Eveneum.Tests
 
             for(ulong version = fromVersion, index = 0; version <= toVersion; ++version, ++index)
             {
-                var @event = (SampleEvent)stream.Value.Events[index];
+                var @event = stream.Value.Events[index];
 
                 Assert.AreEqual(version, @event.Version);
+                Assert.IsTrue(eventDocuments.ContainsKey(version));
+
+                var eventDocument = eventDocuments[version];
+
+                Assert.AreEqual(eventDocument.Metadata, JToken.FromObject(@event.Metadata));
             }
         }
     }
