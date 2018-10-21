@@ -56,6 +56,30 @@ Scenario Outline: Reading stream with metadata and some events
 	Examples:
 		| partitioned     |
 		| partitioned     |
+		| non-partitioned |		
+
+Scenario Outline: Reading stream with no metadata and many events
+	Given an event store backed by <partitioned> collection
+	And an existing stream S with 1000 events
+	When I read stream S
+	Then the stream S in version 1000 is returned
+	And no snapshot is returned
+	And events from version 1 to 1000 are returned
+	Examples:
+		| partitioned     |
+		| partitioned     |
+		| non-partitioned |
+				
+Scenario Outline: Reading stream with metadata and many events
+	Given an event store backed by <partitioned> collection
+	And an existing stream S with metadata and 1000 events
+	When I read stream S
+	Then the stream S with metadata in version 1000 is returned
+	And no snapshot is returned
+	And events from version 1 to 1000 are returned
+	Examples:
+		| partitioned     |
+		| partitioned     |
 		| non-partitioned |
 		
 Scenario Outline: Reading stream with no metadata, some events and snapshot in the middle of the stream
@@ -169,9 +193,6 @@ Scenario Outline: Reading stream with metadata, some events and snapshots and th
 		| partitioned     |
 		| partitioned     |
 		| non-partitioned |
-
-
-
 		
 Scenario Outline: Reading stream with no metadata, some events and snapshot with metadata in the middle of the stream
 	Given an event store backed by <partitioned> collection

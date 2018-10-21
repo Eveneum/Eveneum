@@ -45,16 +45,13 @@ namespace Eveneum
             var sql = $"SELECT * FROM x WHERE x.{nameof(EveneumDocument.StreamId)} = '{streamId}' ORDER BY x.{nameof(EveneumDocument.SortOrder)} DESC";
             var query = this.Client.CreateDocumentQuery<Document>(this.DocumentCollectionUri, sql, new FeedOptions { PartitionKey = this.PartitionKey }).AsDocumentQuery();
 
-            var page = await query.ExecuteNextAsync<Document>(cancellationToken);
-
-            if (page.Count == 0)
-                return null;
-
             var documents = new List<EveneumDocument>();
             var finishLoading = false;
 
             do
             {
+                var page = await query.ExecuteNextAsync<Document>(cancellationToken);
+
                 foreach (var document in page)
                 {
                     var eveneumDoc = EveneumDocument.Parse(document);
@@ -76,10 +73,11 @@ namespace Eveneum
 
                 if (finishLoading)
                     break;
-
-                page = await query.ExecuteNextAsync<Document>(cancellationToken);
             }
             while (query.HasMoreResults);
+
+            if (documents.Count == 0)
+                return null;
 
             var headerDocument = documents.First() as HeaderDocument;
             var events = documents.OfType<EventDocument>().Select(this.Deserialize).Reverse().ToArray();
