@@ -9,10 +9,11 @@ using Newtonsoft.Json.Linq;
 using Eveneum.Documents;
 using System.Threading;
 using System.Collections.Concurrent;
+using Eveneum.Advanced;
 
 namespace Eveneum
 {
-    public class EventStore : IEventStore
+    public class EventStore : IEventStore, IAdvancedEventStore
     {
         public readonly DocumentClient Client;
         public readonly string Database;
@@ -20,7 +21,7 @@ namespace Eveneum
         public readonly string Partition;
         public readonly PartitionKey PartitionKey;
 
-        private readonly Uri DocumentCollectionUri;
+        internal readonly Uri DocumentCollectionUri;
 
         private readonly TypeCache TypeCache = new TypeCache();
 
@@ -223,6 +224,11 @@ namespace Eveneum
             await Task.WhenAll(tasks);
         }
 
+        public Task LoadAllEvents(Action<IReadOnlyCollection<EventData>> callback, CancellationToken cancellationToken = default)
+        {
+            return this.LoadChangeFeed(documents => callback(documents.OfType<EventDocument>().Select(Deserialize).ToList()), cancellationToken: cancellationToken);
+        }
+
         private async Task<HeaderDocument> ReadHeader(string streamId, CancellationToken cancellationToken = default)
         {
             try
@@ -234,6 +240,45 @@ namespace Eveneum
                 throw new StreamNotFoundException(streamId);
             }
         }
+
+        private async Task<IReadOnlyCollection<PartitionKeyRange>> GetPartitionKeyRanges()
+        {
+            string responseContinuation = null;
+            var partitionKeyRanges = new List<PartitionKeyRange>();
+
+            do
+            {
+                var response = await this.Client.ReadPartitionKeyRangeFeedAsync(this.DocumentCollectionUri, new FeedOptions { RequestContinuation = responseContinuation });
+
+                partitionKeyRanges.AddRange(response);
+                responseContinuation = response.ResponseContinuation;
+            }
+            while (responseContinuation != null);
+
+            return partitionKeyRanges;
+        }
+
+        private async Task LoadChangeFeed(Action<IEnumerable<EveneumDocument>> callback, string token = null, CancellationToken cancellationToken = default)
+        {
+            PartitionKeyRange partitionKeyRange = this.PartitionKey != null ? null : (await this.GetPartitionKeyRanges()).FirstOrDefault();
+
+            var changeFeed = this.Client.CreateDocumentChangeFeedQuery(this.DocumentCollectionUri,
+                new ChangeFeedOptions
+                {
+                    PartitionKeyRangeId = partitionKeyRange?.Id,
+                    PartitionKey = this.PartitionKey,
+                    RequestContinuation = token,
+                    StartFromBeginning = true
+                });
+
+            while (changeFeed.HasMoreResults)
+            {
+                var page = await changeFeed.ExecuteNextAsync<Document>(cancellationToken);
+
+                callback(page.Select(EveneumDocument.Parse));
+            }
+        }
+
 
         private EventDocument Serialize(EventData @event, string streamId)
         {
@@ -282,7 +327,12 @@ namespace Eveneum
             if (!string.IsNullOrEmpty(document.MetadataType))
                 metadata = document.Metadata.ToObject(this.TypeCache.Resolve(document.MetadataType));
 
-            return new EventData(document.Body.ToObject(this.TypeCache.Resolve(document.BodyType)), metadata, document.Version);
+            object body = null;
+
+            if (!string.IsNullOrEmpty(document.BodyType))
+                body = document.Body.ToObject(this.TypeCache.Resolve(document.BodyType));
+
+            return new EventData(body, metadata, document.Version);
         }
 
         private Snapshot Deserialize(SnapshotDocument document)

@@ -66,6 +66,11 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Advanced.feature.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Advanced.feature</DependentUpon>
+    </Compile>
     <Compile Include="AppendingToNonExistentStream.feature.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -127,6 +132,7 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>DeletingStream.feature</DependentUpon>
     </Compile>
+    <Compile Include="AdvancedSteps.cs" />
     <Compile Include="ReadingStreamSteps.cs" />
     <Compile Include="DeletingStreamWithNonExpectedVersion.feature.cs">
       <AutoGen>True</AutoGen>
@@ -163,6 +169,10 @@
     <Compile Include="WritingToStreamSteps.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="Advanced.feature">
+      <Generator>SpecFlowSingleFileGenerator</Generator>
+      <LastGenOutput>Advanced.feature.cs</LastGenOutput>
+    </None>
     <None Include="AppendingToNonExistentStream.feature">
       <Generator>SpecFlowSingleFileGenerator</Generator>
       <LastGenOutput>AppendingToNonExistentStream.feature.cs</LastGenOutput>

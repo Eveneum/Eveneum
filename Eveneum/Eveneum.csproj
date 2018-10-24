@@ -51,6 +51,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Advanced\IAdvancedEventStore.cs" />
     <Compile Include="DocumentQueryExtensions.cs" />
     <Compile Include="Documents\EveneumDocument.cs" />
     <Compile Include="Documents\EventDocument.cs" />
