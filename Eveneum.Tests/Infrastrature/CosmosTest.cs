@@ -31,7 +31,7 @@ namespace Eveneum.Tests.Infrastrature
             await CosmosSetup.GetClient().DeleteDocumentCollectionAsync(UriFactory.CreateDocumentCollectionUri(this.Database, this.Collection));
         }
 
-        internal async Task<IReadOnlyCollection<PartitionKeyRange>> GetPartitionKeyRanges(DocumentClient client)
+        internal async Task<IReadOnlyCollection<PartitionKeyRange>> GetPartitionKeyRanges(IDocumentClient client)
         {
             string responseContinuation = null;
             var partitionKeyRanges = new List<PartitionKeyRange>();
@@ -50,7 +50,7 @@ namespace Eveneum.Tests.Infrastrature
             return partitionKeyRanges;
         }
 
-        internal async Task<string> GetCurrentChangeFeedToken(DocumentClient client, string partition)
+        internal async Task<string> GetCurrentChangeFeedToken(IDocumentClient client, string partition)
         {
             PartitionKeyRange partitionKeyRange = partition == null ? (await this.GetPartitionKeyRanges(client)).FirstOrDefault() : null;
 
@@ -73,7 +73,7 @@ namespace Eveneum.Tests.Infrastrature
             return token;
         }
 
-        internal async Task<IReadOnlyCollection<EveneumDocument>> LoadChangeFeed(DocumentClient client, string partition, string token = null)
+        internal async Task<IReadOnlyCollection<EveneumDocument>> LoadChangeFeed(IDocumentClient client, string partition, string token = null)
         {
             var partitioned = partition != null;
 

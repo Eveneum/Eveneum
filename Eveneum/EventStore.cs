@@ -8,14 +8,15 @@ using Microsoft.Azure.Documents.Linq;
 using Newtonsoft.Json.Linq;
 using Eveneum.Documents;
 using System.Threading;
-using System.Collections.Concurrent;
 using Eveneum.Advanced;
+using Newtonsoft.Json;
+using System.Reflection;
 
 namespace Eveneum
 {
     public class EventStore : IEventStore, IAdvancedEventStore
     {
-        public readonly DocumentClient Client;
+        public readonly IDocumentClient Client;
         public readonly string Database;
         public readonly string Collection;
         public readonly string Partition;
@@ -23,9 +24,10 @@ namespace Eveneum
 
         internal readonly Uri DocumentCollectionUri;
 
+        private readonly JsonSerializer JsonSerializer;
         private readonly TypeCache TypeCache = new TypeCache();
 
-        public EventStore(DocumentClient client, string database, string collection, string partition = null)
+        public EventStore(IDocumentClient client, string database, string collection, string partition = null)
         {
             this.Client = client ?? throw new ArgumentNullException(nameof(client));
             this.Database = database ?? throw new ArgumentNullException(nameof(database));
@@ -34,6 +36,9 @@ namespace Eveneum
             this.PartitionKey = string.IsNullOrEmpty(this.Partition) ? null : new PartitionKey(this.Partition);
 
             this.DocumentCollectionUri = UriFactory.CreateDocumentCollectionUri(this.Database, this.Collection);
+
+            var serializerSettings = (JsonSerializerSettings)client.GetType().GetField("serializerSettings", BindingFlags.GetField | BindingFlags.Instance | BindingFlags.NonPublic).GetValue(this.Client);
+            this.JsonSerializer = serializerSettings != null ? JsonSerializer.Create(serializerSettings) : JsonSerializer.Create();
         }
 
         private Uri HeaderDocumentUri(string streamId) => UriFactory.CreateDocumentUri(this.Database, this.Collection, HeaderDocument.GenerateId(streamId));
@@ -87,7 +92,7 @@ namespace Eveneum
             object metadata = null;
 
             if (!string.IsNullOrEmpty(headerDocument.MetadataType))
-                metadata = headerDocument.Metadata.ToObject(this.TypeCache.Resolve(headerDocument.MetadataType));
+                metadata = headerDocument.Metadata.ToObject(this.TypeCache.Resolve(headerDocument.MetadataType), this.JsonSerializer);
 
             return new Stream(streamId, headerDocument.Version, metadata, events, snapshot);
         }
@@ -117,7 +122,7 @@ namespace Eveneum
 
             if (metadata != null)
             {
-                header.Metadata = JToken.FromObject(metadata);
+                header.Metadata = JToken.FromObject(metadata, this.JsonSerializer);
                 header.MetadataType = metadata.GetType().AssemblyQualifiedName;
             }
 
@@ -288,13 +293,13 @@ namespace Eveneum
                 StreamId = streamId,
                 Version = @event.Version,
                 BodyType = @event.Body.GetType().AssemblyQualifiedName,
-                Body = JToken.FromObject(@event.Body)
+                Body = JToken.FromObject(@event.Body, this.JsonSerializer)
             };
 
             if (@event.Metadata != null)
             {
                 document.MetadataType = @event.Metadata.GetType().AssemblyQualifiedName;
-                document.Metadata = JToken.FromObject(@event.Metadata);
+                document.Metadata = JToken.FromObject(@event.Metadata, this.JsonSerializer);
             }
 
             return document;
@@ -308,12 +313,12 @@ namespace Eveneum
                 StreamId = streamId,
                 Version = version,
                 BodyType = snapshot.GetType().AssemblyQualifiedName,
-                Body = JToken.FromObject(snapshot)
+                Body = JToken.FromObject(snapshot, this.JsonSerializer)
             };
 
             if (metadata != null)
             {
-                document.Metadata = JToken.FromObject(metadata);
+                document.Metadata = JToken.FromObject(metadata, this.JsonSerializer);
                 document.MetadataType = metadata.GetType().AssemblyQualifiedName;
             }
 
@@ -325,12 +330,12 @@ namespace Eveneum
             object metadata = null;
 
             if (!string.IsNullOrEmpty(document.MetadataType))
-                metadata = document.Metadata.ToObject(this.TypeCache.Resolve(document.MetadataType));
+                metadata = document.Metadata.ToObject(this.TypeCache.Resolve(document.MetadataType), this.JsonSerializer);
 
             object body = null;
 
             if (!string.IsNullOrEmpty(document.BodyType))
-                body = document.Body.ToObject(this.TypeCache.Resolve(document.BodyType));
+                body = document.Body.ToObject(this.TypeCache.Resolve(document.BodyType), this.JsonSerializer);
 
             return new EventData(body, metadata, document.Version);
         }
@@ -340,9 +345,9 @@ namespace Eveneum
             object metadata = null;
 
             if (!string.IsNullOrEmpty(document.MetadataType))
-                metadata = document.Metadata.ToObject(this.TypeCache.Resolve(document.MetadataType));
+                metadata = document.Metadata.ToObject(this.TypeCache.Resolve(document.MetadataType), this.JsonSerializer);
 
-            return new Snapshot(document.Body.ToObject(this.TypeCache.Resolve(document.BodyType)), metadata, document.Version);
+            return new Snapshot(document.Body.ToObject(this.TypeCache.Resolve(document.BodyType), this.JsonSerializer), metadata, document.Version);
         }
     }
 }

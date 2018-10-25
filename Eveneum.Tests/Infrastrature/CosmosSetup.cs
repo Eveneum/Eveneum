@@ -11,7 +11,7 @@ namespace Eveneum.Tests.Infrastrature
 {
     static class CosmosSetup
     {
-        public static DocumentClient GetClient()
+        public static IDocumentClient GetClient()
         {
             var endpoint = Environment.GetEnvironmentVariable("CosmosDbEmulator.Endpoint", EnvironmentVariableTarget.User) ?? "https://localhost:8081";
             var key = Environment.GetEnvironmentVariable("CosmosDbEmulator.Key", EnvironmentVariableTarget.User) ?? "C2y6yDjf5/R+ob0N8A7Cgv30VRDJIWEHLM+4QDU5DE2nQ9nDuVTqobD4b8mGGyPMbIZnqyMsEcaGQy67XIw/Jw==";
@@ -19,7 +19,7 @@ namespace Eveneum.Tests.Infrastrature
             return new DocumentClient(new Uri(endpoint), key);
         }
 
-        public static async Task<DocumentClient> GetClient(string database, string collection = null, bool partitioned = false)
+        public static async Task<IDocumentClient> GetClient(string database, string collection = null, bool partitioned = false)
         {
             var client = GetClient();
 
@@ -38,14 +38,14 @@ namespace Eveneum.Tests.Infrastrature
             return client;
         }
 
-        public static Task<List<EveneumDocument>> QueryAllDocuments(DocumentClient client, string database, string collection)
+        public static Task<List<EveneumDocument>> QueryAllDocuments(IDocumentClient client, string database, string collection)
             => Query<EveneumDocument>(client, database, collection, "SELECT * FROM x", new FeedOptions { EnableCrossPartitionQuery = true });
 
-        public static Task<List<TDocument>> QueryAllDocumentsInStream<TDocument>(DocumentClient client, string database, string collection, PartitionKey partitionKey, string streamId)
+        public static Task<List<TDocument>> QueryAllDocumentsInStream<TDocument>(IDocumentClient client, string database, string collection, PartitionKey partitionKey, string streamId)
             where TDocument : EveneumDocument
             => Query<TDocument>(client, database, collection, $"SELECT * FROM x WHERE x.{nameof(EveneumDocument.StreamId)} = '{streamId}'", new FeedOptions { PartitionKey = partitionKey });
 
-        private static async Task<List<TDocument>> Query<TDocument>(DocumentClient client, string database, string collection, string query, FeedOptions feedOptions)
+        private static async Task<List<TDocument>> Query<TDocument>(IDocumentClient client, string database, string collection, string query, FeedOptions feedOptions)
             where TDocument : EveneumDocument
         {
             var documentQuery = client.CreateDocumentQuery<Document>(UriFactory.CreateDocumentCollectionUri(database, collection), query, feedOptions).AsDocumentQuery();

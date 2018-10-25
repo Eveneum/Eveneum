@@ -10,7 +10,7 @@ namespace Eveneum.Tests.Infrastrature
         public string Database { get; private set; }
         public string Collection { get; private set; }
 
-        public DocumentClient Client { get; private set; }
+        public IDocumentClient Client { get; private set; }
         public IEventStore EventStore { get; private set; }
         public bool Partitioned { get; set; }
         public string Partition { get; set; }
