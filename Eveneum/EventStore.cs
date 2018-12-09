@@ -273,7 +273,8 @@ namespace Eveneum
                     PartitionKeyRangeId = partitionKeyRange?.Id,
                     PartitionKey = this.PartitionKey,
                     RequestContinuation = token,
-                    StartFromBeginning = true
+                    StartFromBeginning = true,
+                    MaxItemCount = 10000
                 });
 
             while (changeFeed.HasMoreResults)
