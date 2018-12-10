@@ -229,7 +229,7 @@ namespace Eveneum
             await Task.WhenAll(tasks);
         }
 
-        public Task LoadAllEvents(Action<IReadOnlyCollection<EventData>> callback, CancellationToken cancellationToken = default)
+        public Task LoadAllEvents(Func<IReadOnlyCollection<EventData>, Task> callback, CancellationToken cancellationToken = default)
         {
             return this.LoadChangeFeed(documents => callback(documents.OfType<EventDocument>().Select(Deserialize).ToList()), cancellationToken: cancellationToken);
         }
@@ -263,7 +263,7 @@ namespace Eveneum
             return partitionKeyRanges;
         }
 
-        private async Task LoadChangeFeed(Action<IEnumerable<EveneumDocument>> callback, string token = null, CancellationToken cancellationToken = default)
+        private async Task LoadChangeFeed(Func<IEnumerable<EveneumDocument>, Task> callback, string token = null, CancellationToken cancellationToken = default)
         {
             PartitionKeyRange partitionKeyRange = this.PartitionKey != null ? null : (await this.GetPartitionKeyRanges()).FirstOrDefault();
 
@@ -277,11 +277,16 @@ namespace Eveneum
                     MaxItemCount = 10000
                 });
 
+            Task callbackTask = null;
+
             while (changeFeed.HasMoreResults)
             {
                 var page = await changeFeed.ExecuteNextAsync<Document>(cancellationToken);
 
-                callback(page.Select(EveneumDocument.Parse));
+                if (callbackTask != null)
+                    await callbackTask;
+
+                callbackTask = callback(page.Select(EveneumDocument.Parse));
             }
         }
 

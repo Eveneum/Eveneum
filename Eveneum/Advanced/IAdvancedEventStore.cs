@@ -7,6 +7,6 @@ namespace Eveneum.Advanced
 {
     public interface IAdvancedEventStore
     {
-        Task LoadAllEvents(Action<IReadOnlyCollection<EventData>> callback, CancellationToken cancellationToken = default);
+        Task LoadAllEvents(Func<IReadOnlyCollection<EventData>, Task> callback, CancellationToken cancellationToken = default);
     }
 }

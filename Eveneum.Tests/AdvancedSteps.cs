@@ -22,7 +22,7 @@ namespace Eveneum.Tests
         {
             var events = new List<EventData>();
 
-            await (this.Context.EventStore as IAdvancedEventStore).LoadAllEvents(events.AddRange);
+            await (this.Context.EventStore as IAdvancedEventStore).LoadAllEvents(e => { events.AddRange(e); return Task.CompletedTask; });
 
             ScenarioContext.Current.Set(events, "LoadAllEvents");
         }
