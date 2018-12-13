@@ -39,6 +39,14 @@ namespace Eveneum.Tests
             Assert.IsTrue(headerDocument.Deleted);
         }
 
+        [Then(@"the header is hard-deleted")]
+        public async Task ThenTheHeaderIsHard_Deleted()
+        {
+            var documents = await CosmosSetup.QueryAllDocumentsInStream<HeaderDocument>(this.Context.Client, this.Context.Database, this.Context.Collection, this.Context.PartitionKey, ScenarioContext.Current.GetStreamId());
+
+            Assert.IsEmpty(documents);
+        }
+
         [Then(@"all events are soft-deleted")]
         public async Task ThenAllEventsAreSoft_Deleted()
         {
@@ -47,6 +55,15 @@ namespace Eveneum.Tests
 
             foreach (var eventDocument in eventDocuments)
                 Assert.IsTrue(eventDocument.Deleted);
+        }
+
+        [Then(@"all events are hard-deleted")]
+        public async Task ThenAllEventsAreHard_Deleted()
+        {
+            var streamId = ScenarioContext.Current.GetStreamId();
+            var eventDocuments = await CosmosSetup.QueryAllDocumentsInStream<EventDocument>(this.Context.Client, this.Context.Database, this.Context.Collection, this.Context.PartitionKey, streamId);
+
+            Assert.IsEmpty(eventDocuments);
         }
 
         [Then(@"all snapshots are soft-deleted")]
@@ -59,6 +76,15 @@ namespace Eveneum.Tests
                 Assert.IsTrue(snapshotDocument.Deleted);
         }
 
+        [Then(@"all snapshots are hard-deleted")]
+        public async Task ThenAllSnapshotsAreHard_Deleted()
+        {
+            var streamId = ScenarioContext.Current.GetStreamId();
+            var snapshotDocuments = await CosmosSetup.QueryAllDocumentsInStream<SnapshotDocument>(this.Context.Client, this.Context.Database, this.Context.Collection, this.Context.PartitionKey, streamId);
+
+            Assert.IsEmpty(snapshotDocuments);
+        }
+
         [Then(@"stream ([^\s-]) is not soft-deleted")]
         public async Task ThenStreamIsNotSoft_Deleted(string streamId)
         {
@@ -66,6 +92,14 @@ namespace Eveneum.Tests
 
             foreach (var document in documents)
                 Assert.IsFalse(document.Deleted);
+        }
+
+        [Then(@"stream ([^\s-]) is not hard-deleted")]
+        public async Task ThenStreamIsNotHard_Deleted(string streamId)
+        {
+            var documents = await CosmosSetup.QueryAllDocumentsInStream<EveneumDocument>(this.Context.Client, this.Context.Database, this.Context.Collection, this.Context.PartitionKey, streamId);
+
+            Assert.IsNotEmpty(documents);
         }
     }
 }

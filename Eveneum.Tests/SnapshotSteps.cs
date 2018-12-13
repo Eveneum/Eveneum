@@ -109,8 +109,18 @@ namespace Eveneum.Tests
             var currentDocuments = await CosmosSetup.QueryAllDocumentsInStream<SnapshotDocument>(this.Context.Client, this.Context.Database, this.Context.Collection, this.Context.PartitionKey, streamId);
             var olderSnapshotDocuments = currentDocuments.Where(x => x.Version < version);
 
-            foreach(var olderSnapshotDocument in olderSnapshotDocuments)
+            foreach (var olderSnapshotDocument in olderSnapshotDocuments)
                 Assert.IsTrue(olderSnapshotDocument.Deleted);
+        }
+
+        [Then(@"the snapshots older than (\d+) are hard-deleted")]
+        public async Task ThenTheSnapshotsOlderThanAreHard_Deleted(ulong version)
+        {
+            var streamId = ScenarioContext.Current.GetStreamId();
+            var currentDocuments = await CosmosSetup.QueryAllDocumentsInStream<SnapshotDocument>(this.Context.Client, this.Context.Database, this.Context.Collection, this.Context.PartitionKey, streamId);
+            var olderSnapshotDocuments = currentDocuments.Where(x => x.Version < version);
+
+            Assert.IsEmpty(olderSnapshotDocuments);
         }
 
         [Then(@"snapshots (\d+) and newer are not soft-deleted")]
@@ -122,6 +132,16 @@ namespace Eveneum.Tests
 
             foreach (var newerSnapshotDocument in newerSnapshotDocuments)
                 Assert.IsFalse(newerSnapshotDocument.Deleted);
+        }
+
+        [Then(@"snapshots (\d+) and newer are not hard-deleted")]
+        public async Task ThenSnapshotsAndNewerAreNotHard_Deleted(ulong version)
+        {
+            var streamId = ScenarioContext.Current.GetStreamId();
+            var currentDocuments = await CosmosSetup.QueryAllDocumentsInStream<SnapshotDocument>(this.Context.Client, this.Context.Database, this.Context.Collection, this.Context.PartitionKey, streamId);
+            var newerSnapshotDocuments = currentDocuments.Where(x => x.Version >= version);
+
+            Assert.IsNotEmpty(newerSnapshotDocuments);
         }
     }
 }

@@ -22,6 +22,8 @@ namespace Eveneum
         public readonly string Partition;
         public readonly PartitionKey PartitionKey;
 
+        public DeleteMode DeleteMode { get; set; } = DeleteMode.SoftDelete;
+
         internal readonly Uri DocumentCollectionUri;
 
         private readonly JsonSerializer JsonSerializer;
@@ -176,13 +178,19 @@ namespace Eveneum
             {
                 var page = await query.ExecuteNextAsync<Document>(cancellationToken);
 
-                foreach (var document in page)
+                var tasks = page.Select(document =>
                 {
-                    var doc = EveneumDocument.Parse(document);
-                    doc.Deleted = true;
+                    if (this.DeleteMode == DeleteMode.SoftDelete)
+                    {
+                        var doc = EveneumDocument.Parse(document);
+                        doc.Deleted = true;
+                        return this.Client.UpsertDocumentAsync(this.DocumentCollectionUri, doc, new RequestOptions { PartitionKey = this.PartitionKey }, disableAutomaticIdGeneration: true, cancellationToken);
+                    }
+                    else
+                        return this.Client.DeleteDocumentAsync(document.SelfLink, new RequestOptions { PartitionKey = this.PartitionKey }, cancellationToken);
+                });
 
-                    await this.Client.UpsertDocumentAsync(this.DocumentCollectionUri, doc, new RequestOptions { PartitionKey = this.PartitionKey }, disableAutomaticIdGeneration: true, cancellationToken);
-                }
+                await Task.WhenAll(tasks);
             }
         }
 
@@ -211,22 +219,24 @@ namespace Eveneum
                 .Where(x => x.Version < olderThanVersion)
                 .AsDocumentQuery();
 
-            var documents = new List<SnapshotDocument>();
-
             while(query.HasMoreResults)
             {
-                var page = await query.ExecuteNextAsync<SnapshotDocument>(cancellationToken);
-                documents.AddRange(page);
+                var page = await query.ExecuteNextAsync<Document>(cancellationToken);
+
+                var tasks = page.Select(document =>
+                {
+                    if (this.DeleteMode == DeleteMode.SoftDelete)
+                    {
+                        var doc = EveneumDocument.Parse(document);
+                        doc.Deleted = true;
+                        return this.Client.UpsertDocumentAsync(this.DocumentCollectionUri, doc, new RequestOptions { PartitionKey = this.PartitionKey }, disableAutomaticIdGeneration: true, cancellationToken);
+                    }
+                    else
+                        return this.Client.DeleteDocumentAsync(UriFactory.CreateDocumentUri(this.Database, this.Collection, document.Id), new RequestOptions { PartitionKey = this.PartitionKey }, cancellationToken);
+                });
+
+                await Task.WhenAll(tasks);
             }
-
-            var tasks = documents.Select(async document =>
-            {
-                document.Deleted = true;
-                
-                await this.Client.UpsertDocumentAsync(this.DocumentCollectionUri, document,new RequestOptions { PartitionKey = this.PartitionKey }, disableAutomaticIdGeneration: true, cancellationToken);
-            });
-
-            await Task.WhenAll(tasks);
         }
 
         public Task LoadAllEvents(Func<IReadOnlyCollection<EventData>, Task> callback, CancellationToken cancellationToken = default)
