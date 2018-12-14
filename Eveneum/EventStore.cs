@@ -171,7 +171,6 @@ namespace Eveneum
 
             var query = this.Client.CreateDocumentQuery<EveneumDocument>(this.DocumentCollectionUri, new FeedOptions { PartitionKey = this.PartitionKey })
                 .Where(x => x.StreamId == streamId)
-                .Where(x => !x.Deleted)
                 .AsDocumentQuery();
 
             while (query.HasMoreResults)
