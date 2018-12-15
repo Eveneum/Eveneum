@@ -177,19 +177,17 @@ namespace Eveneum
             {
                 var page = await query.ExecuteNextAsync<Document>(cancellationToken);
 
-                var tasks = page.Select(document =>
+                foreach(var document in page)
                 {
                     if (this.DeleteMode == DeleteMode.SoftDelete)
                     {
                         var doc = EveneumDocument.Parse(document);
                         doc.Deleted = true;
-                        return this.Client.UpsertDocumentAsync(this.DocumentCollectionUri, doc, new RequestOptions { PartitionKey = this.PartitionKey }, disableAutomaticIdGeneration: true, cancellationToken);
+                        await this.Client.UpsertDocumentAsync(this.DocumentCollectionUri, doc, new RequestOptions { PartitionKey = this.PartitionKey }, disableAutomaticIdGeneration: true, cancellationToken);
                     }
                     else
-                        return this.Client.DeleteDocumentAsync(document.SelfLink, new RequestOptions { PartitionKey = this.PartitionKey }, cancellationToken);
-                });
-
-                await Task.WhenAll(tasks);
+                        await this.Client.DeleteDocumentAsync(document.SelfLink, new RequestOptions { PartitionKey = this.PartitionKey }, cancellationToken);
+                }
             }
         }
 
@@ -222,19 +220,17 @@ namespace Eveneum
             {
                 var page = await query.ExecuteNextAsync<Document>(cancellationToken);
 
-                var tasks = page.Select(document =>
+                foreach(var document in page)
                 {
                     if (this.DeleteMode == DeleteMode.SoftDelete)
                     {
                         var doc = EveneumDocument.Parse(document);
                         doc.Deleted = true;
-                        return this.Client.UpsertDocumentAsync(this.DocumentCollectionUri, doc, new RequestOptions { PartitionKey = this.PartitionKey }, disableAutomaticIdGeneration: true, cancellationToken);
+                        await this.Client.UpsertDocumentAsync(this.DocumentCollectionUri, doc, new RequestOptions { PartitionKey = this.PartitionKey }, disableAutomaticIdGeneration: true, cancellationToken);
                     }
                     else
-                        return this.Client.DeleteDocumentAsync(UriFactory.CreateDocumentUri(this.Database, this.Collection, document.Id), new RequestOptions { PartitionKey = this.PartitionKey }, cancellationToken);
-                });
-
-                await Task.WhenAll(tasks);
+                        await this.Client.DeleteDocumentAsync(UriFactory.CreateDocumentUri(this.Database, this.Collection, document.Id), new RequestOptions { PartitionKey = this.PartitionKey }, cancellationToken);
+                }
             }
         }
 
