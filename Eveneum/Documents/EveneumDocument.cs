@@ -44,23 +44,26 @@ namespace Eveneum.Documents
             }
         }
 
-        public static EveneumDocument Parse(Document document)
+        public static EveneumDocument Parse(Document document, JsonSerializerSettings jsonSerializerSettings)
         {
             if (document == null)
                 throw new ArgumentNullException(nameof(document));
+
+            if (jsonSerializerSettings == null)
+                throw new ArgumentNullException(nameof(jsonSerializerSettings));
 
             var documentType = document.GetPropertyValue<DocumentType>(nameof(DocumentType));
 
             switch (documentType)
             {
                 case DocumentType.Header:
-                    return JsonConvert.DeserializeObject<HeaderDocument>(document.ToString());
+                    return JsonConvert.DeserializeObject<HeaderDocument>(document.ToString(), jsonSerializerSettings);
 
                 case DocumentType.Snapshot:
-                    return JsonConvert.DeserializeObject<SnapshotDocument>(document.ToString());
+                    return JsonConvert.DeserializeObject<SnapshotDocument>(document.ToString(), jsonSerializerSettings);
                     
                 case DocumentType.Event:
-                    return JsonConvert.DeserializeObject<EventDocument>(document.ToString());
+                    return JsonConvert.DeserializeObject<EventDocument>(document.ToString(), jsonSerializerSettings);
 
                 default:
                     throw new NotSupportedException($"Cannot parse document of type '{document.GetType().AssemblyQualifiedName}' with DocumentType '{document}'.");

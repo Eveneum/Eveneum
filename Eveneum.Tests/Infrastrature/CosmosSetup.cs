@@ -6,6 +6,7 @@ using Eveneum.Documents;
 using Microsoft.Azure.Documents;
 using Microsoft.Azure.Documents.Client;
 using Microsoft.Azure.Documents.Linq;
+using Newtonsoft.Json;
 
 namespace Eveneum.Tests.Infrastrature
 {
@@ -55,7 +56,7 @@ namespace Eveneum.Tests.Infrastrature
             do
             {
                 var page = await documentQuery.ExecuteNextAsync<Document>();
-                documents.AddRange(page.Select(EveneumDocument.Parse).OfType<TDocument>());
+                documents.AddRange(page.Select(x => EveneumDocument.Parse(x, new JsonSerializerSettings())).OfType<TDocument>());
             }
             while (documentQuery.HasMoreResults);
 

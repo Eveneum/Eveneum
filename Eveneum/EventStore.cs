@@ -27,6 +27,7 @@ namespace Eveneum
         internal readonly Uri DocumentCollectionUri;
 
         private readonly JsonSerializer JsonSerializer;
+        private readonly JsonSerializerSettings JsonSerializerSettings;
         private readonly TypeCache TypeCache = new TypeCache();
 
         public EventStore(IDocumentClient client, string database, string collection, string partition = null)
@@ -39,8 +40,12 @@ namespace Eveneum
 
             this.DocumentCollectionUri = UriFactory.CreateDocumentCollectionUri(this.Database, this.Collection);
 
-            var serializerSettings = (JsonSerializerSettings)client.GetType().GetField("serializerSettings", BindingFlags.GetField | BindingFlags.Instance | BindingFlags.NonPublic).GetValue(this.Client);
-            this.JsonSerializer = serializerSettings != null ? JsonSerializer.Create(serializerSettings) : JsonSerializer.Create();
+            this.JsonSerializerSettings = 
+                (JsonSerializerSettings)client.GetType().GetField("serializerSettings", BindingFlags.GetField | BindingFlags.Instance | BindingFlags.NonPublic).GetValue(this.Client)
+                ?? JsonConvert.DefaultSettings?.Invoke()
+                ?? new JsonSerializerSettings();
+
+            this.JsonSerializer = JsonSerializer.Create(this.JsonSerializerSettings);
         }
 
         private Uri HeaderDocumentUri(string streamId) => UriFactory.CreateDocumentUri(this.Database, this.Collection, HeaderDocument.GenerateId(streamId));
@@ -62,7 +67,7 @@ namespace Eveneum
 
                 foreach (var document in page)
                 {
-                    var eveneumDoc = EveneumDocument.Parse(document);
+                    var eveneumDoc = EveneumDocument.Parse(document, this.JsonSerializerSettings);
 
                     if (eveneumDoc is HeaderDocument && eveneumDoc.Deleted)
                         throw new StreamNotFoundException(streamId);
@@ -181,7 +186,7 @@ namespace Eveneum
                 {
                     if (this.DeleteMode == DeleteMode.SoftDelete)
                     {
-                        var doc = EveneumDocument.Parse(document);
+                        var doc = EveneumDocument.Parse(document, this.JsonSerializerSettings);
                         doc.Deleted = true;
                         await this.Client.UpsertDocumentAsync(this.DocumentCollectionUri, doc, new RequestOptions { PartitionKey = this.PartitionKey }, disableAutomaticIdGeneration: true, cancellationToken);
                     }
@@ -224,7 +229,7 @@ namespace Eveneum
                 {
                     if (this.DeleteMode == DeleteMode.SoftDelete)
                     {
-                        var doc = EveneumDocument.Parse(document);
+                        var doc = EveneumDocument.Parse(document, this.JsonSerializerSettings);
                         doc.Deleted = true;
                         await this.Client.UpsertDocumentAsync(this.DocumentCollectionUri, doc, new RequestOptions { PartitionKey = this.PartitionKey }, disableAutomaticIdGeneration: true, cancellationToken);
                     }
@@ -279,7 +284,7 @@ namespace Eveneum
                     PartitionKey = this.PartitionKey,
                     RequestContinuation = token,
                     StartFromBeginning = true,
-                    MaxItemCount = 10000
+                    MaxItemCount = 10000,
                 });
 
             Task callbackTask = null;
@@ -291,7 +296,7 @@ namespace Eveneum
                 if (callbackTask != null)
                     await callbackTask;
 
-                callbackTask = callback(page.Select(EveneumDocument.Parse));
+                callbackTask = callback(page.Select(x => EveneumDocument.Parse(x, this.JsonSerializerSettings)));
             }
         }
 

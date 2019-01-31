@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Eveneum.Documents;
 using Microsoft.Azure.Documents;
 using Microsoft.Azure.Documents.Client;
+using Newtonsoft.Json;
 using NUnit.Framework;
 
 namespace Eveneum.Tests.Infrastrature
@@ -86,7 +87,7 @@ namespace Eveneum.Tests.Infrastrature
                     RequestContinuation = token
                 });
 
-            return await changeFeed.All();
+            return await changeFeed.All(new JsonSerializerSettings());
         }
     }
 }
