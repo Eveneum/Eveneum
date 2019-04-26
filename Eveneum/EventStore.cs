@@ -343,17 +343,29 @@ namespace Eveneum
 
         private EventData Deserialize(EventDocument document)
         {
-            object metadata = null;
-
-            if (!string.IsNullOrEmpty(document.MetadataType))
-                metadata = document.Metadata.ToObject(this.TypeCache.Resolve(document.MetadataType), this.JsonSerializer);
-
-            object body = null;
-
-            if (!string.IsNullOrEmpty(document.BodyType))
-                body = document.Body.ToObject(this.TypeCache.Resolve(document.BodyType), this.JsonSerializer);
+            object metadata = DeserializeObject(document.MetadataType, document.Metadata);
+            object body = DeserializeObject(document.BodyType, document.Body);
 
             return new EventData(body, metadata, document.Version);
+        }
+        
+        private object DeserializeObject(string typeName, JToken data)
+        {
+            if (string.IsNullOrEmpty(typeName))
+                return null;
+
+            var type = this.TypeCache.Resolve(typeName);
+            if (type == null)
+                throw new TypeNotFoundException(typeName);
+
+            try
+            {
+                return data.ToObject(type, this.JsonSerializer);
+            }
+            catch (Exception exc)
+            {
+                throw new DeserializationException(typeName, data.ToString(), exc);
+            }
         }
 
         private Snapshot Deserialize(SnapshotDocument document)

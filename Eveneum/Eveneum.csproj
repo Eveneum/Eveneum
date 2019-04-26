@@ -61,6 +61,8 @@
     <Compile Include="EventData.cs" />
     <Compile Include="EventStore.cs" />
     <Compile Include="Exception\StreamAlreadyExistsException.cs" />
+    <Compile Include="Exception\DeserializationException.cs" />
+    <Compile Include="Exception\TypeNotFoundException.cs" />
     <Compile Include="IEventStore.cs" />
     <Compile Include="Exception\StreamNotFoundException.cs" />
     <Compile Include="Exception\OptimisticConcurrencyException.cs" />
