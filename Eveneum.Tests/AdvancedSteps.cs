@@ -27,6 +27,16 @@ namespace Eveneum.Tests
             ScenarioContext.Current.Set(events, "LoadAllEvents");
         }
 
+        [When(@"I load events using query (.*)")]
+        public async Task WhenIQueryEventsUsing(string query)
+        {
+            var events = new List<EventData>();
+
+            await(this.Context.EventStore as IAdvancedEventStore).LoadEvents(query, e => { events.AddRange(e); return Task.CompletedTask; });
+
+            ScenarioContext.Current.Set(events, "LoadAllEvents");
+        }
+
         [Then(@"all (\d+) events are loaded")]
         public void ThenAllEventsAreLoaded(ulong events)
         {

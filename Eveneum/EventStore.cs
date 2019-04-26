@@ -244,6 +244,19 @@ namespace Eveneum
             return this.LoadChangeFeed(documents => callback(documents.OfType<EventDocument>().Select(Deserialize).ToList()), cancellationToken: cancellationToken);
         }
 
+        public async Task LoadEvents(string sql, Func<IReadOnlyCollection<EventData>, Task> callback, CancellationToken cancellationToken = default)
+        {
+            var query = this.Client.CreateDocumentQuery<Document>(this.DocumentCollectionUri, sql, new FeedOptions { PartitionKey = this.PartitionKey }).AsDocumentQuery();
+
+            do
+            {
+                var page = await query.ExecuteNextAsync<Document>(cancellationToken);
+
+                await callback(page.Select(x => EveneumDocument.Parse(x, this.JsonSerializerSettings)).Where(x => !x.Deleted).OfType<EventDocument>().Select(Deserialize).ToList());
+            }
+            while (query.HasMoreResults);
+        }
+
         private async Task<HeaderDocument> ReadHeader(string streamId, CancellationToken cancellationToken = default)
         {
             try
