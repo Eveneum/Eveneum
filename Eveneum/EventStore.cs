@@ -359,7 +359,7 @@ namespace Eveneum
             object metadata = DeserializeObject(document.MetadataType, document.Metadata);
             object body = DeserializeObject(document.BodyType, document.Body);
 
-            return new EventData(body, metadata, document.Version);
+            return new EventData(document.StreamId, body, metadata, document.Version);
         }
         
         private object DeserializeObject(string typeName, JToken data)
