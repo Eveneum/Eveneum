@@ -7,6 +7,7 @@ namespace Eveneum.Tests.Infrastrature
     {
         public static EventData[] GetEvents(int count = 5, int startVersion = 1)
         {
+            var streamId = Gen.Random.Text.Words()();
             var numbers = Gen.Random.Numbers.Decimals();
             var strings = Gen.Random.Text.VeryLong();
 
@@ -20,7 +21,7 @@ namespace Eveneum.Tests.Infrastrature
                         Content = strings()
                     }
                 })
-                .Select(x => new EventData(x, GetMetadata(), (ulong)x.Version))
+                .Select(x => new EventData(streamId, x, GetMetadata(), (ulong)x.Version))
                 .ToArray();
         }
 
