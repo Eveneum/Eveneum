@@ -56,7 +56,7 @@ namespace Eveneum
                 throw new ArgumentNullException(nameof(streamId));
 
             var sql = $"SELECT * FROM x WHERE x.{nameof(EveneumDocument.StreamId)} = '{streamId}' ORDER BY x.{nameof(EveneumDocument.SortOrder)} DESC";
-            var query = this.Client.CreateDocumentQuery<Document>(this.DocumentCollectionUri, sql, new FeedOptions { PartitionKey = this.PartitionKey }).AsDocumentQuery();
+            var query = this.Client.CreateDocumentQuery<Document>(this.DocumentCollectionUri, sql, new FeedOptions { PartitionKey = this.PartitionKey, MaxItemCount = -1 }).AsDocumentQuery();
 
             var documents = new List<EveneumDocument>();
             var finishLoading = false;
@@ -174,7 +174,7 @@ namespace Eveneum
 
             string etag = existingHeader.ETag;
 
-            var query = this.Client.CreateDocumentQuery<EveneumDocument>(this.DocumentCollectionUri, new FeedOptions { PartitionKey = this.PartitionKey })
+            var query = this.Client.CreateDocumentQuery<EveneumDocument>(this.DocumentCollectionUri, new FeedOptions { PartitionKey = this.PartitionKey, MaxItemCount = -1 })
                 .Where(x => x.StreamId == streamId)
                 .AsDocumentQuery();
 
@@ -215,7 +215,7 @@ namespace Eveneum
         {
             await this.ReadHeader(streamId, cancellationToken);
 
-            var query = this.Client.CreateDocumentQuery<SnapshotDocument>(this.DocumentCollectionUri, new FeedOptions { PartitionKey = this.PartitionKey })
+            var query = this.Client.CreateDocumentQuery<SnapshotDocument>(this.DocumentCollectionUri, new FeedOptions { PartitionKey = this.PartitionKey, MaxItemCount = -1 })
                 .Where(x => x.StreamId == streamId)
                 .Where(x => x.DocumentType == DocumentType.Snapshot)
                 .Where(x => x.Version < olderThanVersion)
@@ -246,7 +246,7 @@ namespace Eveneum
 
         public async Task LoadEvents(string sql, Func<IReadOnlyCollection<EventData>, Task> callback, CancellationToken cancellationToken = default)
         {
-            var query = this.Client.CreateDocumentQuery<Document>(this.DocumentCollectionUri, sql, new FeedOptions { PartitionKey = this.PartitionKey }).AsDocumentQuery();
+            var query = this.Client.CreateDocumentQuery<Document>(this.DocumentCollectionUri, sql, new FeedOptions { PartitionKey = this.PartitionKey, MaxItemCount = -1 }).AsDocumentQuery();
 
             do
             {
@@ -276,7 +276,7 @@ namespace Eveneum
 
             do
             {
-                var response = await this.Client.ReadPartitionKeyRangeFeedAsync(this.DocumentCollectionUri, new FeedOptions { RequestContinuation = responseContinuation });
+                var response = await this.Client.ReadPartitionKeyRangeFeedAsync(this.DocumentCollectionUri, new FeedOptions { RequestContinuation = responseContinuation, MaxItemCount = -1 });
 
                 partitionKeyRanges.AddRange(response);
                 responseContinuation = response.ResponseContinuation;
