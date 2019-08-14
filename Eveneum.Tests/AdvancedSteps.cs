@@ -22,7 +22,7 @@ namespace Eveneum.Tests
         {
             var events = new List<EventData>();
 
-            await (this.Context.EventStore as IAdvancedEventStore).LoadAllEvents(e => { events.AddRange(e); return Task.CompletedTask; });
+            await (this.Context.EventStore as IAdvancedEventStore).LoadAllEvents(e => { events.AddRange(e); return Task.FromResult(true); });
 
             ScenarioContext.Current.Set(events, "LoadAllEvents");
         }
@@ -32,7 +32,7 @@ namespace Eveneum.Tests
         {
             var events = new List<EventData>();
 
-            await(this.Context.EventStore as IAdvancedEventStore).LoadEvents(query, e => { events.AddRange(e); return Task.CompletedTask; });
+            await(this.Context.EventStore as IAdvancedEventStore).LoadEvents(query, e => { events.AddRange(e); return Task.FromResult(true); });
 
             ScenarioContext.Current.Set(events, "LoadAllEvents");
         }
