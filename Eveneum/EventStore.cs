@@ -2,53 +2,40 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.Azure.Documents;
-using Microsoft.Azure.Documents.Client;
-using Microsoft.Azure.Documents.Linq;
+using Microsoft.Azure.Cosmos;
+using Microsoft.Azure.Cosmos.Linq;
 using Newtonsoft.Json.Linq;
 using Eveneum.Documents;
 using System.Threading;
 using Eveneum.Advanced;
 using Newtonsoft.Json;
-using System.Reflection;
 
 namespace Eveneum
 {
     public class EventStore : IEventStore, IAdvancedEventStore
     {
-        public readonly IDocumentClient Client;
-        public readonly string Database;
-        public readonly string Collection;
+        public readonly CosmosClient Client;
+        public readonly Database Database;
+        public readonly Container Collection;
         public readonly string Partition;
-        public readonly PartitionKey PartitionKey;
+        public readonly PartitionKey? PartitionKey;
+
+        public readonly JsonSerializer JsonSerializer;
 
         public DeleteMode DeleteMode { get; set; } = DeleteMode.SoftDelete;
 
-        internal readonly Uri DocumentCollectionUri;
-
-        private readonly JsonSerializer JsonSerializer;
-        private readonly JsonSerializerSettings JsonSerializerSettings;
         private readonly TypeCache TypeCache = new TypeCache();
 
-        public EventStore(IDocumentClient client, string database, string collection, string partition = null)
+        public EventStore(CosmosClient client, string database, string collection, string partition = null, JsonSerializer jsonSerializer = null)
         {
-            this.Client = client ?? throw new ArgumentNullException(nameof(client));
-            this.Database = database ?? throw new ArgumentNullException(nameof(database));
-            this.Collection = collection ?? throw new ArgumentNullException(nameof(collection));
+            this.Client = client ?? throw new ArgumentNullException(nameof(client)); 
+            this.Database = this.Client.GetDatabase(database ?? throw new ArgumentNullException(nameof(database)));
+            this.Collection = this.Database.GetContainer(collection ?? throw new ArgumentNullException(nameof(collection)));
             this.Partition = string.IsNullOrEmpty(partition) ? null : partition;
-            this.PartitionKey = string.IsNullOrEmpty(this.Partition) ? null : new PartitionKey(this.Partition);
+            this.PartitionKey = string.IsNullOrEmpty(partition) ? (PartitionKey?)null : new PartitionKey(partition); 
 
-            this.DocumentCollectionUri = UriFactory.CreateDocumentCollectionUri(this.Database, this.Collection);
-
-            this.JsonSerializerSettings = 
-                (JsonSerializerSettings)client.GetType().GetField("serializerSettings", BindingFlags.GetField | BindingFlags.Instance | BindingFlags.NonPublic).GetValue(this.Client)
-                ?? JsonConvert.DefaultSettings?.Invoke()
-                ?? new JsonSerializerSettings();
-
-            this.JsonSerializer = JsonSerializer.Create(this.JsonSerializerSettings);
+            this.JsonSerializer = jsonSerializer ?? JsonSerializer.CreateDefault();
         }
-
-        private Uri HeaderDocumentUri(string streamId) => UriFactory.CreateDocumentUri(this.Database, this.Collection, HeaderDocument.GenerateId(streamId));
 
         public async Task<Stream?> ReadStream(string streamId, CancellationToken cancellationToken = default)
         {
@@ -56,20 +43,18 @@ namespace Eveneum
                 throw new ArgumentNullException(nameof(streamId));
 
             var sql = $"SELECT * FROM x WHERE x.{nameof(EveneumDocument.StreamId)} = '{streamId}' ORDER BY x.{nameof(EveneumDocument.SortOrder)} DESC";
-            var query = this.Client.CreateDocumentQuery<Document>(this.DocumentCollectionUri, sql, new FeedOptions { PartitionKey = this.PartitionKey, MaxItemCount = -1 }).AsDocumentQuery();
+            var query = this.Collection.GetItemQueryIterator<EveneumDocument>(sql, requestOptions: new QueryRequestOptions { PartitionKey = this.PartitionKey, MaxItemCount = -1 });
 
             var documents = new List<EveneumDocument>();
             var finishLoading = false;
 
-            do
+            while (query.HasMoreResults)
             {
-                var page = await query.ExecuteNextAsync<Document>(cancellationToken);
+                var page = await query.ReadNextAsync(cancellationToken);
 
-                foreach (var document in page)
+                foreach (var eveneumDoc in page)
                 {
-                    var eveneumDoc = EveneumDocument.Parse(document, this.JsonSerializerSettings);
-
-                    if (eveneumDoc is HeaderDocument && eveneumDoc.Deleted)
+                    if (eveneumDoc.DocumentType == DocumentType.Header && eveneumDoc.Deleted)
                         throw new StreamNotFoundException(streamId);
 
                     if (eveneumDoc.Deleted)
@@ -77,7 +62,7 @@ namespace Eveneum
 
                     documents.Add(eveneumDoc);
 
-                    if (eveneumDoc is SnapshotDocument)
+                    if (eveneumDoc.DocumentType == DocumentType.Snapshot)
                     {
                         finishLoading = true;
                         break;
@@ -87,14 +72,13 @@ namespace Eveneum
                 if (finishLoading)
                     break;
             }
-            while (query.HasMoreResults);
 
             if (documents.Count == 0)
                 return null;
 
-            var headerDocument = documents.First() as HeaderDocument;
-            var events = documents.OfType<EventDocument>().Select(this.Deserialize).Reverse().ToArray();
-            var snapshot = documents.OfType<SnapshotDocument>().Select(this.Deserialize).Cast<Snapshot?>().FirstOrDefault();
+            var headerDocument = documents.First();
+            var events = documents.Where(x => x.DocumentType == DocumentType.Event).Select(this.DeserializeEvent).Reverse().ToArray();
+            var snapshot = documents.Where(x => x.DocumentType == DocumentType.Snapshot).Select(this.DeserializeSnapshot).Cast<Snapshot?>().FirstOrDefault();
 
             object metadata = null;
 
@@ -106,7 +90,7 @@ namespace Eveneum
 
         public async Task WriteToStream(string streamId, EventData[] events, ulong? expectedVersion = null, object metadata = null, CancellationToken cancellationToken = default)
         {
-            HeaderDocument header;
+            EveneumDocument header;
 
             // Existing stream
             if (expectedVersion.HasValue)
@@ -118,7 +102,7 @@ namespace Eveneum
             }
             else
             {
-                header = new HeaderDocument
+                header = new EveneumDocument(DocumentType.Header)
                 {
                     Partition = this.Partition,
                     StreamId = streamId
@@ -137,27 +121,27 @@ namespace Eveneum
             {
                 try
                 {
-                    await this.Client.CreateDocumentAsync(this.DocumentCollectionUri, header, new RequestOptions { PartitionKey = this.PartitionKey }, disableAutomaticIdGeneration: true, cancellationToken);
+                    await this.Collection.CreateItemAsync(header, this.PartitionKey, cancellationToken: cancellationToken);
                 }
-                catch (DocumentClientException ex) when (ex.Error.Code == nameof(System.Net.HttpStatusCode.Conflict))
+                catch (CosmosException ex) when (ex.StatusCode == System.Net.HttpStatusCode.Conflict)
                 {
                     throw new StreamAlreadyExistsException(streamId);
                 }
             }
             else
             {
-                await this.Client.ReplaceDocumentAsync(this.HeaderDocumentUri(streamId), header, new RequestOptions { PartitionKey = this.PartitionKey, AccessCondition = new AccessCondition { Type = AccessConditionType.IfMatch, Condition = header.ETag } }, cancellationToken);
+                await this.Collection.ReplaceItemAsync(header, header.Id, this.PartitionKey, new ItemRequestOptions { IfMatchEtag = header.ETag }, cancellationToken);
             }
 
             var eventDocuments = (events ?? Enumerable.Empty<EventData>()).Select(@event => this.Serialize(@event, streamId));
 
             foreach (var eventDocument in eventDocuments)
-                await this.Client.CreateDocumentAsync(this.DocumentCollectionUri, eventDocument, new RequestOptions { PartitionKey = this.PartitionKey }, disableAutomaticIdGeneration: true, cancellationToken);
+                await this.Collection.CreateItemAsync(eventDocument, this.PartitionKey, cancellationToken: cancellationToken);
         }
 
         public async Task DeleteStream(string streamId, ulong expectedVersion, CancellationToken cancellationToken = default)
         {
-            var header = new HeaderDocument
+            var header = new EveneumDocument(DocumentType.Header)
             {
                 Partition = this.Partition,
                 StreamId = streamId,
@@ -174,26 +158,25 @@ namespace Eveneum
 
             string etag = existingHeader.ETag;
 
-            var query = this.Client.CreateDocumentQuery<EveneumDocument>(this.DocumentCollectionUri, new FeedOptions { PartitionKey = this.PartitionKey, MaxItemCount = -1 })
+            var query = this.Collection.GetItemLinqQueryable<EveneumDocument>(allowSynchronousQueryExecution: true, requestOptions: new QueryRequestOptions { PartitionKey = this.PartitionKey, MaxItemCount = -1 })
                 .Where(x => x.StreamId == streamId)
-                .AsDocumentQuery();
+                .ToFeedIterator();
 
-            while (query.HasMoreResults)
+            do
             {
-                var page = await query.ExecuteNextAsync<Document>(cancellationToken);
+                var page = await query.ReadNextAsync(cancellationToken);
 
-                foreach(var document in page)
+                foreach (var document in page)
                 {
                     if (this.DeleteMode == DeleteMode.SoftDelete)
                     {
-                        var doc = EveneumDocument.Parse(document, this.JsonSerializerSettings);
-                        doc.Deleted = true;
-                        await this.Client.UpsertDocumentAsync(this.DocumentCollectionUri, doc, new RequestOptions { PartitionKey = this.PartitionKey }, disableAutomaticIdGeneration: true, cancellationToken);
+                        document.Deleted = true;
+                        await this.Collection.UpsertItemAsync(document, this.PartitionKey, cancellationToken: cancellationToken);
                     }
                     else
-                        await this.Client.DeleteDocumentAsync(document.SelfLink, new RequestOptions { PartitionKey = this.PartitionKey }, cancellationToken);
+                        await this.Collection.DeleteItemAsync<EveneumDocument>(document.Id, this.PartitionKey.Value, cancellationToken: cancellationToken);
                 }
-            }
+            } while (query.HasMoreResults);
         }
 
         public async Task CreateSnapshot(string streamId, ulong version, object snapshot, object metadata = null, bool deleteOlderSnapshots = false, CancellationToken cancellationToken = default)
@@ -205,7 +188,7 @@ namespace Eveneum
 
             var document = this.Serialize(snapshot, metadata, version, streamId);
 
-            await this.Client.UpsertDocumentAsync(this.DocumentCollectionUri, document, new RequestOptions { PartitionKey = this.PartitionKey }, disableAutomaticIdGeneration: true, cancellationToken);
+            await this.Collection.UpsertItemAsync(document, this.PartitionKey, cancellationToken: cancellationToken);
 
             if (deleteOlderSnapshots)
                 await this.DeleteSnapshots(streamId, version, cancellationToken);
@@ -215,108 +198,60 @@ namespace Eveneum
         {
             await this.ReadHeader(streamId, cancellationToken);
 
-            var query = this.Client.CreateDocumentQuery<SnapshotDocument>(this.DocumentCollectionUri, new FeedOptions { PartitionKey = this.PartitionKey, MaxItemCount = -1 })
+            var query = this.Collection.GetItemLinqQueryable<EveneumDocument>(requestOptions: new QueryRequestOptions { PartitionKey = this.PartitionKey, MaxItemCount = -1 })
                 .Where(x => x.StreamId == streamId)
                 .Where(x => x.DocumentType == DocumentType.Snapshot)
                 .Where(x => x.Version < olderThanVersion)
-                .AsDocumentQuery();
-
-            while(query.HasMoreResults)
-            {
-                var page = await query.ExecuteNextAsync<Document>(cancellationToken);
-
-                foreach(var document in page)
-                {
-                    if (this.DeleteMode == DeleteMode.SoftDelete)
-                    {
-                        var doc = EveneumDocument.Parse(document, this.JsonSerializerSettings);
-                        doc.Deleted = true;
-                        await this.Client.UpsertDocumentAsync(this.DocumentCollectionUri, doc, new RequestOptions { PartitionKey = this.PartitionKey }, disableAutomaticIdGeneration: true, cancellationToken);
-                    }
-                    else
-                        await this.Client.DeleteDocumentAsync(UriFactory.CreateDocumentUri(this.Database, this.Collection, document.Id), new RequestOptions { PartitionKey = this.PartitionKey }, cancellationToken);
-                }
-            }
-        }
-
-        public Task LoadAllEvents(Func<IReadOnlyCollection<EventData>, Task> callback, CancellationToken cancellationToken = default)
-        {
-            return this.LoadChangeFeed(documents => callback(documents.OfType<EventDocument>().Select(Deserialize).ToList()), cancellationToken: cancellationToken);
-        }
-
-        public async Task LoadEvents(string sql, Func<IReadOnlyCollection<EventData>, Task> callback, CancellationToken cancellationToken = default)
-        {
-            var query = this.Client.CreateDocumentQuery<Document>(this.DocumentCollectionUri, sql, new FeedOptions { PartitionKey = this.PartitionKey, MaxItemCount = -1 }).AsDocumentQuery();
+                .ToFeedIterator();
 
             do
             {
-                var page = await query.ExecuteNextAsync<Document>(cancellationToken);
+                var page = await query.ReadNextAsync(cancellationToken);
 
-                await callback(page.Select(x => EveneumDocument.Parse(x, this.JsonSerializerSettings)).Where(x => !x.Deleted).OfType<EventDocument>().Select(Deserialize).ToList());
+                foreach (var document in page)
+                {
+                    if (this.DeleteMode == DeleteMode.SoftDelete)
+                    {
+                        document.Deleted = true;
+                        await this.Collection.UpsertItemAsync(document, this.PartitionKey, cancellationToken: cancellationToken);
+                    }
+                    else
+                        await this.Collection.DeleteItemAsync<EveneumDocument>(document.Id, this.PartitionKey.Value, cancellationToken: cancellationToken);
+                }
+            } while (query.HasMoreResults);
+        }
+
+        public Task LoadAllEvents(Func<IReadOnlyCollection<EventData>, Task> callback, CancellationToken cancellationToken = default) =>
+            this.LoadEvents($"SELECT * FROM c WHERE c.{nameof(EveneumDocument.DocumentType)} = '{nameof(DocumentType.Event)}'", callback, cancellationToken);
+
+        public async Task LoadEvents(string sql, Func<IReadOnlyCollection<EventData>, Task> callback, CancellationToken cancellationToken = default)
+        {
+            var query = this.Collection.GetItemQueryIterator<EveneumDocument>(sql, requestOptions: new QueryRequestOptions { PartitionKey = this.PartitionKey, MaxItemCount = -1 });
+
+            do
+            {
+                var page = await query.ReadNextAsync(cancellationToken);
+
+                await callback(page.Where(x => x.DocumentType == DocumentType.Event).Where(x => !x.Deleted).Select(DeserializeEvent).ToList());
             }
             while (query.HasMoreResults);
         }
 
-        private async Task<HeaderDocument> ReadHeader(string streamId, CancellationToken cancellationToken = default)
+        private async Task<EveneumDocument> ReadHeader(string streamId, CancellationToken cancellationToken = default)
         {
             try
             {
-                return await this.Client.ReadDocumentAsync<HeaderDocument>(this.HeaderDocumentUri(streamId), new RequestOptions { PartitionKey = this.PartitionKey }, cancellationToken);
+                return await this.Collection.ReadItemAsync<EveneumDocument>(streamId, this.PartitionKey.Value, cancellationToken: cancellationToken);
             }
-            catch (DocumentClientException ex) when (ex.Error.Code == nameof(System.Net.HttpStatusCode.NotFound))
+            catch (CosmosException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
             {
                 throw new StreamNotFoundException(streamId);
             }
         }
 
-        private async Task<IReadOnlyCollection<PartitionKeyRange>> GetPartitionKeyRanges()
+        private EveneumDocument Serialize(EventData @event, string streamId)
         {
-            string responseContinuation = null;
-            var partitionKeyRanges = new List<PartitionKeyRange>();
-
-            do
-            {
-                var response = await this.Client.ReadPartitionKeyRangeFeedAsync(this.DocumentCollectionUri, new FeedOptions { RequestContinuation = responseContinuation, MaxItemCount = -1 });
-
-                partitionKeyRanges.AddRange(response);
-                responseContinuation = response.ResponseContinuation;
-            }
-            while (responseContinuation != null);
-
-            return partitionKeyRanges;
-        }
-
-        private async Task LoadChangeFeed(Func<IEnumerable<EveneumDocument>, Task> callback, string token = null, CancellationToken cancellationToken = default)
-        {
-            PartitionKeyRange partitionKeyRange = this.PartitionKey != null ? null : (await this.GetPartitionKeyRanges()).FirstOrDefault();
-
-            var changeFeed = this.Client.CreateDocumentChangeFeedQuery(this.DocumentCollectionUri,
-                new ChangeFeedOptions
-                {
-                    PartitionKeyRangeId = partitionKeyRange?.Id,
-                    PartitionKey = this.PartitionKey,
-                    RequestContinuation = token,
-                    StartFromBeginning = true,
-                    MaxItemCount = 10000,
-                });
-
-            Task callbackTask = null;
-
-            while (changeFeed.HasMoreResults)
-            {
-                var page = await changeFeed.ExecuteNextAsync<Document>(cancellationToken);
-
-                if (callbackTask != null)
-                    await callbackTask;
-
-                callbackTask = callback(page.Select(x => EveneumDocument.Parse(x, this.JsonSerializerSettings)));
-            }
-        }
-
-
-        private EventDocument Serialize(EventData @event, string streamId)
-        {
-            var document = new EventDocument
+            var document = new EveneumDocument(DocumentType.Event)
             {
                 Partition = this.Partition,
                 StreamId = streamId,
@@ -334,9 +269,9 @@ namespace Eveneum
             return document;
         }
 
-        private SnapshotDocument Serialize(object snapshot, object metadata, ulong version, string streamId)
+        private EveneumDocument Serialize(object snapshot, object metadata, ulong version, string streamId)
         {
-            var document = new SnapshotDocument
+            var document = new EveneumDocument(DocumentType.Snapshot)
             {
                 Partition = this.Partition,
                 StreamId = streamId,
@@ -354,7 +289,7 @@ namespace Eveneum
             return document;
         }
 
-        private EventData Deserialize(EventDocument document)
+        private EventData DeserializeEvent(EveneumDocument document)
         {
             object metadata = DeserializeObject(document.MetadataType, document.Metadata);
             object body = DeserializeObject(document.BodyType, document.Body);
@@ -381,7 +316,7 @@ namespace Eveneum
             }
         }
 
-        private Snapshot Deserialize(SnapshotDocument document)
+        private Snapshot DeserializeSnapshot(EveneumDocument document)
         {
             object metadata = null;
 

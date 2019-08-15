@@ -3,8 +3,6 @@ using NUnit.Framework;
 using TechTalk.SpecFlow;
 using Eveneum.Tests.Infrastrature;
 using Eveneum.Documents;
-using Microsoft.Azure.Documents.Client;
-using System.Linq;
 
 namespace Eveneum.Tests
 {
@@ -30,11 +28,11 @@ namespace Eveneum.Tests
         [Then(@"the header is soft-deleted")]
         public async Task ThenTheHeaderIsSoft_Deleted()
         {
-            var headerDocumentResponse = await this.Context.Client.ReadDocumentAsync<HeaderDocument>(UriFactory.CreateDocumentUri(this.Context.Database, this.Context.Collection, ScenarioContext.Current.GetStreamId()), new RequestOptions { PartitionKey = this.Context.PartitionKey });
+            var headerDocumentResponse = await this.Context.Client.GetDatabase(this.Context.Database).GetContainer(this.Context.Collection).ReadItemAsync<EveneumDocument>(ScenarioContext.Current.GetStreamId(), this.Context.PartitionKey);
 
-            Assert.IsNotNull(headerDocumentResponse.Document);
+            Assert.IsNotNull(headerDocumentResponse.Resource);
 
-            var headerDocument = headerDocumentResponse.Document;
+            var headerDocument = headerDocumentResponse.Resource;
 
             Assert.IsTrue(headerDocument.Deleted);
         }
@@ -42,7 +40,7 @@ namespace Eveneum.Tests
         [Then(@"the header is hard-deleted")]
         public async Task ThenTheHeaderIsHard_Deleted()
         {
-            var documents = await CosmosSetup.QueryAllDocumentsInStream<HeaderDocument>(this.Context.Client, this.Context.Database, this.Context.Collection, this.Context.PartitionKey, ScenarioContext.Current.GetStreamId());
+            var documents = await CosmosSetup.QueryAllDocumentsInStream(this.Context.Client, this.Context.Database, this.Context.Collection, ScenarioContext.Current.GetStreamId(), this.Context.PartitionKey, DocumentType.Header);
 
             Assert.IsEmpty(documents);
         }
@@ -51,7 +49,7 @@ namespace Eveneum.Tests
         public async Task ThenAllEventsAreSoft_Deleted()
         {
             var streamId = ScenarioContext.Current.GetStreamId();
-            var eventDocuments = await CosmosSetup.QueryAllDocumentsInStream<EventDocument>(this.Context.Client, this.Context.Database, this.Context.Collection, this.Context.PartitionKey, streamId);
+            var eventDocuments = await CosmosSetup.QueryAllDocumentsInStream(this.Context.Client, this.Context.Database, this.Context.Collection, streamId, this.Context.PartitionKey, DocumentType.Event);
 
             foreach (var eventDocument in eventDocuments)
                 Assert.IsTrue(eventDocument.Deleted);
@@ -61,7 +59,7 @@ namespace Eveneum.Tests
         public async Task ThenAllEventsAreHard_Deleted()
         {
             var streamId = ScenarioContext.Current.GetStreamId();
-            var eventDocuments = await CosmosSetup.QueryAllDocumentsInStream<EventDocument>(this.Context.Client, this.Context.Database, this.Context.Collection, this.Context.PartitionKey, streamId);
+            var eventDocuments = await CosmosSetup.QueryAllDocumentsInStream(this.Context.Client, this.Context.Database, this.Context.Collection, streamId, this.Context.PartitionKey, DocumentType.Event);
 
             Assert.IsEmpty(eventDocuments);
         }
@@ -70,7 +68,7 @@ namespace Eveneum.Tests
         public async Task ThenAllSnapshotsAreSoft_Deleted()
         {
             var streamId = ScenarioContext.Current.GetStreamId();
-            var snapshotDocuments = await CosmosSetup.QueryAllDocumentsInStream<SnapshotDocument>(this.Context.Client, this.Context.Database, this.Context.Collection, this.Context.PartitionKey, streamId);
+            var snapshotDocuments = await CosmosSetup.QueryAllDocumentsInStream(this.Context.Client, this.Context.Database, this.Context.Collection, streamId, this.Context.PartitionKey, DocumentType.Snapshot);
 
             foreach (var snapshotDocument in snapshotDocuments)
                 Assert.IsTrue(snapshotDocument.Deleted);
@@ -80,7 +78,7 @@ namespace Eveneum.Tests
         public async Task ThenAllSnapshotsAreHard_Deleted()
         {
             var streamId = ScenarioContext.Current.GetStreamId();
-            var snapshotDocuments = await CosmosSetup.QueryAllDocumentsInStream<SnapshotDocument>(this.Context.Client, this.Context.Database, this.Context.Collection, this.Context.PartitionKey, streamId);
+            var snapshotDocuments = await CosmosSetup.QueryAllDocumentsInStream(this.Context.Client, this.Context.Database, this.Context.Collection, streamId, this.Context.PartitionKey, DocumentType.Snapshot);
 
             Assert.IsEmpty(snapshotDocuments);
         }
@@ -88,7 +86,7 @@ namespace Eveneum.Tests
         [Then(@"stream ([^\s-]) is not soft-deleted")]
         public async Task ThenStreamIsNotSoft_Deleted(string streamId)
         {
-            var documents = await CosmosSetup.QueryAllDocumentsInStream<EveneumDocument>(this.Context.Client, this.Context.Database, this.Context.Collection, this.Context.PartitionKey, streamId);
+            var documents = await CosmosSetup.QueryAllDocumentsInStream(this.Context.Client, this.Context.Database, this.Context.Collection, streamId, this.Context.PartitionKey);
 
             foreach (var document in documents)
                 Assert.IsFalse(document.Deleted);
@@ -97,7 +95,7 @@ namespace Eveneum.Tests
         [Then(@"stream ([^\s-]) is not hard-deleted")]
         public async Task ThenStreamIsNotHard_Deleted(string streamId)
         {
-            var documents = await CosmosSetup.QueryAllDocumentsInStream<EveneumDocument>(this.Context.Client, this.Context.Database, this.Context.Collection, this.Context.PartitionKey, streamId);
+            var documents = await CosmosSetup.QueryAllDocumentsInStream(this.Context.Client, this.Context.Database, this.Context.Collection, streamId, this.Context.PartitionKey);
 
             Assert.IsNotEmpty(documents);
         }

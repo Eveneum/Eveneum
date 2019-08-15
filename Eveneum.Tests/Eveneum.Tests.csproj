@@ -1,15 +1,16 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk" ToolsVersion="Current">
   <PropertyGroup>
-    <TargetFramework>net452</TargetFramework>
+    <TargetFramework>net472</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Microsoft.Azure.DocumentDB" Version="2.5.1" />
-    <PackageReference Include="Microsoft.Azure.DocumentDB.ChangeFeedProcessor" Version="2.2.7" />
+    <PackageReference Include="Microsoft.Azure.Cosmos" Version="3.1.1" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.2" />
     <PackageReference Include="NUnit" Version="3.12.0" />
-    <PackageReference Include="NUnit3TestAdapter" Version="3.13.0" />
+    <PackageReference Include="NUnit3TestAdapter" Version="3.14.0" />
     <PackageReference Include="RandomGen" Version="1.0.0" />
-    <PackageReference Include="SpecFlow" Version="2.4.0" />
+    <PackageReference Include="SpecFlow" Version="3.0.225" />
+    <PackageReference Include="SpecFlow.NUnit.Runners" Version="3.0.225" />
+    <PackageReference Include="SpecFlow.Tools.MsBuild.Generation" Version="3.0.225" />
     <ProjectReference Include="..\Eveneum\Eveneum.csproj" />
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -22,5 +23,162 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Properties\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Update="Advanced.feature.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Advanced.feature</DependentUpon>
+    </Compile>
+    <Compile Update="AppendingToNonExistentStream.feature.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>AppendingToNonExistentStream.feature</DependentUpon>
+    </Compile>
+    <Compile Update="AppendingToStream.feature.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>AppendingToStream.feature</DependentUpon>
+    </Compile>
+    <Compile Update="AppendingToStreamWithNonMatchingExpectedVersion.feature.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>AppendingToStreamWithNonMatchingExpectedVersion.feature</DependentUpon>
+    </Compile>
+    <Compile Update="CreatingNewStream.feature.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>CreatingNewStream.feature</DependentUpon>
+    </Compile>
+    <Compile Update="CreatingNewStreamWithDuplicatedStreamId.feature.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>CreatingNewStreamWithDuplicatedStreamId.feature</DependentUpon>
+    </Compile>
+    <Compile Update="CreatingSnapshot.feature.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>CreatingSnapshot.feature</DependentUpon>
+    </Compile>
+    <Compile Update="CreatingSnapshotForNonExistentStream.feature.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>CreatingSnapshotForNonExistentStream.feature</DependentUpon>
+    </Compile>
+    <Compile Update="CreatingSnapshotForNonExistingEvent.feature.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>CreatingSnapshotForNonExistingEvent.feature</DependentUpon>
+    </Compile>
+    <Compile Update="DeletingDeletedStream.feature.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>DeletingDeletedStream.feature</DependentUpon>
+    </Compile>
+    <Compile Update="DeletingNonExistentStream.feature.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>DeletingNonExistentStream.feature</DependentUpon>
+    </Compile>
+    <Compile Update="DeletingOlderSnapshots.feature.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>DeletingOlderSnapshots.feature</DependentUpon>
+    </Compile>
+    <Compile Update="DeletingSnapshots.feature.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>DeletingSnapshots.feature</DependentUpon>
+    </Compile>
+    <Compile Update="DeletingSnapshotsForNonExistingStream.feature.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>DeletingSnapshotsForNonExistingStream.feature</DependentUpon>
+    </Compile>
+    <Compile Update="DeletingStream.feature.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>DeletingStream.feature</DependentUpon>
+    </Compile>
+    <Compile Update="DeletingStreamWithNonExpectedVersion.feature.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>DeletingStreamWithNonExpectedVersion.feature</DependentUpon>
+    </Compile>
+    <Compile Update="ReadingStream.feature.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>ReadingStream.feature</DependentUpon>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <SpecFlowFeatureFiles Update="Advanced.feature">
+      <Generator>SpecFlowSingleFileGenerator</Generator>
+      <LastGenOutput>Advanced.feature.cs</LastGenOutput>
+    </SpecFlowFeatureFiles>
+    <SpecFlowFeatureFiles Update="AppendingToNonExistentStream.feature">
+      <Generator>SpecFlowSingleFileGenerator</Generator>
+      <LastGenOutput>AppendingToNonExistentStream.feature.cs</LastGenOutput>
+    </SpecFlowFeatureFiles>
+    <SpecFlowFeatureFiles Update="AppendingToStream.feature">
+      <Generator>SpecFlowSingleFileGenerator</Generator>
+      <LastGenOutput>AppendingToStream.feature.cs</LastGenOutput>
+    </SpecFlowFeatureFiles>
+    <SpecFlowFeatureFiles Update="AppendingToStreamWithNonMatchingExpectedVersion.feature">
+      <Generator>SpecFlowSingleFileGenerator</Generator>
+      <LastGenOutput>AppendingToStreamWithNonMatchingExpectedVersion.feature.cs</LastGenOutput>
+    </SpecFlowFeatureFiles>
+    <SpecFlowFeatureFiles Update="CreatingNewStream.feature">
+      <Generator>SpecFlowSingleFileGenerator</Generator>
+      <LastGenOutput>CreatingNewStream.feature.cs</LastGenOutput>
+    </SpecFlowFeatureFiles>
+    <SpecFlowFeatureFiles Update="CreatingNewStreamWithDuplicatedStreamId.feature">
+      <Generator>SpecFlowSingleFileGenerator</Generator>
+      <LastGenOutput>CreatingNewStreamWithDuplicatedStreamId.feature.cs</LastGenOutput>
+    </SpecFlowFeatureFiles>
+    <SpecFlowFeatureFiles Update="CreatingSnapshot.feature">
+      <Generator>SpecFlowSingleFileGenerator</Generator>
+      <LastGenOutput>CreatingSnapshot.feature.cs</LastGenOutput>
+    </SpecFlowFeatureFiles>
+    <SpecFlowFeatureFiles Update="CreatingSnapshotForNonExistentStream.feature">
+      <Generator>SpecFlowSingleFileGenerator</Generator>
+      <LastGenOutput>CreatingSnapshotForNonExistentStream.feature.cs</LastGenOutput>
+    </SpecFlowFeatureFiles>
+    <SpecFlowFeatureFiles Update="CreatingSnapshotForNonExistingEvent.feature">
+      <Generator>SpecFlowSingleFileGenerator</Generator>
+      <LastGenOutput>CreatingSnapshotForNonExistingEvent.feature.cs</LastGenOutput>
+    </SpecFlowFeatureFiles>
+    <SpecFlowFeatureFiles Update="DeletingDeletedStream.feature">
+      <Generator>SpecFlowSingleFileGenerator</Generator>
+      <LastGenOutput>DeletingDeletedStream.feature.cs</LastGenOutput>
+    </SpecFlowFeatureFiles>
+    <SpecFlowFeatureFiles Update="DeletingNonExistentStream.feature">
+      <Generator>SpecFlowSingleFileGenerator</Generator>
+      <LastGenOutput>DeletingNonExistentStream.feature.cs</LastGenOutput>
+    </SpecFlowFeatureFiles>
+    <SpecFlowFeatureFiles Update="DeletingOlderSnapshots.feature">
+      <Generator>SpecFlowSingleFileGenerator</Generator>
+      <LastGenOutput>DeletingOlderSnapshots.feature.cs</LastGenOutput>
+    </SpecFlowFeatureFiles>
+    <SpecFlowFeatureFiles Update="DeletingSnapshots.feature">
+      <Generator>SpecFlowSingleFileGenerator</Generator>
+      <LastGenOutput>DeletingSnapshots.feature.cs</LastGenOutput>
+    </SpecFlowFeatureFiles>
+    <SpecFlowFeatureFiles Update="DeletingSnapshotsForNonExistingStream.feature">
+      <Generator>SpecFlowSingleFileGenerator</Generator>
+      <LastGenOutput>DeletingSnapshotsForNonExistingStream.feature.cs</LastGenOutput>
+    </SpecFlowFeatureFiles>
+    <SpecFlowFeatureFiles Update="DeletingStream.feature">
+      <Generator>SpecFlowSingleFileGenerator</Generator>
+      <LastGenOutput>DeletingStream.feature.cs</LastGenOutput>
+    </SpecFlowFeatureFiles>
+    <SpecFlowFeatureFiles Update="DeletingStreamWithNonExpectedVersion.feature">
+      <Generator>SpecFlowSingleFileGenerator</Generator>
+      <LastGenOutput>DeletingStreamWithNonExpectedVersion.feature.cs</LastGenOutput>
+    </SpecFlowFeatureFiles>
+    <SpecFlowFeatureFiles Update="ReadingStream.feature">
+      <Generator>SpecFlowSingleFileGenerator</Generator>
+      <LastGenOutput>ReadingStream.feature.cs</LastGenOutput>
+    </SpecFlowFeatureFiles>
   </ItemGroup>
 </Project>
