@@ -11,7 +11,7 @@
         <projectUrl>http://github.com/Eveneum/Eveneum</projectUrl>
         <licenseUrl>https://github.com/Eveneum/Eveneum/blob/master/LICENSE</licenseUrl>
         <dependencies>
-          <dependency id="Microsoft.Azure.DocumentDB" version="[2.1.3,3)" />
+          <dependency id="Microsoft.Azure.Cosmos" version="[3.1.1,4)" />
         </dependencies>
     </metadata>
     <files>        
