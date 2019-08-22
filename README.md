@@ -5,6 +5,24 @@
 
 **Eveneum is a simple, developer-friendly Event Store with snapshots, backed by Azure Cosmos DB.**
 
+```
+var database = "Eveneum";
+var collection = "Events";
+
+var client = new CosmosClient("connection-string");
+var databaseResponse = await client.CreateDatabaseIfNotExistsAsync(database);
+var containerResponse = await databaseResponse.Database
+    .CreateContainerIfNotExistsAsync(new ContainerProperties(collection, "/StreamId"));
+
+IEventStore eventStore = new EventStore(client, database, collection);
+
+var streamId = Guid.NewGuid().ToString();
+EventData[] events = GetEventsToWrite();
+await eventStore.WriteToStream(streamId, events);
+await eventStore.CreateSnapshot(streamId, 7, GetSnapshotForVersion(7));
+await eventStore.ReadStream(streamId);
+```
+
 ## Project Goals
 
 The aim of the project is to provide a straightforward implementation of Event Store by utilising the features of Azure Cosmos DB. The library will benefit from automatic indexing, replication and scalability offered by Cosmos DB. 
