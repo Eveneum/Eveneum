@@ -53,7 +53,7 @@ namespace Eveneum.Tests
         {
             var headerDocuments = await CosmosSetup.QueryAllDocumentsInStream(this.Context.Client, this.Context.Database, this.Context.Collection, this.Context.StreamId, DocumentType.Header);
 
-            Assert.AreEqual(2, headerDocuments.Count);
+            Assert.AreEqual(1, headerDocuments.Count);
 
             var headerDocument = headerDocuments[0];
 
@@ -72,7 +72,7 @@ namespace Eveneum.Tests
         {
             var headerDocuments = await CosmosSetup.QueryAllDocumentsInStream(this.Context.Client, this.Context.Database, this.Context.Collection, this.Context.StreamId, DocumentType.Header);
 
-            Assert.AreEqual(2, headerDocuments.Count);
+            Assert.AreEqual(1, headerDocuments.Count);
 
             var headerDocument = headerDocuments[0];
 
