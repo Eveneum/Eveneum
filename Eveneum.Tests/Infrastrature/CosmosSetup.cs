@@ -17,14 +17,14 @@ namespace Eveneum.Tests.Infrastrature
             return new CosmosClient(endpoint, key);
         }
 
-        public static async Task<CosmosClient> GetClient(string database, string collection = null)
+        public static async Task<CosmosClient> GetClient(string database, string container = null)
         {
             var client = GetClient();
 
             await client.CreateDatabaseIfNotExistsAsync(database);
 
-            if (collection != null)
-                await client.GetDatabase(database).CreateContainerAsync(new ContainerProperties(collection, "/" + nameof(EveneumDocument.StreamId)));
+            if (container != null)
+                await client.GetDatabase(database).CreateContainerAsync(new ContainerProperties(container, "/" + nameof(EveneumDocument.StreamId)));
             
             return client;
         }

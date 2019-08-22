@@ -101,7 +101,7 @@ namespace Eveneum.Tests
         public async Task ThenEventsFromVersionToAreReturned(ulong fromVersion, ulong toVersion)
         {
             var stream = this.Context.Stream;
-            var allDocuments = await CosmosSetup.QueryAllDocumentsInStream(this.Context.Client, this.Context.Database, this.Context.Collection, stream.Value.StreamId, Documents.DocumentType.Event);
+            var allDocuments = await CosmosSetup.QueryAllDocumentsInStream(this.Context.Client, this.Context.Database, this.Context.Container, stream.Value.StreamId, Documents.DocumentType.Event);
             var eventDocuments = allDocuments.ToDictionary(x => x.Version);
 
             Assert.IsTrue(stream.HasValue);

@@ -9,7 +9,7 @@ namespace Eveneum.Tests.Infrastrature
     class CosmosDbContext : IDisposable
     {
         public string Database { get; private set; }
-        public string Collection { get; private set; }
+        public string Container { get; private set; }
 
         public CosmosClient Client { get; private set; }
         public IEventStore EventStore { get; private set; }
@@ -26,18 +26,18 @@ namespace Eveneum.Tests.Infrastrature
         public CosmosDbContext()
         {
             this.Database = "EveneumDB";
-            this.Collection = Guid.NewGuid().ToString();
+            this.Container = Guid.NewGuid().ToString();
         }
 
         internal async Task Initialize()
         {
-            this.Client = await CosmosSetup.GetClient(this.Database, this.Collection);
-            this.EventStore = new EventStore(this.Client, this.Database, this.Collection);
+            this.Client = await CosmosSetup.GetClient(this.Database, this.Container);
+            this.EventStore = new EventStore(this.Client, this.Database, this.Container);
         }
 
         public void Dispose()
         {
-            CosmosSetup.GetClient().GetDatabase(this.Database).GetContainer(this.Collection).DeleteContainerAsync().Wait();
+            CosmosSetup.GetClient().GetDatabase(this.Database).GetContainer(this.Container).DeleteContainerAsync().Wait();
         }
     }
 }

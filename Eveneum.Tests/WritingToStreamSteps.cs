@@ -25,7 +25,7 @@ namespace Eveneum.Tests
         {
             this.Context.StreamId = streamId;
             this.Context.NewEvents = TestSetup.GetEvents(events);
-            this.Context.ExistingDocuments = await CosmosSetup.QueryAllDocuments(this.Context.Client, this.Context.Database, this.Context.Collection);
+            this.Context.ExistingDocuments = await CosmosSetup.QueryAllDocuments(this.Context.Client, this.Context.Database, this.Context.Container);
 
             await this.Context.EventStore.WriteToStream(this.Context.StreamId, this.Context.NewEvents, metadata: this.Context.HeaderMetadata);
         }
@@ -43,7 +43,7 @@ namespace Eveneum.Tests
         {
             this.Context.StreamId = streamId;
             this.Context.NewEvents = TestSetup.GetEvents(events, expectedVersion + 1);
-            this.Context.ExistingDocuments = await CosmosSetup.QueryAllDocuments(this.Context.Client, this.Context.Database, this.Context.Collection);
+            this.Context.ExistingDocuments = await CosmosSetup.QueryAllDocuments(this.Context.Client, this.Context.Database, this.Context.Container);
 
             await this.Context.EventStore.WriteToStream(this.Context.StreamId, this.Context.NewEvents, expectedVersion, metadata: this.Context.HeaderMetadata);
         }
@@ -51,7 +51,7 @@ namespace Eveneum.Tests
         [Then(@"the header version (\d+) with no metadata is persisted")]
         public async Task ThenTheHeaderVersionWithNoMetadataIsPersisted(ulong version)
         {
-            var headerDocuments = await CosmosSetup.QueryAllDocumentsInStream(this.Context.Client, this.Context.Database, this.Context.Collection, this.Context.StreamId, DocumentType.Header);
+            var headerDocuments = await CosmosSetup.QueryAllDocumentsInStream(this.Context.Client, this.Context.Database, this.Context.Container, this.Context.StreamId, DocumentType.Header);
 
             Assert.AreEqual(1, headerDocuments.Count);
 
@@ -70,7 +70,7 @@ namespace Eveneum.Tests
         [Then(@"the header version (\d+) with metadata is persisted")]
         public async Task ThenTheHeaderVersionWithMetadataIsPersisted(ulong version)
         {
-            var headerDocuments = await CosmosSetup.QueryAllDocumentsInStream(this.Context.Client, this.Context.Database, this.Context.Collection, this.Context.StreamId, DocumentType.Header);
+            var headerDocuments = await CosmosSetup.QueryAllDocumentsInStream(this.Context.Client, this.Context.Database, this.Context.Container, this.Context.StreamId, DocumentType.Header);
 
             Assert.AreEqual(1, headerDocuments.Count);
 
@@ -123,7 +123,7 @@ namespace Eveneum.Tests
         public async Task ThenNoEventsAreAppended()
         {
             var streamId = this.Context.StreamId;
-            var currentDocuments = await CosmosSetup.QueryAllDocumentsInStream(this.Context.Client, this.Context.Database, this.Context.Collection, streamId, DocumentType.Event);
+            var currentDocuments = await CosmosSetup.QueryAllDocumentsInStream(this.Context.Client, this.Context.Database, this.Context.Container, streamId, DocumentType.Event);
             var existingDocumentIds = this.Context.ExistingDocuments.Select(x => x.Id);
 
             var newEventDocuments = currentDocuments.Where(x => !existingDocumentIds.Contains(x.Id));
@@ -135,7 +135,7 @@ namespace Eveneum.Tests
         public async Task ThenNewEventsAreAppended()
         {
             var streamId = this.Context.StreamId;
-            var currentDocuments = await CosmosSetup.QueryAllDocumentsInStream(this.Context.Client, this.Context.Database, this.Context.Collection, streamId, DocumentType.Event);
+            var currentDocuments = await CosmosSetup.QueryAllDocumentsInStream(this.Context.Client, this.Context.Database, this.Context.Container, streamId, DocumentType.Event);
             var existingDocumentIds = this.Context.ExistingDocuments.Select(x => x.Id);
 
             var newEventDocuments = currentDocuments.Where(x => !existingDocumentIds.Contains(x.Id)).ToList();

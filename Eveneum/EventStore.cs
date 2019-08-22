@@ -16,7 +16,7 @@ namespace Eveneum
     {
         public readonly CosmosClient Client;
         public readonly Database Database;
-        public readonly Container Collection;
+        public readonly Container Container;
 
         public readonly JsonSerializer JsonSerializer;
 
@@ -24,11 +24,11 @@ namespace Eveneum
 
         private readonly TypeCache TypeCache = new TypeCache();
 
-        public EventStore(CosmosClient client, string database, string collection, JsonSerializer jsonSerializer = null)
+        public EventStore(CosmosClient client, string database, string container, JsonSerializer jsonSerializer = null)
         {
             this.Client = client ?? throw new ArgumentNullException(nameof(client)); 
             this.Database = this.Client.GetDatabase(database ?? throw new ArgumentNullException(nameof(database)));
-            this.Collection = this.Database.GetContainer(collection ?? throw new ArgumentNullException(nameof(collection)));
+            this.Container = this.Database.GetContainer(container ?? throw new ArgumentNullException(nameof(container)));
 
             this.JsonSerializer = jsonSerializer ?? JsonSerializer.CreateDefault();
         }
@@ -39,7 +39,7 @@ namespace Eveneum
                 throw new ArgumentNullException(nameof(streamId));
 
             var sql = $"SELECT * FROM x ORDER BY x.{nameof(EveneumDocument.SortOrder)} DESC";
-            var query = this.Collection.GetItemQueryIterator<EveneumDocument>(sql, requestOptions: new QueryRequestOptions { PartitionKey = new PartitionKey(streamId), MaxItemCount = -1 });
+            var query = this.Container.GetItemQueryIterator<EveneumDocument>(sql, requestOptions: new QueryRequestOptions { PartitionKey = new PartitionKey(streamId), MaxItemCount = -1 });
 
             var documents = new List<EveneumDocument>();
             var finishLoading = false;
@@ -111,7 +111,7 @@ namespace Eveneum
             {
                 try
                 {
-                    await this.Collection.CreateItemAsync(header, new PartitionKey(streamId), cancellationToken: cancellationToken);
+                    await this.Container.CreateItemAsync(header, new PartitionKey(streamId), cancellationToken: cancellationToken);
                 }
                 catch (CosmosException ex) when (ex.StatusCode == System.Net.HttpStatusCode.Conflict)
                 {
@@ -120,13 +120,13 @@ namespace Eveneum
             }
             else
             {
-                await this.Collection.ReplaceItemAsync(header, header.Id, new PartitionKey(streamId), new ItemRequestOptions { IfMatchEtag = header.ETag }, cancellationToken);
+                await this.Container.ReplaceItemAsync(header, header.Id, new PartitionKey(streamId), new ItemRequestOptions { IfMatchEtag = header.ETag }, cancellationToken);
             }
 
             var eventDocuments = (events ?? Enumerable.Empty<EventData>()).Select(@event => this.Serialize(@event, streamId));
 
             foreach (var eventDocument in eventDocuments)
-                await this.Collection.CreateItemAsync(eventDocument, new PartitionKey(streamId), cancellationToken: cancellationToken);
+                await this.Container.CreateItemAsync(eventDocument, new PartitionKey(streamId), cancellationToken: cancellationToken);
         }
 
         public async Task DeleteStream(string streamId, ulong expectedVersion, CancellationToken cancellationToken = default)
@@ -147,7 +147,7 @@ namespace Eveneum
 
             var partitionKey = new PartitionKey(streamId);
 
-            var query = this.Collection.GetItemQueryIterator<EveneumDocument>(new QueryDefinition("SELECT * FROM x"), requestOptions: new QueryRequestOptions { PartitionKey = partitionKey, MaxItemCount = -1 });
+            var query = this.Container.GetItemQueryIterator<EveneumDocument>(new QueryDefinition("SELECT * FROM x"), requestOptions: new QueryRequestOptions { PartitionKey = partitionKey, MaxItemCount = -1 });
 
             do
             {
@@ -158,10 +158,10 @@ namespace Eveneum
                     if (this.DeleteMode == DeleteMode.SoftDelete)
                     {
                         document.Deleted = true;
-                        await this.Collection.UpsertItemAsync(document, partitionKey, cancellationToken: cancellationToken);
+                        await this.Container.UpsertItemAsync(document, partitionKey, cancellationToken: cancellationToken);
                     }
                     else
-                        await this.Collection.DeleteItemAsync<EveneumDocument>(document.Id, partitionKey, cancellationToken: cancellationToken);
+                        await this.Container.DeleteItemAsync<EveneumDocument>(document.Id, partitionKey, cancellationToken: cancellationToken);
                 }
             } while (query.HasMoreResults);
         }
@@ -175,7 +175,7 @@ namespace Eveneum
 
             var document = this.Serialize(snapshot, metadata, version, streamId);
 
-            await this.Collection.UpsertItemAsync(document, new PartitionKey(streamId), cancellationToken: cancellationToken);
+            await this.Container.UpsertItemAsync(document, new PartitionKey(streamId), cancellationToken: cancellationToken);
 
             if (deleteOlderSnapshots)
                 await this.DeleteSnapshots(streamId, version, cancellationToken);
@@ -187,7 +187,7 @@ namespace Eveneum
 
             var partitionKey = new PartitionKey(streamId);
 
-            var query = this.Collection.GetItemLinqQueryable<EveneumDocument>(requestOptions: new QueryRequestOptions { PartitionKey = partitionKey, MaxItemCount = -1 })
+            var query = this.Container.GetItemLinqQueryable<EveneumDocument>(requestOptions: new QueryRequestOptions { PartitionKey = partitionKey, MaxItemCount = -1 })
                 .Where(x => x.DocumentType == DocumentType.Snapshot)
                 .Where(x => x.Version < olderThanVersion)
                 .ToFeedIterator();
@@ -201,10 +201,10 @@ namespace Eveneum
                     if (this.DeleteMode == DeleteMode.SoftDelete)
                     {
                         document.Deleted = true;
-                        await this.Collection.UpsertItemAsync(document, partitionKey, cancellationToken: cancellationToken);
+                        await this.Container.UpsertItemAsync(document, partitionKey, cancellationToken: cancellationToken);
                     }
                     else
-                        await this.Collection.DeleteItemAsync<EveneumDocument>(document.Id, partitionKey, cancellationToken: cancellationToken);
+                        await this.Container.DeleteItemAsync<EveneumDocument>(document.Id, partitionKey, cancellationToken: cancellationToken);
                 }
             } while (query.HasMoreResults);
         }
@@ -214,7 +214,7 @@ namespace Eveneum
 
         public async Task LoadEvents(string sql, Func<IReadOnlyCollection<EventData>, Task> callback, CancellationToken cancellationToken = default)
         {
-            var query = this.Collection.GetItemQueryIterator<EveneumDocument>(sql, requestOptions: new QueryRequestOptions { MaxItemCount = -1 });
+            var query = this.Container.GetItemQueryIterator<EveneumDocument>(sql, requestOptions: new QueryRequestOptions { MaxItemCount = -1 });
 
             do
             {
@@ -229,7 +229,7 @@ namespace Eveneum
         {
             try
             {
-                return await this.Collection.ReadItemAsync<EveneumDocument>(streamId, new PartitionKey(streamId), cancellationToken: cancellationToken);
+                return await this.Container.ReadItemAsync<EveneumDocument>(streamId, new PartitionKey(streamId), cancellationToken: cancellationToken);
             }
             catch (CosmosException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
             {
