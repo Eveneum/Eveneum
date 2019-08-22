@@ -20,8 +20,6 @@ namespace Eveneum.Documents
         [JsonProperty(PropertyName = "id")]
         public virtual string Id => this.GenerateId();
 
-        public string Partition { get; set; }
-
         [JsonConverter(typeof(StringEnumConverter))]
         public DocumentType DocumentType { get; }
 

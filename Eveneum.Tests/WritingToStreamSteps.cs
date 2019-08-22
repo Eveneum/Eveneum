@@ -124,7 +124,7 @@ namespace Eveneum.Tests
         public async Task ThenNoEventsAreAppended()
         {
             var streamId = ScenarioContext.Current.GetStreamId();
-            var currentDocuments = await CosmosSetup.QueryAllDocumentsInStream(this.Context.Client, this.Context.Database, this.Context.Collection, streamId, this.Context.PartitionKey, DocumentType.Event);
+            var currentDocuments = await CosmosSetup.QueryAllDocumentsInStream(this.Context.Client, this.Context.Database, this.Context.Collection, streamId, DocumentType.Event);
             var existingDocumentIds = ScenarioContext.Current.GetExistingDocuments().Select(x => x.Id);
 
             var newEventDocuments = currentDocuments.Where(x => !existingDocumentIds.Contains(x.Id));
@@ -136,7 +136,7 @@ namespace Eveneum.Tests
         public async Task ThenNewEventsAreAppended()
         {
             var streamId = ScenarioContext.Current.GetStreamId();
-            var currentDocuments = await CosmosSetup.QueryAllDocumentsInStream(this.Context.Client, this.Context.Database, this.Context.Collection, streamId, this.Context.PartitionKey, DocumentType.Event);
+            var currentDocuments = await CosmosSetup.QueryAllDocumentsInStream(this.Context.Client, this.Context.Database, this.Context.Collection, streamId, DocumentType.Event);
             var existingDocumentIds = ScenarioContext.Current.GetExistingDocuments().Select(x => x.Id);
 
             var newEventDocuments = currentDocuments.Where(x => !existingDocumentIds.Contains(x.Id)).ToList();
@@ -147,7 +147,7 @@ namespace Eveneum.Tests
 
             foreach (var newEvent in newEvents)
             {
-                var eventDocument = newEventDocuments.Find(x => x.Partition == this.Context.Partition && x.Id == EveneumDocument.GenerateEventId(streamId, newEvent.Version));
+                var eventDocument = newEventDocuments.Find(x => x.Id == EveneumDocument.GenerateEventId(streamId, newEvent.Version));
 
                 Assert.IsNotNull(eventDocument);
                 Assert.AreEqual(DocumentType.Event, eventDocument.DocumentType);

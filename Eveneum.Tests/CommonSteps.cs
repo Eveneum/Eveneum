@@ -18,8 +18,6 @@ namespace Eveneum.Tests
         [Given(@"an event store backed by partitioned collection")]
         public async Task GivenAnEventStoreBackedByPartitionedCollection()
         {
-            this.Context.Partition = Guid.NewGuid().ToString();
-
             await this.Context.Initialize();
         }
 

@@ -24,7 +24,7 @@ namespace Eveneum.Tests.Infrastrature
             await client.CreateDatabaseIfNotExistsAsync(database);
 
             if (collection != null)
-                await client.GetDatabase(database).CreateContainerAsync(new ContainerProperties(collection, "/" + nameof(EveneumDocument.Partition)));
+                await client.GetDatabase(database).CreateContainerAsync(new ContainerProperties(collection, "/" + nameof(EveneumDocument.StreamId)));
             
             return client;
         }
@@ -32,8 +32,8 @@ namespace Eveneum.Tests.Infrastrature
         public static Task<List<EveneumDocument>> QueryAllDocuments(CosmosClient client, string database, string collection)
             => Query(client, database, collection, "SELECT * FROM x");
 
-        public static Task<List<EveneumDocument>> QueryAllDocumentsInStream(CosmosClient client, string database, string collection, string streamId, PartitionKey? partitionKey = null, DocumentType? documentType = null)
-            => Query(client, database, collection, $"SELECT * FROM x WHERE x.{nameof(EveneumDocument.StreamId)} = '{streamId}'", partitionKey, documentType);
+        public static Task<List<EveneumDocument>> QueryAllDocumentsInStream(CosmosClient client, string database, string collection, string streamId, DocumentType? documentType = null)
+            => Query(client, database, collection, $"SELECT * FROM x", new PartitionKey(streamId), documentType);
 
         private static async Task<List<EveneumDocument>> Query(CosmosClient client, string database, string collection, string query, PartitionKey? partitionKey = null, DocumentType? documentType = null)
         {

@@ -11,8 +11,6 @@ namespace Eveneum.Tests.Infrastrature
 
         public CosmosClient Client { get; private set; }
         public IEventStore EventStore { get; private set; }
-        public string Partition { get; set; }
-        public PartitionKey PartitionKey => new PartitionKey(this.Partition);
 
         public CosmosDbContext()
         {
@@ -23,7 +21,7 @@ namespace Eveneum.Tests.Infrastrature
         internal async Task Initialize()
         {
             this.Client = await CosmosSetup.GetClient(this.Database, this.Collection);
-            this.EventStore = new EventStore(this.Client, this.Database, this.Collection, this.Partition);
+            this.EventStore = new EventStore(this.Client, this.Database, this.Collection);
         }
 
         public void Dispose()
