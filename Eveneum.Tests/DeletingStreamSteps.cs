@@ -20,16 +20,16 @@ namespace Eveneum.Tests
         [When(@"I delete stream ([^\s-]) in expected version (\d+)")]
         public async Task WhenIDeleteStreamInExpectedVersion(string streamId, ulong expectedVersion)
         {
-            ScenarioContext.Current.SetStreamId(streamId);
-            ScenarioContext.Current.SetExistingDocuments(await CosmosSetup.QueryAllDocuments(this.Context.Client, this.Context.Database, this.Context.Collection));
+            this.Context.StreamId = streamId;
+            this.Context.ExistingDocuments = await CosmosSetup.QueryAllDocuments(this.Context.Client, this.Context.Database, this.Context.Collection);
 
-            await this.Context.EventStore.DeleteStream(ScenarioContext.Current.GetStreamId(), expectedVersion);
+            await this.Context.EventStore.DeleteStream(streamId, expectedVersion);
         }
 
         [Then(@"the header is soft-deleted")]
         public async Task ThenTheHeaderIsSoft_Deleted()
         {
-            var documents = await CosmosSetup.QueryAllDocumentsInStream(this.Context.Client, this.Context.Database, this.Context.Collection, ScenarioContext.Current.GetStreamId(), DocumentType.Header);
+            var documents = await CosmosSetup.QueryAllDocumentsInStream(this.Context.Client, this.Context.Database, this.Context.Collection, this.Context.StreamId, DocumentType.Header);
             Assert.AreEqual(1, documents.Count);
 
             var headerDocument = documents[0];
@@ -40,7 +40,7 @@ namespace Eveneum.Tests
         [Then(@"the header is hard-deleted")]
         public async Task ThenTheHeaderIsHard_Deleted()
         {
-            var documents = await CosmosSetup.QueryAllDocumentsInStream(this.Context.Client, this.Context.Database, this.Context.Collection, ScenarioContext.Current.GetStreamId(), DocumentType.Header);
+            var documents = await CosmosSetup.QueryAllDocumentsInStream(this.Context.Client, this.Context.Database, this.Context.Collection, this.Context.StreamId, DocumentType.Header);
 
             Assert.IsEmpty(documents);
         }
@@ -48,7 +48,7 @@ namespace Eveneum.Tests
         [Then(@"all events are soft-deleted")]
         public async Task ThenAllEventsAreSoft_Deleted()
         {
-            var streamId = ScenarioContext.Current.GetStreamId();
+            var streamId = this.Context.StreamId;
             var eventDocuments = await CosmosSetup.QueryAllDocumentsInStream(this.Context.Client, this.Context.Database, this.Context.Collection, streamId, DocumentType.Event);
 
             foreach (var eventDocument in eventDocuments)
@@ -58,7 +58,7 @@ namespace Eveneum.Tests
         [Then(@"all events are hard-deleted")]
         public async Task ThenAllEventsAreHard_Deleted()
         {
-            var streamId = ScenarioContext.Current.GetStreamId();
+            var streamId = this.Context.StreamId;
             var eventDocuments = await CosmosSetup.QueryAllDocumentsInStream(this.Context.Client, this.Context.Database, this.Context.Collection, streamId, DocumentType.Event);
 
             Assert.IsEmpty(eventDocuments);
@@ -67,7 +67,7 @@ namespace Eveneum.Tests
         [Then(@"all snapshots are soft-deleted")]
         public async Task ThenAllSnapshotsAreSoft_Deleted()
         {
-            var streamId = ScenarioContext.Current.GetStreamId();
+            var streamId = this.Context.StreamId;
             var snapshotDocuments = await CosmosSetup.QueryAllDocumentsInStream(this.Context.Client, this.Context.Database, this.Context.Collection, streamId, DocumentType.Snapshot);
 
             foreach (var snapshotDocument in snapshotDocuments)
@@ -77,7 +77,7 @@ namespace Eveneum.Tests
         [Then(@"all snapshots are hard-deleted")]
         public async Task ThenAllSnapshotsAreHard_Deleted()
         {
-            var streamId = ScenarioContext.Current.GetStreamId();
+            var streamId = this.Context.StreamId;
             var snapshotDocuments = await CosmosSetup.QueryAllDocumentsInStream(this.Context.Client, this.Context.Database, this.Context.Collection, streamId, DocumentType.Snapshot);
 
             Assert.IsEmpty(snapshotDocuments);

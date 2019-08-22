@@ -20,14 +20,14 @@ namespace Eveneum.Tests
         [When(@"I read stream ([^\s-])")]
         public async Task WhenIReadStream(string streamId)
         {
-            ScenarioContext.Current.SetStreamId(streamId);
-            ScenarioContext.Current.SetStream(await this.Context.EventStore.ReadStream(streamId));
+            this.Context.StreamId = streamId;
+            this.Context.Stream = await this.Context.EventStore.ReadStream(streamId);
         }
 
         [Then(@"the non-existing stream is returned")]
         public void ThenTheNon_ExistingStreamIsReturned()
         {
-            var stream = ScenarioContext.Current.GetStream();
+            var stream = this.Context.Stream;
 
             Assert.IsFalse(stream.HasValue);
         }
@@ -35,7 +35,7 @@ namespace Eveneum.Tests
         [Then(@"the stream ([^\s-]) in version (\d+) is returned")]
         public void ThenTheStreamInVersionIsReturned(string streamId, ulong version)
         {
-            var stream = ScenarioContext.Current.GetStream();
+            var stream = this.Context.Stream;
 
             Assert.IsTrue(stream.HasValue);
             Assert.AreEqual(streamId, stream.Value.StreamId);
@@ -46,18 +46,18 @@ namespace Eveneum.Tests
         [Then(@"the stream ([^\s-]) with metadata in version (\d+) is returned")]
         public void ThenTheStreamWithMetadataInVersionIsReturned(string streamId, ulong version)
         {
-            var stream = ScenarioContext.Current.GetStream();
+            var stream = this.Context.Stream;
 
             Assert.IsTrue(stream.HasValue);
             Assert.AreEqual(streamId, stream.Value.StreamId);
             Assert.AreEqual(version, stream.Value.Version);
-            Assert.AreEqual(JToken.FromObject(ScenarioContext.Current.GetHeaderMetadata()), JToken.FromObject(stream.Value.Metadata));
+            Assert.AreEqual(JToken.FromObject(this.Context.HeaderMetadata), JToken.FromObject(stream.Value.Metadata));
         }
 
         [Then(@"no snapshot is returned")]
         public void ThenNoSnapshotIsReturned()
         {
-            var stream = ScenarioContext.Current.GetStream();
+            var stream = this.Context.Stream;
 
             Assert.IsTrue(stream.HasValue);
             Assert.IsFalse(stream.Value.Snapshot.HasValue);
@@ -66,32 +66,32 @@ namespace Eveneum.Tests
         [Then(@"a snapshot for version (\d+) is returned")]
         public void ThenASnapshotForVersionIsReturned(ulong version)
         {
-            var stream = ScenarioContext.Current.GetStream();
+            var stream = this.Context.Stream;
 
             Assert.IsTrue(stream.HasValue);
             Assert.IsTrue(stream.Value.Snapshot.HasValue);
             Assert.AreEqual(version, stream.Value.Snapshot.Value.Version);
-            Assert.AreEqual(JToken.FromObject(ScenarioContext.Current.GetSnapshot()), JToken.FromObject(stream.Value.Snapshot.Value.Data));
+            Assert.AreEqual(JToken.FromObject(this.Context.Snapshot), JToken.FromObject(stream.Value.Snapshot.Value.Data));
             Assert.IsNull(stream.Value.Snapshot.Value.Metadata);
         }
 
         [Then(@"a snapshot with metadata for version (\d+) is returned")]
         public void ThenASnapshotWithMetadataForVersionIsReturned(ulong version)
         {
-            var stream = ScenarioContext.Current.GetStream();
+            var stream = this.Context.Stream;
 
             Assert.IsTrue(stream.HasValue);
             Assert.IsTrue(stream.Value.Snapshot.HasValue);
             Assert.AreEqual(version, stream.Value.Snapshot.Value.Version);
-            Assert.AreEqual(JToken.FromObject(ScenarioContext.Current.GetSnapshot()), JToken.FromObject(stream.Value.Snapshot.Value.Data));
+            Assert.AreEqual(JToken.FromObject(this.Context.Snapshot), JToken.FromObject(stream.Value.Snapshot.Value.Data));
             Assert.IsNotNull(stream.Value.Snapshot.Value.Metadata);
-            Assert.AreEqual(JToken.FromObject(ScenarioContext.Current.GetSnapshotMetadata()), JToken.FromObject(stream.Value.Snapshot.Value.Metadata));
+            Assert.AreEqual(JToken.FromObject(this.Context.SnapshotMetadata), JToken.FromObject(stream.Value.Snapshot.Value.Metadata));
         }
 
         [Then(@"no events are returned")]
         public void ThenNoEventsAreReturned()
         {
-            var stream = ScenarioContext.Current.GetStream();
+            var stream = this.Context.Stream;
 
             Assert.IsTrue(stream.HasValue);
             Assert.IsEmpty(stream.Value.Events);
@@ -100,8 +100,8 @@ namespace Eveneum.Tests
         [Then(@"events from version (\d+) to (\d+) are returned")]
         public async Task ThenEventsFromVersionToAreReturned(ulong fromVersion, ulong toVersion)
         {
-            var stream = ScenarioContext.Current.GetStream();
-            var allDocuments = await CosmosSetup.QueryAllDocumentsInStream(this.Context.Client, this.Context.Database, this.Context.Collection, stream.Value.StreamId, this.Context.PartitionKey, Documents.DocumentType.Event);
+            var stream = this.Context.Stream;
+            var allDocuments = await CosmosSetup.QueryAllDocumentsInStream(this.Context.Client, this.Context.Database, this.Context.Collection, stream.Value.StreamId, Documents.DocumentType.Event);
             var eventDocuments = allDocuments.ToDictionary(x => x.Version);
 
             Assert.IsTrue(stream.HasValue);

@@ -1,9 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
-using Eveneum.Documents;
-using Newtonsoft.Json;
 using NUnit.Framework;
 
 namespace Eveneum.Tests.Infrastrature
@@ -29,63 +25,5 @@ namespace Eveneum.Tests.Infrastrature
         {
             await CosmosSetup.GetClient().GetDatabase(this.Database).GetContainer(this.Collection).DeleteContainerAsync();
         }
-
-        //internal async Task<IReadOnlyCollection<PartitionKeyRange>> GetPartitionKeyRanges(CosmosClient client)
-        //{
-        //    string responseContinuation = null;
-        //    var partitionKeyRanges = new List<PartitionKeyRange>();
-
-        //    var documentCollectionUri = UriFactory.CreateDocumentCollectionUri(this.Database, this.Collection);
-
-        //    do
-        //    {
-        //        var response = await client.ReadPartitionKeyRangeFeedAsync(documentCollectionUri, new FeedOptions { RequestContinuation = responseContinuation });
-
-        //        partitionKeyRanges.AddRange(response);
-        //        responseContinuation = response.ResponseContinuation;
-        //    }
-        //    while (responseContinuation != null);
-
-        //    return partitionKeyRanges;
-        //}
-
-        //internal async Task<string> GetCurrentChangeFeedToken(IDocumentClient client, string partition)
-        //{
-        //    PartitionKeyRange partitionKeyRange = partition == null ? (await this.GetPartitionKeyRanges(client)).FirstOrDefault() : null;
-
-        //    var changeFeed = client.CreateDocumentChangeFeedQuery(UriFactory.CreateDocumentCollectionUri(this.Database, this.Collection),
-        //        new ChangeFeedOptions
-        //        {
-        //            PartitionKeyRangeId = partitionKeyRange?.Id,
-        //            PartitionKey = partition != null ? new PartitionKey(partition) : null,
-        //            StartFromBeginning = true
-        //        });
-
-        //    string token = null;
-
-        //    while (changeFeed.HasMoreResults)
-        //    {
-        //        var page = await changeFeed.ExecuteNextAsync<Document>();
-        //        token = page.ResponseContinuation;
-        //    }
-
-        //    return token;
-        //}
-
-        //internal async Task<IReadOnlyCollection<EveneumDocument>> LoadChangeFeed(IDocumentClient client, string partition, string token = null)
-        //{
-        //    var partitioned = partition != null;
-
-        //    PartitionKeyRange partitionKeyRange = partitioned ? null : (await this.GetPartitionKeyRanges(client)).FirstOrDefault();
-        //    var changeFeed = client.CreateDocumentChangeFeedQuery(UriFactory.CreateDocumentCollectionUri(this.Database, this.Collection),
-        //        new ChangeFeedOptions
-        //        {
-        //            PartitionKeyRangeId = partitionKeyRange?.Id,
-        //            PartitionKey = partitioned ? new PartitionKey(partition) : null,
-        //            RequestContinuation = token
-        //        });
-
-        //    return await changeFeed.All(new JsonSerializerSettings());
-        //}
     }
 }

@@ -24,7 +24,7 @@ namespace Eveneum.Tests
 
             await (this.Context.EventStore as IAdvancedEventStore).LoadAllEvents(e => { events.AddRange(e); return Task.CompletedTask; });
 
-            ScenarioContext.Current.Set(events, "LoadAllEvents");
+            this.Context.LoadAllEvents = events;
         }
 
         [When(@"I load events using query (.*)")]
@@ -34,15 +34,13 @@ namespace Eveneum.Tests
 
             await(this.Context.EventStore as IAdvancedEventStore).LoadEvents(query, e => { events.AddRange(e); return Task.CompletedTask; });
 
-            ScenarioContext.Current.Set(events, "LoadAllEvents");
+            this.Context.LoadAllEvents = events;
         }
 
         [Then(@"all (\d+) events are loaded")]
         public void ThenAllEventsAreLoaded(ulong events)
         {
-            var loadedEvents = ScenarioContext.Current.Get<List<EventData>>("LoadAllEvents");
-
-            Assert.AreEqual(events, loadedEvents.Count);
+            Assert.AreEqual(events, this.Context.LoadAllEvents.Count);
         }
     }
 }

@@ -30,7 +30,7 @@ namespace Eveneum.Tests
         [Given(@"an existing stream ([^\s-]) with (\d+) events")]
         public async Task GivenAnExistingStream(string streamId, ushort events)
         {
-            ScenarioContext.Current.SetStreamId(streamId);
+            this.Context.StreamId = streamId;
 
             await this.Context.EventStore.WriteToStream(streamId, TestSetup.GetEvents(events));
         }
@@ -38,10 +38,10 @@ namespace Eveneum.Tests
         [Given(@"an existing stream ([^\s-]) with metadata and (\d+) events")]
         public async Task GivenAnExistingStreamWithMetadataAndEvents(string streamId, ushort events)
         {
-            ScenarioContext.Current.SetStreamId(streamId);
-            ScenarioContext.Current.SetHeaderMetadata(TestSetup.GetMetadata());
+            this.Context.StreamId = streamId;
+            this.Context.HeaderMetadata = TestSetup.GetMetadata();
 
-            await this.Context.EventStore.WriteToStream(streamId, TestSetup.GetEvents(events), metadata: ScenarioContext.Current.GetHeaderMetadata());
+            await this.Context.EventStore.WriteToStream(streamId, TestSetup.GetEvents(events), metadata: this.Context.HeaderMetadata);
         }
 
         [Given(@"a deleted stream ([^\s-]) with (\d+) events")]

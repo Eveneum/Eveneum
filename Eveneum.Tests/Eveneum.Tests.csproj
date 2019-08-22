@@ -22,9 +22,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Properties\" />
-  </ItemGroup>
-  <ItemGroup>
     <Compile Update="Advanced.feature.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
@@ -180,5 +177,8 @@
       <Generator>SpecFlowSingleFileGenerator</Generator>
       <LastGenOutput>ReadingStream.feature.cs</LastGenOutput>
     </SpecFlowFeatureFiles>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Properties\" />
   </ItemGroup>
 </Project>
