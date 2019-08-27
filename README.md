@@ -38,3 +38,6 @@ The aim of the project is to provide a straightforward implementation of Event S
  
  All documentation is available in [wiki](https://github.com/Eveneum/Eveneum/wiki)
 
+## Stability
+
+Eveneum has been used in Production in a multi-tenant system since Oct 2018, is considerred stable and is being maintained. Any bugs will be fixed as priority.
