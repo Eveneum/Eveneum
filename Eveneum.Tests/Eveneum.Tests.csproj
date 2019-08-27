@@ -102,6 +102,9 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>DeletingStreamWithNonExpectedVersion.feature</DependentUpon>
     </Compile>
+    <Compile Update="ReadingStreamIgnoringSnapshots.feature.cs">
+      <DependentUpon>ReadingStreamIgnoringSnapshots.feature</DependentUpon>
+    </Compile>
     <Compile Update="ReadingStream.feature.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
@@ -172,6 +175,12 @@
     <SpecFlowFeatureFiles Update="DeletingStreamWithNonExpectedVersion.feature">
       <Generator>SpecFlowSingleFileGenerator</Generator>
       <LastGenOutput>DeletingStreamWithNonExpectedVersion.feature.cs</LastGenOutput>
+    </SpecFlowFeatureFiles>
+    <SpecFlowFeatureFiles Update="ReadingStreamIgnoringSnapshots.feature">
+      <Visible>$(UsingMicrosoftNETSdk)</Visible>
+      <CodeBehindFile>%(RelativeDir)%(Filename).feature$(DefaultLanguageSourceExtension)</CodeBehindFile>
+      <LastGenOutput>ReadingStream.feature.cs</LastGenOutput>
+      <Generator>SpecFlowSingleFileGenerator</Generator>
     </SpecFlowFeatureFiles>
     <SpecFlowFeatureFiles Update="ReadingStream.feature">
       <Generator>SpecFlowSingleFileGenerator</Generator>

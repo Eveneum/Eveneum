@@ -33,12 +33,17 @@ namespace Eveneum
             this.JsonSerializer = jsonSerializer ?? JsonSerializer.CreateDefault();
         }
 
-        public async Task<Stream?> ReadStream(string streamId, CancellationToken cancellationToken = default)
+        public Task<Stream?> ReadStream(string streamId, CancellationToken cancellationToken = default) =>
+            this.ReadStream(streamId, $"SELECT * FROM x ORDER BY x.{nameof(EveneumDocument.SortOrder)} DESC", cancellationToken);
+
+        public Task<Stream?> ReadStreamIgnoringSnapshots(string streamId, CancellationToken cancellationToken = default) =>
+            this.ReadStream(streamId, $"SELECT * FROM x WHERE x.{nameof(EveneumDocument.DocumentType)} <> '{nameof(DocumentType.Snapshot)}' ORDER BY x.{nameof(EveneumDocument.SortOrder)} DESC", cancellationToken);
+
+        private async Task<Stream?> ReadStream(string streamId, string sql, CancellationToken cancellationToken = default)
         {
             if (streamId == null)
                 throw new ArgumentNullException(nameof(streamId));
 
-            var sql = $"SELECT * FROM x ORDER BY x.{nameof(EveneumDocument.SortOrder)} DESC";
             var query = this.Container.GetItemQueryIterator<EveneumDocument>(sql, requestOptions: new QueryRequestOptions { PartitionKey = new PartitionKey(streamId), MaxItemCount = -1 });
 
             var documents = new List<EveneumDocument>();

@@ -1,9 +1,9 @@
-﻿using System.Threading.Tasks;
+﻿using System.Linq;
+using System.Threading.Tasks;
+using Newtonsoft.Json.Linq;
+using Eveneum.Tests.Infrastrature;
 using NUnit.Framework;
 using TechTalk.SpecFlow;
-using Eveneum.Tests.Infrastrature;
-using Newtonsoft.Json.Linq;
-using System.Linq;
 
 namespace Eveneum.Tests
 {
@@ -22,6 +22,13 @@ namespace Eveneum.Tests
         {
             this.Context.StreamId = streamId;
             this.Context.Stream = await this.Context.EventStore.ReadStream(streamId);
+        }
+
+        [When(@"I read stream ([^\s-]) ignoring snapshots")]
+        public async Task WhenIReadStreamIgnoringSnapshots(string streamId)
+        {
+            this.Context.StreamId = streamId;
+            this.Context.Stream = await this.Context.EventStore.ReadStreamIgnoringSnapshots(streamId);
         }
 
         [Then(@"the non-existing stream is returned")]
