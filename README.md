@@ -2,6 +2,7 @@
 ![GitHub](https://img.shields.io/github/license/mashape/apistatus.svg?style=popout)
 [![NuGet](https://img.shields.io/nuget/v/Eveneum.svg?style=popout)](https://www.nuget.org/packages/Eveneum/)
 [![NuGet](https://img.shields.io/nuget/dt/Eveneum.svg?style=popout)](https://www.nuget.org/packages/Eveneum/)
+[![Twitter](https://img.shields.io/twitter/follow/EveneumDB.svg?style=social&label=Follow)](https://twitter.com/intent/follow?screen_name=EveneumDB)
 
 **Eveneum is a simple, developer-friendly Event Store with snapshots, backed by Azure Cosmos DB.**
 
