@@ -36,6 +36,9 @@ namespace Eveneum
         public Task<Stream?> ReadStream(string streamId, CancellationToken cancellationToken = default) =>
             this.ReadStream(streamId, $"SELECT * FROM x ORDER BY x.{nameof(EveneumDocument.SortOrder)} DESC", cancellationToken);
 
+        public Task<Stream?> ReadStreamAsOfVersion(string streamId, ulong version, CancellationToken cancellationToken = default) =>
+            this.ReadStream(streamId, $"SELECT * FROM x WHERE x.{nameof(EveneumDocument.Version)} <= {version} OR x.{nameof(EveneumDocument.DocumentType)} = '{nameof(DocumentType.Header)}' ORDER BY x.{nameof(EveneumDocument.SortOrder)} DESC", cancellationToken);
+
         public Task<Stream?> ReadStreamIgnoringSnapshots(string streamId, CancellationToken cancellationToken = default) =>
             this.ReadStream(streamId, $"SELECT * FROM x WHERE x.{nameof(EveneumDocument.DocumentType)} <> '{nameof(DocumentType.Snapshot)}' ORDER BY x.{nameof(EveneumDocument.SortOrder)} DESC", cancellationToken);
 
@@ -77,7 +80,7 @@ namespace Eveneum
             if (documents.Count == 0)
                 return null;
 
-            var headerDocument = documents.First();
+            var headerDocument = documents.First(x => x.DocumentType == DocumentType.Header);
             var events = documents.Where(x => x.DocumentType == DocumentType.Event).Select(this.DeserializeEvent).Reverse().ToArray();
             var snapshot = documents.Where(x => x.DocumentType == DocumentType.Snapshot).Select(this.DeserializeSnapshot).Cast<Snapshot?>().FirstOrDefault();
 

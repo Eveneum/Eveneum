@@ -24,6 +24,13 @@ namespace Eveneum.Tests
             this.Context.Stream = await this.Context.EventStore.ReadStream(streamId);
         }
 
+        [When(@"I read stream ([^\s-]) as of version (\d+)")]
+        public async Task WhenIReadStreamAsOfVersion(string streamId, ulong version)
+        {
+            this.Context.StreamId = streamId;
+            this.Context.Stream = await this.Context.EventStore.ReadStreamAsOfVersion(streamId, version);
+        }
+
         [When(@"I read stream ([^\s-]) ignoring snapshots")]
         public async Task WhenIReadStreamIgnoringSnapshots(string streamId)
         {
