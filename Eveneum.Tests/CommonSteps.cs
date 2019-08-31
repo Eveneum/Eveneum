@@ -24,7 +24,7 @@ namespace Eveneum.Tests
         [Given(@"hard-delete mode")]
         public void GivenHardDeleteMode()
         {
-            this.Context.EventStore.DeleteMode = DeleteMode.HardDelete;
+            this.Context.EventStoreOptions.DeleteMode = DeleteMode.HardDelete;
         }
 
         [Given(@"an existing stream ([^\s-]) with (\d+) events")]

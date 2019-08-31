@@ -80,7 +80,7 @@ namespace Eveneum.Tests
             Assert.AreEqual(this.Context.StreamId, headerDocument.StreamId);
             Assert.AreEqual(version, headerDocument.Version);
             Assert.AreEqual(version + EveneumDocument.GetOrderingFraction(DocumentType.Header), headerDocument.SortOrder);
-            Assert.AreEqual(typeof(SampleMetadata).AssemblyQualifiedName, headerDocument.MetadataType);
+            Assert.AreEqual(this.Context.EventStoreOptions.TypeProvider.GetIdentifierForType(typeof(SampleMetadata)), headerDocument.MetadataType);
             Assert.NotNull(headerDocument.Metadata);
             Assert.AreEqual(JToken.FromObject(this.Context.HeaderMetadata), headerDocument.Metadata);
             Assert.NotNull(headerDocument.ETag);
@@ -151,7 +151,7 @@ namespace Eveneum.Tests
                 Assert.IsNotNull(eventDocument);
                 Assert.AreEqual(DocumentType.Event, eventDocument.DocumentType);
                 Assert.AreEqual(streamId, eventDocument.StreamId);
-                Assert.AreEqual(newEvent.Body.GetType().AssemblyQualifiedName, eventDocument.BodyType);
+                Assert.AreEqual(this.Context.EventStoreOptions.TypeProvider.GetIdentifierForType(newEvent.Body.GetType()), eventDocument.BodyType);
                 Assert.NotNull(eventDocument.Body);
                 Assert.AreEqual(JToken.FromObject(newEvent.Body), eventDocument.Body);
                 Assert.NotNull(eventDocument.ETag);
@@ -164,7 +164,7 @@ namespace Eveneum.Tests
                 }
                 else
                 {
-                    Assert.AreEqual(newEvent.Metadata.GetType().AssemblyQualifiedName, eventDocument.MetadataType);
+                    Assert.AreEqual(this.Context.EventStoreOptions.TypeProvider.GetIdentifierForType(newEvent.Metadata.GetType()), eventDocument.MetadataType);
                     Assert.NotNull(eventDocument.Metadata);
                     Assert.AreEqual(JToken.FromObject(newEvent.Metadata), eventDocument.Metadata);
                 }

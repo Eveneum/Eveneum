@@ -17,7 +17,7 @@ namespace Eveneum
 
     public interface IDeleteStream
     {
-        DeleteMode DeleteMode { get; set; }
+        DeleteMode DeleteMode { get; }
         Task DeleteStream(string streamId, ulong expectedVersion, CancellationToken cancellationToken = default);
     }
 

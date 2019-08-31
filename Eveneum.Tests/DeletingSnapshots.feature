@@ -29,8 +29,8 @@ Scenario: Deleting all snapshots
 	And stream P is not soft-deleted
 
 Scenario: Hard-deleting some snapshots
-	Given an event store backed by partitioned collection
-	And hard-delete mode
+	Given hard-delete mode
+	And an event store backed by partitioned collection
 	And an existing stream P with 10 events
 	And an existing snapshot for version 5
 	And an existing stream S with 10 events
@@ -44,8 +44,8 @@ Scenario: Hard-deleting some snapshots
 	And stream P is not hard-deleted
 
 Scenario: Hard-eleting all snapshots
-	Given an event store backed by partitioned collection
-	And hard-delete mode
+	Given hard-delete mode
+	And an event store backed by partitioned collection
 	And an existing stream P with 10 events
 	And an existing snapshot for version 5
 	And an existing stream S with 10 events

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Eveneum.Documents;
+using Eveneum.Serialization;
 using Microsoft.Azure.Cosmos;
 
 namespace Eveneum.Tests.Infrastrature
@@ -13,6 +14,7 @@ namespace Eveneum.Tests.Infrastrature
 
         public CosmosClient Client { get; private set; }
         public IEventStore EventStore { get; private set; }
+        public EventStoreOptions EventStoreOptions { get; } = new EventStoreOptions();
 
         public string StreamId { get; set; }
         public Stream? Stream { get; set; }
@@ -32,7 +34,7 @@ namespace Eveneum.Tests.Infrastrature
         internal async Task Initialize()
         {
             this.Client = await CosmosSetup.GetClient(this.Database, this.Container);
-            this.EventStore = new EventStore(this.Client, this.Database, this.Container);
+            this.EventStore = new EventStore(this.Client, this.Database, this.Container, this.EventStoreOptions);
         }
 
         public void Dispose()

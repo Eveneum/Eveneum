@@ -32,6 +32,9 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>AppendingToNonExistentStream.feature</DependentUpon>
     </Compile>
+    <Compile Update="CustomTypeProvider.feature.cs">
+      <DependentUpon>CustomTypeProvider.feature</DependentUpon>
+    </Compile>
     <Compile Update="AppendingToStream.feature.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
@@ -122,6 +125,12 @@
     <SpecFlowFeatureFiles Update="AppendingToNonExistentStream.feature">
       <Generator>SpecFlowSingleFileGenerator</Generator>
       <LastGenOutput>AppendingToNonExistentStream.feature.cs</LastGenOutput>
+    </SpecFlowFeatureFiles>
+    <SpecFlowFeatureFiles Update="CustomTypeProvider.feature">
+      <Visible>$(UsingMicrosoftNETSdk)</Visible>
+      <CodeBehindFile>%(RelativeDir)%(Filename).feature$(DefaultLanguageSourceExtension)</CodeBehindFile>
+      <LastGenOutput>AppendingToStream.feature.cs</LastGenOutput>
+      <Generator>SpecFlowSingleFileGenerator</Generator>
     </SpecFlowFeatureFiles>
     <SpecFlowFeatureFiles Update="AppendingToStream.feature">
       <Generator>SpecFlowSingleFileGenerator</Generator>

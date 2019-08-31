@@ -1,14 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Azure.Cosmos;
 using Microsoft.Azure.Cosmos.Linq;
-using Newtonsoft.Json.Linq;
-using Eveneum.Documents;
-using System.Threading;
-using Eveneum.Advanced;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using Eveneum.Advanced;
+using Eveneum.Documents;
+using Eveneum.Serialization;
 
 namespace Eveneum
 {
@@ -18,19 +19,19 @@ namespace Eveneum
         public readonly Database Database;
         public readonly Container Container;
 
-        public readonly JsonSerializer JsonSerializer;
+        public DeleteMode DeleteMode { get; }
+        public JsonSerializer JsonSerializer { get; }
+        public ITypeProvider TypeProvider { get; }
 
-        public DeleteMode DeleteMode { get; set; } = DeleteMode.SoftDelete;
-
-        private readonly TypeCache TypeCache = new TypeCache();
-
-        public EventStore(CosmosClient client, string database, string container, JsonSerializer jsonSerializer = null)
+        public EventStore(CosmosClient client, string database, string container, EventStoreOptions options = null)
         {
             this.Client = client ?? throw new ArgumentNullException(nameof(client)); 
             this.Database = this.Client.GetDatabase(database ?? throw new ArgumentNullException(nameof(database)));
             this.Container = this.Database.GetContainer(container ?? throw new ArgumentNullException(nameof(container)));
 
-            this.JsonSerializer = jsonSerializer ?? JsonSerializer.CreateDefault();
+            this.DeleteMode = options?.DeleteMode ?? DeleteMode.SoftDelete;
+            this.JsonSerializer = options?.JsonSerializer ?? JsonSerializer.CreateDefault();
+            this.TypeProvider = options?.TypeProvider ?? new PlatformTypeProvider();
         }
 
         public Task<Stream?> ReadStream(string streamId, CancellationToken cancellationToken = default) =>
@@ -87,7 +88,7 @@ namespace Eveneum
             object metadata = null;
 
             if (!string.IsNullOrEmpty(headerDocument.MetadataType))
-                metadata = headerDocument.Metadata.ToObject(this.TypeCache.Resolve(headerDocument.MetadataType), this.JsonSerializer);
+                metadata = headerDocument.Metadata.ToObject(this.TypeProvider.GetTypeForIdentifier(headerDocument.MetadataType), this.JsonSerializer);
 
             return new Stream(streamId, headerDocument.Version, metadata, events, snapshot);
         }
@@ -111,8 +112,8 @@ namespace Eveneum
 
             if (metadata != null)
             {
+                header.MetadataType = this.TypeProvider.GetIdentifierForType(metadata.GetType());
                 header.Metadata = JToken.FromObject(metadata, this.JsonSerializer);
-                header.MetadataType = metadata.GetType().AssemblyQualifiedName;
             }
 
             if (!expectedVersion.HasValue)
@@ -251,13 +252,13 @@ namespace Eveneum
             {
                 StreamId = streamId,
                 Version = @event.Version,
-                BodyType = @event.Body.GetType().AssemblyQualifiedName,
+                BodyType = this.TypeProvider.GetIdentifierForType(@event.Body.GetType()),
                 Body = JToken.FromObject(@event.Body, this.JsonSerializer)
             };
 
             if (@event.Metadata != null)
             {
-                document.MetadataType = @event.Metadata.GetType().AssemblyQualifiedName;
+                document.MetadataType = this.TypeProvider.GetIdentifierForType(@event.Metadata.GetType());
                 document.Metadata = JToken.FromObject(@event.Metadata, this.JsonSerializer);
             }
 
@@ -270,14 +271,14 @@ namespace Eveneum
             {
                 StreamId = streamId,
                 Version = version,
-                BodyType = snapshot.GetType().AssemblyQualifiedName,
+                BodyType = this.TypeProvider.GetIdentifierForType(snapshot.GetType()),
                 Body = JToken.FromObject(snapshot, this.JsonSerializer)
             };
 
             if (metadata != null)
             {
+                document.MetadataType = this.TypeProvider.GetIdentifierForType(metadata.GetType());
                 document.Metadata = JToken.FromObject(metadata, this.JsonSerializer);
-                document.MetadataType = metadata.GetType().AssemblyQualifiedName;
             }
 
             return document;
@@ -296,7 +297,7 @@ namespace Eveneum
             if (string.IsNullOrEmpty(typeName))
                 return null;
 
-            var type = this.TypeCache.Resolve(typeName);
+            var type = this.TypeProvider.GetTypeForIdentifier(typeName);
             if (type == null)
                 throw new TypeNotFoundException(typeName);
 
@@ -315,9 +316,9 @@ namespace Eveneum
             object metadata = null;
 
             if (!string.IsNullOrEmpty(document.MetadataType))
-                metadata = document.Metadata.ToObject(this.TypeCache.Resolve(document.MetadataType), this.JsonSerializer);
+                metadata = document.Metadata.ToObject(this.TypeProvider.GetTypeForIdentifier(document.MetadataType), this.JsonSerializer);
 
-            return new Snapshot(document.Body.ToObject(this.TypeCache.Resolve(document.BodyType), this.JsonSerializer), metadata, document.Version);
+            return new Snapshot(document.Body.ToObject(this.TypeProvider.GetTypeForIdentifier(document.BodyType), this.JsonSerializer), metadata, document.Version);
         }
     }
 }
