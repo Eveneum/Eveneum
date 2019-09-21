@@ -8,6 +8,7 @@ Scenario: Deleting stream with no events
 	When I delete stream S in expected version 0
 	Then the header is soft-deleted
 	And stream P is not soft-deleted
+	And request charge is reported
 	
 Scenario: Deleting stream with some events
 	Given an event store backed by partitioned collection
@@ -17,6 +18,7 @@ Scenario: Deleting stream with some events
 	Then the header is soft-deleted
 	And all events are soft-deleted
 	And stream P is not soft-deleted
+	And request charge is reported
 	
 Scenario: Deleting stream with some events and snapshots
 	Given an event store backed by partitioned collection
@@ -30,6 +32,7 @@ Scenario: Deleting stream with some events and snapshots
 	And all events are soft-deleted
 	And all snapshots are soft-deleted
 	And stream P is not soft-deleted
+	And request charge is reported
 		
 Scenario: Hard-deleting stream with no events
 	Given hard-delete mode
@@ -39,6 +42,7 @@ Scenario: Hard-deleting stream with no events
 	When I delete stream S in expected version 0
 	Then the header is hard-deleted
 	And stream P is not hard-deleted
+	And request charge is reported
 	
 Scenario: Hard-deleting stream with some events
 	Given hard-delete mode
@@ -49,6 +53,7 @@ Scenario: Hard-deleting stream with some events
 	Then the header is hard-deleted
 	And all events are hard-deleted
 	And stream P is not hard-deleted
+	And request charge is reported
 	
 Scenario: Hard-deleting stream with some events and snapshots
 	Given hard-delete mode
@@ -63,3 +68,4 @@ Scenario: Hard-deleting stream with some events and snapshots
 	And all events are hard-deleted
 	And all snapshots are hard-deleted
 	And stream P is not hard-deleted
+	And request charge is reported

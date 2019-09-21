@@ -91,6 +91,8 @@ this.ScenarioInitialize(scenarioInfo);
  testRunner.When("I create snapshot for stream S in version 10 and delete older snapshots", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
 #line 11
  testRunner.Then("the snapshots older than 10 are soft-deleted", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
+#line 12
+ testRunner.And("request charge is reported", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
 #line hidden
             this.ScenarioCleanup();
         }

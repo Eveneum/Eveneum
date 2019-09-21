@@ -25,6 +25,8 @@ namespace Eveneum.Tests.Infrastrature
         public List<EventData> LoadAllEvents { get; set; }
         public List<EveneumDocument> ExistingDocuments { get; set; }
 
+        public double RequestCharge { get; set; }
+
         public CosmosDbContext()
         {
             this.Database = "EveneumDB";

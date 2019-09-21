@@ -27,7 +27,9 @@ namespace Eveneum.Tests
             this.Context.NewEvents = TestSetup.GetEvents(events);
             this.Context.ExistingDocuments = await CosmosSetup.QueryAllDocuments(this.Context.Client, this.Context.Database, this.Context.Container);
 
-            await this.Context.EventStore.WriteToStream(this.Context.StreamId, this.Context.NewEvents, metadata: this.Context.HeaderMetadata);
+            var response = await this.Context.EventStore.WriteToStream(this.Context.StreamId, this.Context.NewEvents, metadata: this.Context.HeaderMetadata);
+
+            this.Context.RequestCharge = response.RequestCharge;
         }
 
         [When(@"I write a new stream ([^\s-]) with metadata and (\d+) events")]
@@ -45,7 +47,9 @@ namespace Eveneum.Tests
             this.Context.NewEvents = TestSetup.GetEvents(events, expectedVersion + 1);
             this.Context.ExistingDocuments = await CosmosSetup.QueryAllDocuments(this.Context.Client, this.Context.Database, this.Context.Container);
 
-            await this.Context.EventStore.WriteToStream(this.Context.StreamId, this.Context.NewEvents, expectedVersion, metadata: this.Context.HeaderMetadata);
+            var response = await this.Context.EventStore.WriteToStream(this.Context.StreamId, this.Context.NewEvents, expectedVersion, metadata: this.Context.HeaderMetadata);
+
+            this.Context.RequestCharge = response.RequestCharge;
         }
 
         [Then(@"the header version (\d+) with no metadata is persisted")]

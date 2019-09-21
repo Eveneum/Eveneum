@@ -14,6 +14,7 @@ Scenario: Deleting some snapshots
 	Then the snapshots older than 5 are soft-deleted
 	And snapshots 5 and newer are not soft-deleted
 	And stream P is not soft-deleted
+	And request charge is reported
 
 Scenario: Deleting all snapshots
 	Given an event store backed by partitioned collection
@@ -27,6 +28,7 @@ Scenario: Deleting all snapshots
 	When I delete snapshots older than version 999999 from stream S
 	Then the snapshots older than 10 are soft-deleted
 	And stream P is not soft-deleted
+	And request charge is reported
 
 Scenario: Hard-deleting some snapshots
 	Given hard-delete mode
@@ -42,6 +44,7 @@ Scenario: Hard-deleting some snapshots
 	Then the snapshots older than 5 are hard-deleted
 	And snapshots 5 and newer are not hard-deleted
 	And stream P is not hard-deleted
+	And request charge is reported
 
 Scenario: Hard-eleting all snapshots
 	Given hard-delete mode
@@ -56,3 +59,4 @@ Scenario: Hard-eleting all snapshots
 	When I delete snapshots older than version 999999 from stream S
 	Then the snapshots older than 10 are hard-deleted
 	And stream P is not hard-deleted
+	And request charge is reported

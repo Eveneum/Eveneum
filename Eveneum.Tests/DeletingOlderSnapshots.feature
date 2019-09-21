@@ -9,3 +9,4 @@ Scenario: Deleting older snapshots
 	And an existing snapshot for version 7
 	When I create snapshot for stream S in version 10 and delete older snapshots
 	Then the snapshots older than 10 are soft-deleted
+	And request charge is reported

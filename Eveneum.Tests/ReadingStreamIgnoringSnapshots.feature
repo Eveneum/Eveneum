@@ -5,6 +5,7 @@ Scenario: Reading stream that doesn't exist
 	Given an event store backed by partitioned collection
 	When I read stream S ignoring snapshots
 	Then the non-existing stream is returned
+	And request charge is reported
 
 Scenario: Reading empty stream with no metadata
 	Given an event store backed by partitioned collection
@@ -13,6 +14,7 @@ Scenario: Reading empty stream with no metadata
 	Then the stream S in version 0 is returned
 	And no snapshot is returned
 	And no events are returned
+	And request charge is reported
 		
 Scenario: Reading empty stream with metadata
 	Given an event store backed by partitioned collection
@@ -21,6 +23,7 @@ Scenario: Reading empty stream with metadata
 	Then the stream S with metadata in version 0 is returned
 	And no snapshot is returned
 	And no events are returned
+	And request charge is reported
 		
 Scenario: Reading stream with no metadata and some events
 	Given an event store backed by partitioned collection
@@ -29,6 +32,7 @@ Scenario: Reading stream with no metadata and some events
 	Then the stream S in version 10 is returned
 	And no snapshot is returned
 	And events from version 1 to 10 are returned
+	And request charge is reported
 				
 Scenario: Reading stream with metadata and some events
 	Given an event store backed by partitioned collection
@@ -37,6 +41,7 @@ Scenario: Reading stream with metadata and some events
 	Then the stream S with metadata in version 10 is returned
 	And no snapshot is returned
 	And events from version 1 to 10 are returned
+	And request charge is reported
 
 Scenario: Reading stream with no metadata and many events
 	Given an event store backed by partitioned collection
@@ -45,6 +50,7 @@ Scenario: Reading stream with no metadata and many events
 	Then the stream S in version 1000 is returned
 	And no snapshot is returned
 	And events from version 1 to 1000 are returned
+	And request charge is reported
 				
 Scenario: Reading stream with metadata and many events
 	Given an event store backed by partitioned collection
@@ -53,6 +59,7 @@ Scenario: Reading stream with metadata and many events
 	Then the stream S with metadata in version 1000 is returned
 	And no snapshot is returned
 	And events from version 1 to 1000 are returned
+	And request charge is reported
 		
 Scenario: Reading stream with no metadata, some events and snapshot in the middle of the stream
 	Given an event store backed by partitioned collection
@@ -62,6 +69,7 @@ Scenario: Reading stream with no metadata, some events and snapshot in the middl
 	Then the stream S in version 10 is returned
 	And no snapshot is returned
 	And events from version 1 to 10 are returned
+	And request charge is reported
 				
 Scenario: Reading stream with metadata, some events and snapshot in the middle of the stream
 	Given an event store backed by partitioned collection
@@ -71,6 +79,7 @@ Scenario: Reading stream with metadata, some events and snapshot in the middle o
 	Then the stream S with metadata in version 10 is returned
 	And no snapshot is returned
 	And events from version 1 to 10 are returned
+	And request charge is reported
 				
 Scenario: Reading stream with no metadata, some events and snapshot at the end of the stream
 	Given an event store backed by partitioned collection
@@ -80,6 +89,7 @@ Scenario: Reading stream with no metadata, some events and snapshot at the end o
 	Then the stream S in version 10 is returned
 	And no snapshot is returned
 	And events from version 1 to 10 are returned
+	And request charge is reported
 				
 Scenario: Reading stream with metadata, some events and snapshot and the end of the stream
 	Given an event store backed by partitioned collection
@@ -89,6 +99,7 @@ Scenario: Reading stream with metadata, some events and snapshot and the end of 
 	Then the stream S with metadata in version 10 is returned
 	And no snapshot is returned
 	And events from version 1 to 10 are returned
+	And request charge is reported
 
 Scenario: Reading stream with no metadata, some events and snapshots in the middle of the stream
 	Given an event store backed by partitioned collection
@@ -100,6 +111,7 @@ Scenario: Reading stream with no metadata, some events and snapshots in the midd
 	Then the stream S in version 10 is returned
 	And no snapshot is returned
 	And events from version 1 to 10 are returned
+	And request charge is reported
 				
 Scenario: Reading stream with metadata, some events and snapshots in the middle of the stream
 	Given an event store backed by partitioned collection
@@ -111,6 +123,7 @@ Scenario: Reading stream with metadata, some events and snapshots in the middle 
 	Then the stream S with metadata in version 10 is returned
 	And no snapshot is returned
 	And events from version 1 to 10 are returned
+	And request charge is reported
 				
 Scenario: Reading stream with no metadata, some events and snapshots at the end of the stream
 	Given an event store backed by partitioned collection
@@ -122,6 +135,7 @@ Scenario: Reading stream with no metadata, some events and snapshots at the end 
 	Then the stream S in version 10 is returned
 	And no snapshot is returned
 	And events from version 1 to 10 are returned
+	And request charge is reported
 				
 Scenario: Reading stream with metadata, some events and snapshots and the end of the stream
 	Given an event store backed by partitioned collection
@@ -133,6 +147,7 @@ Scenario: Reading stream with metadata, some events and snapshots and the end of
 	Then the stream S with metadata in version 10 is returned
 	And no snapshot is returned
 	And events from version 1 to 10 are returned
+	And request charge is reported
 		
 Scenario: Reading stream with no metadata, some events and snapshot with metadata in the middle of the stream
 	Given an event store backed by partitioned collection
@@ -142,6 +157,7 @@ Scenario: Reading stream with no metadata, some events and snapshot with metadat
 	Then the stream S in version 10 is returned
 	And no snapshot is returned
 	And events from version 1 to 10 are returned
+	And request charge is reported
 				
 Scenario: Reading stream with metadata, some events and snapshot with metadata in the middle of the stream
 	Given an event store backed by partitioned collection
@@ -151,6 +167,7 @@ Scenario: Reading stream with metadata, some events and snapshot with metadata i
 	Then the stream S with metadata in version 10 is returned
 	And no snapshot is returned
 	And events from version 1 to 10 are returned
+	And request charge is reported
 				
 Scenario: Reading stream with no metadata, some events and snapshot with metadata at the end of the stream
 	Given an event store backed by partitioned collection
@@ -160,6 +177,7 @@ Scenario: Reading stream with no metadata, some events and snapshot with metadat
 	Then the stream S in version 10 is returned
 	And no snapshot is returned
 	And events from version 1 to 10 are returned
+	And request charge is reported
 				
 Scenario: Reading stream with metadata, some events and snapshot with metadata and the end of the stream
 	Given an event store backed by partitioned collection
@@ -169,6 +187,7 @@ Scenario: Reading stream with metadata, some events and snapshot with metadata a
 	Then the stream S with metadata in version 10 is returned
 	And no snapshot is returned
 	And events from version 1 to 10 are returned
+	And request charge is reported
 
 Scenario: Reading stream with no metadata, some events and snapshots with metadata in the middle of the stream
 	Given an event store backed by partitioned collection
@@ -180,6 +199,7 @@ Scenario: Reading stream with no metadata, some events and snapshots with metada
 	Then the stream S in version 10 is returned
 	And no snapshot is returned
 	And events from version 1 to 10 are returned
+	And request charge is reported
 				
 Scenario: Reading stream with metadata, some events and snapshots with metadata in the middle of the stream
 	Given an event store backed by partitioned collection
@@ -191,6 +211,7 @@ Scenario: Reading stream with metadata, some events and snapshots with metadata 
 	Then the stream S with metadata in version 10 is returned
 	And no snapshot is returned
 	And events from version 1 to 10 are returned
+	And request charge is reported
 				
 Scenario: Reading stream with no metadata, some events and snapshots with metadata at the end of the stream
 	Given an event store backed by partitioned collection
@@ -202,6 +223,7 @@ Scenario: Reading stream with no metadata, some events and snapshots with metada
 	Then the stream S in version 10 is returned
 	And no snapshot is returned
 	And events from version 1 to 10 are returned
+	And request charge is reported
 				
 Scenario: Reading stream with metadata, some events and snapshots with metadata and the end of the stream
 	Given an event store backed by partitioned collection
@@ -213,3 +235,4 @@ Scenario: Reading stream with metadata, some events and snapshots with metadata 
 	Then the stream S with metadata in version 10 is returned
 	And no snapshot is returned
 	And events from version 1 to 10 are returned
+	And request charge is reported

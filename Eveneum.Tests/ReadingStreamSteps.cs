@@ -21,21 +21,33 @@ namespace Eveneum.Tests
         public async Task WhenIReadStream(string streamId)
         {
             this.Context.StreamId = streamId;
-            this.Context.Stream = await this.Context.EventStore.ReadStream(streamId);
+
+            var response = await this.Context.EventStore.ReadStream(streamId);
+
+            this.Context.Stream = response.Stream;
+            this.Context.RequestCharge = response.RequestCharge;
         }
 
         [When(@"I read stream ([^\s-]) as of version (\d+)")]
         public async Task WhenIReadStreamAsOfVersion(string streamId, ulong version)
         {
             this.Context.StreamId = streamId;
-            this.Context.Stream = await this.Context.EventStore.ReadStreamAsOfVersion(streamId, version);
+
+            var response = await this.Context.EventStore.ReadStreamAsOfVersion(streamId, version);
+
+            this.Context.Stream = response.Stream;
+            this.Context.RequestCharge = response.RequestCharge;
         }
 
         [When(@"I read stream ([^\s-]) ignoring snapshots")]
         public async Task WhenIReadStreamIgnoringSnapshots(string streamId)
         {
             this.Context.StreamId = streamId;
-            this.Context.Stream = await this.Context.EventStore.ReadStreamIgnoringSnapshots(streamId);
+
+            var response = await this.Context.EventStore.ReadStreamIgnoringSnapshots(streamId);
+
+            this.Context.Stream = response.Stream;
+            this.Context.RequestCharge = response.RequestCharge;
         }
 
         [Then(@"the non-existing stream is returned")]

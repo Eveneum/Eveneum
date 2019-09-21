@@ -1,4 +1,6 @@
 ﻿using Eveneum.Tests.Infrastrature;
+using NUnit.Framework;
+using NUnit.Framework.Interfaces;
 using System;
 using System.Threading.Tasks;
 using TechTalk.SpecFlow;
@@ -51,6 +53,14 @@ namespace Eveneum.Tests
 
             await this.Context.EventStore.WriteToStream(streamId, eventData);
             await this.Context.EventStore.DeleteStream(streamId, (ulong)eventData.Length);
+        }
+
+        [Then(@"request charge is reported")]
+        public void ThenRequestChargeIsReported()
+        {
+            Assert.Greater(this.Context.RequestCharge, 0);
+
+            Console.WriteLine("Request charge: " + this.Context.RequestCharge);
         }
     }
 }

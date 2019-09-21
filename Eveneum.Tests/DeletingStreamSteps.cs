@@ -23,7 +23,9 @@ namespace Eveneum.Tests
             this.Context.StreamId = streamId;
             this.Context.ExistingDocuments = await CosmosSetup.QueryAllDocuments(this.Context.Client, this.Context.Database, this.Context.Container);
 
-            await this.Context.EventStore.DeleteStream(streamId, expectedVersion);
+            var response = await this.Context.EventStore.DeleteStream(streamId, expectedVersion);
+
+            this.Context.RequestCharge = response.RequestCharge;
         }
 
         [Then(@"the header is soft-deleted")]

@@ -40,7 +40,9 @@ namespace Eveneum.Tests
         {
             this.Context.Snapshot = TestSetup.GetSnapshot();;
 
-            await this.Context.EventStore.CreateSnapshot(streamId, version, this.Context.Snapshot, this.Context.SnapshotMetadata);
+            var response = await this.Context.EventStore.CreateSnapshot(streamId, version, this.Context.Snapshot, this.Context.SnapshotMetadata);
+
+            this.Context.RequestCharge = response.RequestCharge;
         }
 
         [When(@"I create snapshot with metadata for stream ([^\s-]) in version (\d+)")]
@@ -56,13 +58,17 @@ namespace Eveneum.Tests
         {
             this.Context.Snapshot = TestSetup.GetSnapshot();;
 
-            await this.Context.EventStore.CreateSnapshot(streamId, version, this.Context.Snapshot, deleteOlderSnapshots: true);
+            var response = await this.Context.EventStore.CreateSnapshot(streamId, version, this.Context.Snapshot, deleteOlderSnapshots: true);
+
+            this.Context.RequestCharge = response.RequestCharge;
         }
 
         [When(@"I delete snapshots older than version (\d+) from stream ([^\s-])")]
         public async Task WhenIDeleteSnapshotsOlderThanVersionFromStream(ulong version, string streamId)
         {
-            await this.Context.EventStore.DeleteSnapshots(streamId, version);
+            var response = await this.Context.EventStore.DeleteSnapshots(streamId, version);
+
+            this.Context.RequestCharge = response.RequestCharge;
         }
 
         [Then(@"the snapshot for version (\d+) is persisted")]

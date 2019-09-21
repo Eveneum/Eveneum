@@ -17,6 +17,7 @@ Scenario: Loading all events
 	And an existing stream J with 10 events
 	When I load all events
 	Then all 370 events are loaded
+	And request charge is reported
 
 		
 Scenario: Querying events
@@ -35,3 +36,4 @@ Scenario: Querying events
 	And an existing stream J with 10 events
 	When I load events using query SELECT * from c WHERE c.StreamId = 'B' or c.StreamId = 'D'
 	Then all 150 events are loaded
+	And request charge is reported

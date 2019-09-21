@@ -22,9 +22,10 @@ namespace Eveneum.Tests
         {
             var events = new List<EventData>();
 
-            await (this.Context.EventStore as IAdvancedEventStore).LoadAllEvents(e => { events.AddRange(e); return Task.CompletedTask; });
+            var response = await (this.Context.EventStore as IAdvancedEventStore).LoadAllEvents(e => { events.AddRange(e); return Task.CompletedTask; });
 
             this.Context.LoadAllEvents = events;
+            this.Context.RequestCharge = response.RequestCharge;
         }
 
         [When(@"I load events using query (.*)")]
@@ -32,9 +33,10 @@ namespace Eveneum.Tests
         {
             var events = new List<EventData>();
 
-            await(this.Context.EventStore as IAdvancedEventStore).LoadEvents(query, e => { events.AddRange(e); return Task.CompletedTask; });
+            var response = await(this.Context.EventStore as IAdvancedEventStore).LoadEvents(query, e => { events.AddRange(e); return Task.CompletedTask; });
 
             this.Context.LoadAllEvents = events;
+            this.Context.RequestCharge = response.RequestCharge;
         }
 
         [Then(@"all (\d+) events are loaded")]
