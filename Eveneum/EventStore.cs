@@ -10,6 +10,9 @@ using Newtonsoft.Json.Linq;
 using Eveneum.Advanced;
 using Eveneum.Documents;
 using Eveneum.Serialization;
+using Microsoft.Azure.Cosmos.Scripts;
+using System.Reflection;
+using System.IO;
 
 namespace Eveneum
 {
@@ -24,6 +27,7 @@ namespace Eveneum
         public ITypeProvider TypeProvider { get; }
 
         private bool IsInitialized = false;
+        private const string WriteEventsStoredProc = "Eveneum.WriteEvents";
 
         public EventStore(CosmosClient client, string database, string container, EventStoreOptions options = null)
         {
@@ -36,11 +40,11 @@ namespace Eveneum
             this.TypeProvider = options?.TypeProvider ?? new PlatformTypeProvider();
         }
 
-        public Task Initialize()
+        public async Task Initialize()
         {
-            this.IsInitialized = true;
+            await CreateStoredProcedure(WriteEventsStoredProc, "WriteEvents");
 
-            return Task.CompletedTask;
+            this.IsInitialized = true;
         }
 
         public Task<StreamResponse> ReadStream(string streamId, CancellationToken cancellationToken = default) =>
@@ -157,13 +161,14 @@ namespace Eveneum
                 requestCharge += response.RequestCharge;
             }
 
-            var eventDocuments = (events ?? Enumerable.Empty<EventData>()).Select(@event => this.Serialize(@event, streamId));
+            var eventDocuments = (events ?? Enumerable.Empty<EventData>()).Select(@event => this.Serialize(@event, streamId)).ToList();
 
-            foreach (var eventDocument in eventDocuments)
+            while(eventDocuments.Count > 0)
             {
-                var response = await this.Container.CreateItemAsync(eventDocument, new PartitionKey(streamId), cancellationToken: cancellationToken);
-
+                var response = await this.Container.Scripts.ExecuteStoredProcedureAsync<int>(WriteEventsStoredProc, new PartitionKey(streamId), new[] { eventDocuments }, cancellationToken: cancellationToken);
                 requestCharge += response.RequestCharge;
+
+                eventDocuments.RemoveRange(0, response.Resource);
             }
 
             return new Response(requestCharge);
@@ -401,6 +406,29 @@ namespace Eveneum
                 metadata = document.Metadata.ToObject(this.TypeProvider.GetTypeForIdentifier(document.MetadataType), this.JsonSerializer);
 
             return new Snapshot(document.Body.ToObject(this.TypeProvider.GetTypeForIdentifier(document.BodyType), this.JsonSerializer), metadata, document.Version);
+        }
+
+        private async Task CreateStoredProcedure(string procedureId, string procedureFileName)
+        {
+            using (var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(typeof(EventStore), $"StoredProcedures.{procedureFileName}.js"))
+            using (var reader = new StreamReader(stream))
+            {
+                var properties = new StoredProcedureProperties
+                {
+                    Id = procedureId,
+                    Body = await reader.ReadToEndAsync()
+                };
+
+                try
+                {
+                    await this.Container.Scripts.ReadStoredProcedureAsync(procedureId);
+                    await this.Container.Scripts.ReplaceStoredProcedureAsync(properties);
+                }
+                catch (CosmosException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
+                {
+                    await this.Container.Scripts.CreateStoredProcedureAsync(properties);
+                }
+            }
         }
     }
 }
