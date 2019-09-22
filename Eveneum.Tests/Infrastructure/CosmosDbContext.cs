@@ -33,10 +33,13 @@ namespace Eveneum.Tests.Infrastrature
             this.Container = Guid.NewGuid().ToString();
         }
 
-        internal async Task Initialize()
+        internal async Task Initialize(bool initializeEventStore = true)
         {
             this.Client = await CosmosSetup.GetClient(this.Database, this.Container);
             this.EventStore = new EventStore(this.Client, this.Database, this.Container, this.EventStoreOptions);
+
+            if (initializeEventStore)
+                await this.EventStore.Initialize();
         }
 
         public void Dispose()

@@ -23,6 +23,8 @@ namespace Eveneum
         public JsonSerializer JsonSerializer { get; }
         public ITypeProvider TypeProvider { get; }
 
+        private bool IsInitialized = false;
+
         public EventStore(CosmosClient client, string database, string container, EventStoreOptions options = null)
         {
             this.Client = client ?? throw new ArgumentNullException(nameof(client)); 
@@ -32,6 +34,13 @@ namespace Eveneum
             this.DeleteMode = options?.DeleteMode ?? DeleteMode.SoftDelete;
             this.JsonSerializer = options?.JsonSerializer ?? JsonSerializer.CreateDefault();
             this.TypeProvider = options?.TypeProvider ?? new PlatformTypeProvider();
+        }
+
+        public Task Initialize()
+        {
+            this.IsInitialized = true;
+
+            return Task.CompletedTask;
         }
 
         public Task<StreamResponse> ReadStream(string streamId, CancellationToken cancellationToken = default) =>
@@ -45,6 +54,9 @@ namespace Eveneum
 
         private async Task<StreamResponse> ReadStream(string streamId, string sql, int maxItemCount, CancellationToken cancellationToken)
         {
+            if (!this.IsInitialized)
+                throw new NotInitializedException();
+
             if (streamId == null)
                 throw new ArgumentNullException(nameof(streamId));
 
@@ -97,6 +109,9 @@ namespace Eveneum
 
         public async Task<Response> WriteToStream(string streamId, EventData[] events, ulong? expectedVersion = null, object metadata = null, CancellationToken cancellationToken = default)
         {
+            if (!this.IsInitialized)
+                throw new NotInitializedException();
+
             EveneumDocument header;
             double requestCharge = 0;
 
@@ -156,6 +171,9 @@ namespace Eveneum
 
         public async Task<Response> DeleteStream(string streamId, ulong expectedVersion, CancellationToken cancellationToken = default)
         {
+            if (!this.IsInitialized)
+                throw new NotInitializedException();
+
             var headerResponse = await this.ReadHeader(streamId, cancellationToken);
 
             var existingHeader = headerResponse.Document;
@@ -201,6 +219,9 @@ namespace Eveneum
 
         public async Task<Response> CreateSnapshot(string streamId, ulong version, object snapshot, object metadata = null, bool deleteOlderSnapshots = false, CancellationToken cancellationToken = default)
         {
+            if (!this.IsInitialized)
+                throw new NotInitializedException();
+
             var headerResponse = await this.ReadHeader(streamId, cancellationToken);
 
             var header = headerResponse.Document;
@@ -227,6 +248,9 @@ namespace Eveneum
 
         public async Task<Response> DeleteSnapshots(string streamId, ulong olderThanVersion, CancellationToken cancellationToken = default)
         {
+            if (!this.IsInitialized)
+                throw new NotInitializedException();
+
             var headerResponse = await this.ReadHeader(streamId, cancellationToken);
 
             var requestCharge = headerResponse.RequestCharge;
@@ -271,6 +295,9 @@ namespace Eveneum
 
         public async Task<Response> LoadEvents(string sql, Func<IReadOnlyCollection<EventData>, Task> callback, CancellationToken cancellationToken = default)
         {
+            if (!this.IsInitialized)
+                throw new NotInitializedException();
+
             double requestCharge = 0;
             var query = this.Container.GetItemQueryIterator<EveneumDocument>(sql, requestOptions: new QueryRequestOptions { MaxItemCount = -1 });
 

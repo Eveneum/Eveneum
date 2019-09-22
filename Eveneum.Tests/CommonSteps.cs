@@ -23,6 +23,12 @@ namespace Eveneum.Tests
             await this.Context.Initialize();
         }
 
+        [Given(@"an uninitialized event store backed by partitioned collection")]
+        public async Task GivenAnUninitializedEventStoreBackedByPartitionedCollection()
+        {
+            await this.Context.Initialize(false);
+        }
+
         [Given(@"hard-delete mode")]
         public void GivenHardDeleteMode()
         {
