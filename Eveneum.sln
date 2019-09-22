@@ -1,13 +1,16 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.27703.2026
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29306.81
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Eveneum", "Eveneum\Eveneum.csproj", "{E260F510-BC7A-4B3E-869A-8C183AA0FD46}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Eveneum", "Eveneum\Eveneum.csproj", "{E260F510-BC7A-4B3E-869A-8C183AA0FD46}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Eveneum.Tests", "Eveneum.Tests\Eveneum.Tests.csproj", "{B19F8FD5-6650-417B-A94C-6931DB8DC29F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Eveneum.Tests", "Eveneum.Tests\Eveneum.Tests.csproj", "{B19F8FD5-6650-417B-A94C-6931DB8DC29F}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{6425DCA9-49EC-48E2-AD32-A9CFDBD23832}"
+	ProjectSection(SolutionItems) = preProject
+		README.md = README.md
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

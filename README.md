@@ -16,6 +16,7 @@ var containerResponse = await databaseResponse.Database
     .CreateContainerIfNotExistsAsync(new ContainerProperties(collection, "/StreamId"));
 
 IEventStore eventStore = new EventStore(client, database, collection);
+await eventStore.Initialize();
 
 var streamId = Guid.NewGuid().ToString();
 EventData[] events = GetEventsToWrite();
