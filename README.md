@@ -42,3 +42,9 @@ The aim of the project is to provide a straightforward implementation of Event S
 ## Stability
 
 Eveneum has been used in Production in a multi-tenant system since Oct 2018, is considerred stable and is being maintained. Any bugs will be fixed as priority.
+
+## Support
+
+Please create issues for all bugs / feature requests here.
+
+If you're looking for training / mentoring in the areas of event-sourcing / CosmosDB than [contact me](https://github.com/jkonecki) directly.
