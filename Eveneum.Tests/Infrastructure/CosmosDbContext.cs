@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Eveneum.Documents;
 using Eveneum.Serialization;
 using Microsoft.Azure.Cosmos;
+using Microsoft.Azure.Cosmos.Fluent;
 
 namespace Eveneum.Tests.Infrastrature
 {
@@ -36,7 +37,7 @@ namespace Eveneum.Tests.Infrastrature
         internal async Task Initialize(bool initializeEventStore = true)
         {
             this.Client = await CosmosSetup.GetClient(this.Database, this.Container);
-            this.EventStore = new EventStore(this.Client, this.Database, this.Container, this.EventStoreOptions);
+            this.EventStore = new EventStore(CosmosSetup.GetClientBuilder(), this.Database, this.Container, this.EventStoreOptions);
 
             if (initializeEventStore)
                 await this.EventStore.Initialize();

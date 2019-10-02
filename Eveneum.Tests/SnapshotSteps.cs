@@ -94,7 +94,7 @@ namespace Eveneum.Tests
             if (snapshotMetadata == null)
             {
                 Assert.IsNull(snapshotDocument.MetadataType);
-                Assert.IsFalse(snapshotDocument.Metadata.HasValues);
+                Assert.IsNull(snapshotDocument.Metadata);
             }
             else
             {

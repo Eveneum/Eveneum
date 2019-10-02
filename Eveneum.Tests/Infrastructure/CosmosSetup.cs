@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Eveneum.Documents;
 using Microsoft.Azure.Cosmos;
+using Microsoft.Azure.Cosmos.Fluent;
 
 namespace Eveneum.Tests.Infrastrature
 {
@@ -15,6 +16,13 @@ namespace Eveneum.Tests.Infrastrature
             var key = Environment.GetEnvironmentVariable("CosmosDbEmulator.Key", EnvironmentVariableTarget.User) ?? "C2y6yDjf5/R+ob0N8A7Cgv30VRDJIWEHLM+4QDU5DE2nQ9nDuVTqobD4b8mGGyPMbIZnqyMsEcaGQy67XIw/Jw==";
 
             return new CosmosClient(endpoint, key);
+        }
+        public static CosmosClientBuilder GetClientBuilder()
+        {
+            var endpoint = Environment.GetEnvironmentVariable("CosmosDbEmulator.Endpoint", EnvironmentVariableTarget.User) ?? "https://localhost:8081";
+            var key = Environment.GetEnvironmentVariable("CosmosDbEmulator.Key", EnvironmentVariableTarget.User) ?? "C2y6yDjf5/R+ob0N8A7Cgv30VRDJIWEHLM+4QDU5DE2nQ9nDuVTqobD4b8mGGyPMbIZnqyMsEcaGQy67XIw/Jw==";
+
+            return new CosmosClientBuilder(endpoint, key);
         }
 
         public static async Task<CosmosClient> GetClient(string database, string container = null)

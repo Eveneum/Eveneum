@@ -66,7 +66,7 @@ namespace Eveneum.Tests
             Assert.AreEqual(version, headerDocument.Version);
             Assert.AreEqual(version + EveneumDocument.GetOrderingFraction(DocumentType.Header), headerDocument.SortOrder);
             Assert.IsNull(headerDocument.MetadataType);
-            Assert.IsFalse(headerDocument.Metadata.HasValues);
+            Assert.IsNull(headerDocument.Metadata);
             Assert.NotNull(headerDocument.ETag);
             Assert.False(headerDocument.Deleted);
         }

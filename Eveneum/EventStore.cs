@@ -5,14 +5,14 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Azure.Cosmos;
 using Microsoft.Azure.Cosmos.Linq;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
+using System.Text.Json;
 using Eveneum.Advanced;
 using Eveneum.Documents;
 using Eveneum.Serialization;
 using Microsoft.Azure.Cosmos.Scripts;
 using System.Reflection;
 using System.IO;
+using Microsoft.Azure.Cosmos.Fluent;
 
 namespace Eveneum
 {
@@ -23,20 +23,21 @@ namespace Eveneum
         public readonly Container Container;
 
         public DeleteMode DeleteMode { get; }
-        public JsonSerializer JsonSerializer { get; }
+        public JsonSerializerOptions JsonSerializerOptions { get; }
         public ITypeProvider TypeProvider { get; }
 
         private bool IsInitialized = false;
         private const string WriteEventsStoredProc = "Eveneum.WriteEvents";
 
-        public EventStore(CosmosClient client, string database, string container, EventStoreOptions options = null)
+        public EventStore(CosmosClientBuilder cosmosClientBuilder, string database, string container, EventStoreOptions options = null)
         {
-            this.Client = client ?? throw new ArgumentNullException(nameof(client)); 
+            this.JsonSerializerOptions = options?.JsonSerializerOptions ?? new JsonSerializerOptions();
+
+            this.Client = cosmosClientBuilder.WithCustomSerializer(new CosmosJsonSerializer(this.JsonSerializerOptions)).Build();
             this.Database = this.Client.GetDatabase(database ?? throw new ArgumentNullException(nameof(database)));
             this.Container = this.Database.GetContainer(container ?? throw new ArgumentNullException(nameof(container)));
 
             this.DeleteMode = options?.DeleteMode ?? DeleteMode.SoftDelete;
-            this.JsonSerializer = options?.JsonSerializer ?? JsonSerializer.CreateDefault();
             this.TypeProvider = options?.TypeProvider ?? new PlatformTypeProvider();
         }
 
@@ -109,7 +110,7 @@ namespace Eveneum
             object metadata = null;
 
             if (!string.IsNullOrEmpty(headerDocument.MetadataType))
-                metadata = headerDocument.Metadata.ToObject(this.TypeProvider.GetTypeForIdentifier(headerDocument.MetadataType), this.JsonSerializer);
+                metadata = JsonSerializer.Deserialize(headerDocument.Metadata.ToString(), this.TypeProvider.GetTypeForIdentifier(headerDocument.MetadataType), this.JsonSerializerOptions);
 
             return new StreamResponse(new Stream(streamId, headerDocument.Version, metadata, events, snapshot), requestCharge);
         }
@@ -141,7 +142,7 @@ namespace Eveneum
             if (metadata != null)
             {
                 header.MetadataType = this.TypeProvider.GetIdentifierForType(metadata.GetType());
-                header.Metadata = JToken.FromObject(metadata, this.JsonSerializer);
+                header.Metadata = JsonDocument.Parse(JsonSerializer.Serialize(metadata, metadata.GetType(), this.JsonSerializerOptions));
             }
 
             if (!expectedVersion.HasValue)
@@ -343,13 +344,13 @@ namespace Eveneum
                 StreamId = streamId,
                 Version = @event.Version,
                 BodyType = this.TypeProvider.GetIdentifierForType(@event.Body.GetType()),
-                Body = JToken.FromObject(@event.Body, this.JsonSerializer)
+                Body = JsonDocument.Parse(JsonSerializer.Serialize(@event.Body, @event.Body.GetType(), this.JsonSerializerOptions))
             };
 
             if (@event.Metadata != null)
             {
                 document.MetadataType = this.TypeProvider.GetIdentifierForType(@event.Metadata.GetType());
-                document.Metadata = JToken.FromObject(@event.Metadata, this.JsonSerializer);
+                document.Metadata = JsonDocument.Parse(JsonSerializer.Serialize(@event.Metadata, @event.Metadata.GetType(), this.JsonSerializerOptions));
             }
 
             return document;
@@ -362,13 +363,13 @@ namespace Eveneum
                 StreamId = streamId,
                 Version = version,
                 BodyType = this.TypeProvider.GetIdentifierForType(snapshot.GetType()),
-                Body = JToken.FromObject(snapshot, this.JsonSerializer)
+                Body = JsonDocument.Parse(JsonSerializer.Serialize(snapshot, snapshot.GetType(), this.JsonSerializerOptions))
             };
 
             if (metadata != null)
             {
                 document.MetadataType = this.TypeProvider.GetIdentifierForType(metadata.GetType());
-                document.Metadata = JToken.FromObject(metadata, this.JsonSerializer);
+                document.Metadata = JsonDocument.Parse(JsonSerializer.Serialize(metadata, metadata.GetType(), this.JsonSerializerOptions));
             }
 
             return document;
@@ -382,7 +383,7 @@ namespace Eveneum
             return new EventData(document.StreamId, body, metadata, document.Version);
         }
         
-        private object DeserializeObject(string typeName, JToken data)
+        private object DeserializeObject(string typeName, JsonDocument data)
         {
             if (string.IsNullOrEmpty(typeName))
                 return null;
@@ -393,7 +394,7 @@ namespace Eveneum
 
             try
             {
-                return data.ToObject(type, this.JsonSerializer);
+                return JsonSerializer.Deserialize(data.ToString(), type, this.JsonSerializerOptions);
             }
             catch (Exception exc)
             {
@@ -406,9 +407,9 @@ namespace Eveneum
             object metadata = null;
 
             if (!string.IsNullOrEmpty(document.MetadataType))
-                metadata = document.Metadata.ToObject(this.TypeProvider.GetTypeForIdentifier(document.MetadataType), this.JsonSerializer);
+                metadata = JsonSerializer.Deserialize(document.Metadata.ToString(), this.TypeProvider.GetTypeForIdentifier(document.MetadataType), this.JsonSerializerOptions);
 
-            return new Snapshot(document.Body.ToObject(this.TypeProvider.GetTypeForIdentifier(document.BodyType), this.JsonSerializer), metadata, document.Version);
+            return new Snapshot(JsonSerializer.Deserialize(document.Body.ToString(), this.TypeProvider.GetTypeForIdentifier(document.BodyType), this.JsonSerializerOptions), metadata, document.Version);
         }
 
         private async Task CreateStoredProcedure(string procedureId, string procedureFileName)

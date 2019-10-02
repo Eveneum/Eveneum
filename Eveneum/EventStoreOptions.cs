@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+﻿using System.Text.Json;
 using Eveneum.Serialization;
 
 namespace Eveneum
@@ -6,7 +6,7 @@ namespace Eveneum
     public class EventStoreOptions
     {
         public DeleteMode DeleteMode { get; set; } = DeleteMode.SoftDelete;
-        public JsonSerializer JsonSerializer { get; set; } = JsonSerializer.CreateDefault();
+        public JsonSerializerOptions JsonSerializerOptions { get; set; }
         public ITypeProvider TypeProvider { get; set; } = new PlatformTypeProvider();
     }
 }

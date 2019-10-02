@@ -1,7 +1,6 @@
 ﻿using System;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
-using Newtonsoft.Json.Linq;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace Eveneum.Documents
 {
@@ -17,10 +16,9 @@ namespace Eveneum.Documents
         public const char Separator = '~';
 
 
-        [JsonProperty(PropertyName = "id")]
+        [JsonPropertyName("id")]
         public virtual string Id => this.GenerateId();
 
-        [JsonConverter(typeof(StringEnumConverter))]
         public DocumentType DocumentType { get; }
 
         public string StreamId { get; set; }
@@ -28,15 +26,15 @@ namespace Eveneum.Documents
         public ulong Version { get; set; }
 
         public string MetadataType { get; set; }
-        public JToken Metadata { get; set; }
+        public JsonDocument Metadata { get; set; }
         public string BodyType { get; set; }
-        public JToken Body { get; set; }
+        public JsonDocument Body { get; set; }
 
         public decimal SortOrder => this.Version + GetOrderingFraction(this.DocumentType);
 
         public bool Deleted { get; set; }
 
-        [JsonProperty(PropertyName = "_etag")]
+        [JsonPropertyName("_etag")]
         public string ETag { get; set; }
 
         internal string GenerateId()
