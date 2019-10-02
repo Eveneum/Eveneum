@@ -7,6 +7,7 @@ namespace Eveneum
     {
         Task<StreamResponse> ReadStream(string streamId, CancellationToken cancellationToken = default);
         Task<StreamResponse> ReadStreamAsOfVersion(string streamId, ulong version, CancellationToken cancellationToken = default);
+        Task<StreamResponse> ReadStreamFromVersion(string streamId, ulong version, CancellationToken cancellationToken = default);
         Task<StreamResponse> ReadStreamIgnoringSnapshots(string streamId, CancellationToken cancellationToken = default);
     }
 

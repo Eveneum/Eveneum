@@ -3,6 +3,9 @@
     <TargetFramework>net472</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
+    <SpecFlowObsoleteCodeBehindFiles Remove="ReadingStreamAsOfVersion - Copy.feature.cs" />
+  </ItemGroup>
+  <ItemGroup>
     <PackageReference Include="Microsoft.Azure.Cosmos" Version="3.1.1" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.2" />
     <PackageReference Include="NUnit" Version="3.12.0" />
@@ -105,6 +108,9 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>DeletingStreamWithNonExpectedVersion.feature</DependentUpon>
     </Compile>
+    <Compile Update="ReadingStreamFromVersion.feature.cs">
+      <DependentUpon>ReadingStreamFromVersion.feature</DependentUpon>
+    </Compile>
     <Compile Update="ReadingStreamAsOfVersion.feature.cs">
       <DependentUpon>ReadingStreamAsOfVersion.feature</DependentUpon>
     </Compile>
@@ -187,6 +193,12 @@
     <SpecFlowFeatureFiles Update="DeletingStreamWithNonExpectedVersion.feature">
       <Generator>SpecFlowSingleFileGenerator</Generator>
       <LastGenOutput>DeletingStreamWithNonExpectedVersion.feature.cs</LastGenOutput>
+    </SpecFlowFeatureFiles>
+    <SpecFlowFeatureFiles Update="ReadingStreamFromVersion.feature">
+      <Visible>$(UsingMicrosoftNETSdk)</Visible>
+      <CodeBehindFile>%(RelativeDir)%(Filename).feature$(DefaultLanguageSourceExtension)</CodeBehindFile>
+      <LastGenOutput>ReadingStream.feature.cs</LastGenOutput>
+      <Generator>SpecFlowSingleFileGenerator</Generator>
     </SpecFlowFeatureFiles>
     <SpecFlowFeatureFiles Update="ReadingStreamAsOfVersion.feature">
       <Visible>$(UsingMicrosoftNETSdk)</Visible>
