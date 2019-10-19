@@ -1,18 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Azure.Cosmos;
 using Microsoft.Azure.Cosmos.Linq;
-using Newtonsoft.Json;
+using Microsoft.Azure.Cosmos.Scripts;
 using Newtonsoft.Json.Linq;
 using Eveneum.Advanced;
 using Eveneum.Documents;
 using Eveneum.Serialization;
-using Microsoft.Azure.Cosmos.Scripts;
-using System.Reflection;
-using System.IO;
 
 namespace Eveneum
 {
@@ -23,9 +22,8 @@ namespace Eveneum
         public readonly Container Container;
 
         public DeleteMode DeleteMode { get; }
-        public JsonSerializer JsonSerializer { get; }
-        public ITypeProvider TypeProvider { get; }
-
+        public EveneumDocumentSerializer Serializer { get; }
+        
         private bool IsInitialized = false;
         private const string WriteEventsStoredProc = "Eveneum.WriteEvents";
 
@@ -36,8 +34,8 @@ namespace Eveneum
             this.Container = this.Database.GetContainer(container ?? throw new ArgumentNullException(nameof(container)));
 
             this.DeleteMode = options?.DeleteMode ?? DeleteMode.SoftDelete;
-            this.JsonSerializer = options?.JsonSerializer ?? JsonSerializer.CreateDefault();
-            this.TypeProvider = options?.TypeProvider ?? new PlatformTypeProvider();
+
+            this.Serializer = new EveneumDocumentSerializer(options?.JsonSerializer, options?.TypeProvider);
         }
 
         public async Task Initialize()
@@ -103,13 +101,9 @@ namespace Eveneum
                 return new StreamResponse(null, requestCharge);
 
             var headerDocument = documents.First(x => x.DocumentType == DocumentType.Header);
-            var events = documents.Where(x => x.DocumentType == DocumentType.Event).Select(this.DeserializeEvent).Reverse().ToArray();
-            var snapshot = documents.Where(x => x.DocumentType == DocumentType.Snapshot).Select(this.DeserializeSnapshot).Cast<Snapshot?>().FirstOrDefault();
-
-            object metadata = null;
-
-            if (!string.IsNullOrEmpty(headerDocument.MetadataType))
-                metadata = headerDocument.Metadata.ToObject(this.TypeProvider.GetTypeForIdentifier(headerDocument.MetadataType), this.JsonSerializer);
+            var events = documents.Where(x => x.DocumentType == DocumentType.Event).Select(this.Serializer.DeserializeEvent).Reverse().ToArray();
+            var snapshot = documents.Where(x => x.DocumentType == DocumentType.Snapshot).Select(this.Serializer.DeserializeSnapshot).Cast<Snapshot?>().FirstOrDefault();
+            var metadata = this.Serializer.DeserializeObject(headerDocument.MetadataType, headerDocument.Metadata);
 
             return new StreamResponse(new Stream(streamId, headerDocument.Version, metadata, events, snapshot), requestCharge);
         }
@@ -138,11 +132,7 @@ namespace Eveneum
 
             header.Version += (ulong)events.Length;
 
-            if (metadata != null)
-            {
-                header.MetadataType = this.TypeProvider.GetIdentifierForType(metadata.GetType());
-                header.Metadata = JToken.FromObject(metadata, this.JsonSerializer);
-            }
+            this.Serializer.SerializeHeaderMetadata(header, metadata);
 
             if (!expectedVersion.HasValue)
             {
@@ -164,7 +154,7 @@ namespace Eveneum
                 requestCharge += response.RequestCharge;
             }
 
-            var eventDocuments = (events ?? Enumerable.Empty<EventData>()).Select(@event => this.Serialize(@event, streamId)).ToList();
+            var eventDocuments = (events ?? Enumerable.Empty<EventData>()).Select(@event => this.Serializer.SerializeEvent(@event, streamId)).ToList();
 
             while(eventDocuments.Count > 0)
             {
@@ -238,7 +228,7 @@ namespace Eveneum
             if (header.Version < version)
                 throw new OptimisticConcurrencyException(streamId, version, header.Version);
 
-            var document = this.Serialize(snapshot, metadata, version, streamId);
+            var document = this.Serializer.SerializeSnapshot(snapshot, metadata, version, streamId);
 
             var response = await this.Container.UpsertItemAsync(document, new PartitionKey(streamId), cancellationToken: cancellationToken);
 
@@ -315,7 +305,7 @@ namespace Eveneum
 
                 requestCharge += page.RequestCharge;
 
-                await callback(page.Where(x => x.DocumentType == DocumentType.Event).Where(x => !x.Deleted).Select(DeserializeEvent).ToList());
+                await callback(page.Where(x => x.DocumentType == DocumentType.Event).Where(x => !x.Deleted).Select(this.Serializer.DeserializeEvent).ToList());
             }
             while (query.HasMoreResults);
 
@@ -334,81 +324,6 @@ namespace Eveneum
             {
                 throw new StreamNotFoundException(streamId);
             }
-        }
-
-        private EveneumDocument Serialize(EventData @event, string streamId)
-        {
-            var document = new EveneumDocument(DocumentType.Event)
-            {
-                StreamId = streamId,
-                Version = @event.Version,
-                BodyType = this.TypeProvider.GetIdentifierForType(@event.Body.GetType()),
-                Body = JToken.FromObject(@event.Body, this.JsonSerializer)
-            };
-
-            if (@event.Metadata != null)
-            {
-                document.MetadataType = this.TypeProvider.GetIdentifierForType(@event.Metadata.GetType());
-                document.Metadata = JToken.FromObject(@event.Metadata, this.JsonSerializer);
-            }
-
-            return document;
-        }
-
-        private EveneumDocument Serialize(object snapshot, object metadata, ulong version, string streamId)
-        {
-            var document = new EveneumDocument(DocumentType.Snapshot)
-            {
-                StreamId = streamId,
-                Version = version,
-                BodyType = this.TypeProvider.GetIdentifierForType(snapshot.GetType()),
-                Body = JToken.FromObject(snapshot, this.JsonSerializer)
-            };
-
-            if (metadata != null)
-            {
-                document.MetadataType = this.TypeProvider.GetIdentifierForType(metadata.GetType());
-                document.Metadata = JToken.FromObject(metadata, this.JsonSerializer);
-            }
-
-            return document;
-        }
-
-        private EventData DeserializeEvent(EveneumDocument document)
-        {
-            object metadata = DeserializeObject(document.MetadataType, document.Metadata);
-            object body = DeserializeObject(document.BodyType, document.Body);
-
-            return new EventData(document.StreamId, body, metadata, document.Version);
-        }
-        
-        private object DeserializeObject(string typeName, JToken data)
-        {
-            if (string.IsNullOrEmpty(typeName))
-                return null;
-
-            var type = this.TypeProvider.GetTypeForIdentifier(typeName);
-            if (type == null)
-                throw new TypeNotFoundException(typeName);
-
-            try
-            {
-                return data.ToObject(type, this.JsonSerializer);
-            }
-            catch (Exception exc)
-            {
-                throw new DeserializationException(typeName, data.ToString(), exc);
-            }
-        }
-
-        private Snapshot DeserializeSnapshot(EveneumDocument document)
-        {
-            object metadata = null;
-
-            if (!string.IsNullOrEmpty(document.MetadataType))
-                metadata = document.Metadata.ToObject(this.TypeProvider.GetTypeForIdentifier(document.MetadataType), this.JsonSerializer);
-
-            return new Snapshot(document.Body.ToObject(this.TypeProvider.GetTypeForIdentifier(document.BodyType), this.JsonSerializer), metadata, document.Version);
         }
 
         private async Task CreateStoredProcedure(string procedureId, string procedureFileName)

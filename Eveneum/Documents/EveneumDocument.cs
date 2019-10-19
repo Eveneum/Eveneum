@@ -5,9 +5,9 @@ using Newtonsoft.Json.Linq;
 
 namespace Eveneum.Documents
 {
-    enum DocumentType { Header = 1, Event, Snapshot }
+    public enum DocumentType { Header = 1, Event, Snapshot }
 
-    class EveneumDocument
+    public class EveneumDocument
     {
         public EveneumDocument(DocumentType documentType)
         {
@@ -54,7 +54,7 @@ namespace Eveneum.Documents
             }
         }
 
-        public static string GenerateEventId(string streamId, ulong version) => $"{streamId}{Separator}{version}";
+        internal static string GenerateEventId(string streamId, ulong version) => $"{streamId}{Separator}{version}";
 
         internal static decimal GetOrderingFraction(DocumentType documentType)
         {
