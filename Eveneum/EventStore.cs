@@ -312,6 +312,27 @@ namespace Eveneum
             return new Response(requestCharge);
         }
 
+        public async Task<Response> LoadStreamHeaders(string sql, Func<IReadOnlyCollection<StreamHeader>, Task> callback, CancellationToken cancellationToken = default)
+        {
+            if (!this.IsInitialized)
+                throw new NotInitializedException();
+
+            double requestCharge = 0;
+            var query = this.Container.GetItemQueryIterator<EveneumDocument>(sql, requestOptions: new QueryRequestOptions { MaxItemCount = -1 });
+
+            do
+            {
+                var page = await query.ReadNextAsync(cancellationToken);
+
+                requestCharge += page.RequestCharge;
+
+                await callback(page.Where(x => x.DocumentType == DocumentType.Header).Where(x => !x.Deleted).Select(x => new StreamHeader(x.StreamId, x.Version, this.Serializer.DeserializeObject(x.MetadataType, x.Metadata))).ToList());
+            }
+            while (query.HasMoreResults);
+
+            return new Response(requestCharge);
+        }
+
         private async Task<DocumentResponse> ReadHeader(string streamId, CancellationToken cancellationToken = default)
         {
             try

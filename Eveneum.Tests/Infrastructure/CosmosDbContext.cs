@@ -1,9 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Eveneum.Documents;
-using Eveneum.Serialization;
 using Microsoft.Azure.Cosmos;
+using Eveneum.Documents;
 
 namespace Eveneum.Tests.Infrastrature
 {
@@ -23,6 +22,7 @@ namespace Eveneum.Tests.Infrastrature
         public SampleMetadata SnapshotMetadata { get; set; }
         public EventData[] NewEvents { get; set; }
         public List<EventData> LoadAllEvents { get; set; }
+        public List<StreamHeader> LoadAllStreamHeaders { get; set; }
         public List<EveneumDocument> ExistingDocuments { get; set; }
 
         public double RequestCharge { get; set; }

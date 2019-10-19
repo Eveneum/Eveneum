@@ -33,9 +33,20 @@ namespace Eveneum.Tests
         {
             var events = new List<EventData>();
 
-            var response = await(this.Context.EventStore as IAdvancedEventStore).LoadEvents(query, e => { events.AddRange(e); return Task.CompletedTask; });
+            var response = await (this.Context.EventStore as IAdvancedEventStore).LoadEvents(query, e => { events.AddRange(e); return Task.CompletedTask; });
 
             this.Context.LoadAllEvents = events;
+            this.Context.RequestCharge = response.RequestCharge;
+        }
+
+        [When(@"I load stream headers using query (.*)")]
+        public async Task WhenIQueryStreamHeadersUsing(string query)
+        {
+            var headers = new List<StreamHeader>();
+
+            var response = await (this.Context.EventStore as IAdvancedEventStore).LoadStreamHeaders(query, e => { headers.AddRange(e); return Task.CompletedTask; });
+
+            this.Context.LoadAllStreamHeaders = headers;
             this.Context.RequestCharge = response.RequestCharge;
         }
 
@@ -43,6 +54,12 @@ namespace Eveneum.Tests
         public void ThenAllEventsAreLoaded(ulong events)
         {
             Assert.AreEqual(events, this.Context.LoadAllEvents.Count);
+        }
+
+        [Then(@"the stream header for stream (.*) in version (\d+) is returned")]
+        public void ThenTheStreamHeaderForStreamInVersionIsReturned(string streamId, ulong version)
+        {
+            Assert.IsNotNull(this.Context.LoadAllStreamHeaders.Find(x => x.StreamId == streamId && x.Version == version));
         }
     }
 }
