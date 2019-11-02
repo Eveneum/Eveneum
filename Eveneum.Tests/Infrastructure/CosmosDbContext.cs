@@ -25,7 +25,7 @@ namespace Eveneum.Tests.Infrastrature
         public List<StreamHeader> LoadAllStreamHeaders { get; set; }
         public List<EveneumDocument> ExistingDocuments { get; set; }
 
-        public double RequestCharge { get; set; }
+        public Response Response { get; set; }
 
         public CosmosDbContext()
         {

@@ -29,7 +29,7 @@ namespace Eveneum.Tests
 
             var response = await this.Context.EventStore.WriteToStream(this.Context.StreamId, this.Context.NewEvents, metadata: this.Context.HeaderMetadata);
 
-            this.Context.RequestCharge = response.RequestCharge;
+            this.Context.Response = response;
         }
 
         [When(@"I write a new stream ([^\s-]) with metadata and (\d+) events")]
@@ -49,7 +49,7 @@ namespace Eveneum.Tests
 
             var response = await this.Context.EventStore.WriteToStream(this.Context.StreamId, this.Context.NewEvents, expectedVersion, metadata: this.Context.HeaderMetadata);
 
-            this.Context.RequestCharge = response.RequestCharge;
+            this.Context.Response = response;
         }
 
         [Then(@"the header version (\d+) with no metadata is persisted")]

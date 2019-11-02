@@ -8,9 +8,11 @@
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
   </PropertyGroup>
   <ItemGroup>
+    <None Remove="StoredProcedures\BulkDelete.js" />
     <None Remove="StoredProcedures\WriteEvents.js" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="StoredProcedures\BulkDelete.js" />
     <EmbeddedResource Include="StoredProcedures\WriteEvents.js" />
   </ItemGroup>
   <ItemGroup>

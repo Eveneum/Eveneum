@@ -19,13 +19,13 @@ namespace Eveneum
     public interface IDeleteStream
     {
         DeleteMode DeleteMode { get; }
-        Task<Response> DeleteStream(string streamId, ulong expectedVersion, CancellationToken cancellationToken = default);
+        Task<DeleteResponse> DeleteStream(string streamId, ulong expectedVersion, CancellationToken cancellationToken = default);
     }
 
     public interface IManageSnapshots
     {
         Task<Response> CreateSnapshot(string streamId, ulong version, object snapshot, object metadata = null, bool deleteOlderSnapshots = false, CancellationToken cancellationToken = default);
-        Task<Response> DeleteSnapshots(string streamId, ulong olderThanVersion, CancellationToken cancellationToken = default);
+        Task<DeleteResponse> DeleteSnapshots(string streamId, ulong olderThanVersion, CancellationToken cancellationToken = default);
     }
 
     public interface IEventStore : IReadStream, IWriteToStream, IDeleteStream, IManageSnapshots

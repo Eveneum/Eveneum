@@ -1,6 +1,5 @@
 ﻿using Eveneum.Tests.Infrastrature;
 using NUnit.Framework;
-using NUnit.Framework.Interfaces;
 using System;
 using System.Threading.Tasks;
 using TechTalk.SpecFlow;
@@ -64,9 +63,19 @@ namespace Eveneum.Tests
         [Then(@"request charge is reported")]
         public void ThenRequestChargeIsReported()
         {
-            Assert.Greater(this.Context.RequestCharge, 0);
+            Assert.Greater(this.Context.Response.RequestCharge, 0);
 
-            Console.WriteLine("Request charge: " + this.Context.RequestCharge);
+            Console.WriteLine("Request charge: " + this.Context.Response.RequestCharge);
+        }
+
+        [Then(@"(\d+) deleted documents are reported")]
+        public void ThenDeletedDocumentsAreReported(ulong deletedDocuments)
+        {
+            Assert.IsInstanceOf<DeleteResponse>(this.Context.Response);
+
+            var response = this.Context.Response as DeleteResponse;
+
+            Assert.AreEqual(deletedDocuments, response.DeletedDocuments);
         }
     }
 }

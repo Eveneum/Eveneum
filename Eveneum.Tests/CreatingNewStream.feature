@@ -38,7 +38,7 @@ Scenario: Creating new stream with no metadata and many events
 			
 Scenario: Creating new stream with metadata and many events
 	Given an event store backed by partitioned collection
-	When I write a new stream S with metadata and 990 events
-	Then the header version 990 with metadata is persisted
+	When I write a new stream S with metadata and 9990 events
+	Then the header version 9990 with metadata is persisted
 	And new events are appended
 	And request charge is reported

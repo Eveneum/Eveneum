@@ -25,7 +25,7 @@ namespace Eveneum.Tests
 
             var response = await this.Context.EventStore.DeleteStream(streamId, expectedVersion);
 
-            this.Context.RequestCharge = response.RequestCharge;
+            this.Context.Response = response;
         }
 
         [Then(@"the header is soft-deleted")]

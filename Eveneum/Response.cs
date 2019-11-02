@@ -22,6 +22,18 @@ namespace Eveneum
 
         public Stream? Stream { get; }
     }
+
+    public class DeleteResponse : Response
+    {
+        internal DeleteResponse(ulong deletedDocuments, double requestCharge)
+            : base(requestCharge)
+        {
+            this.DeletedDocuments = deletedDocuments;
+        }
+
+        public ulong DeletedDocuments { get; }
+    }
+
     internal class DocumentResponse : Response
     {
         internal DocumentResponse(EveneumDocument document, double requestCharge)

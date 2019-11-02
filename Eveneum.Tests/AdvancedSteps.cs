@@ -25,7 +25,7 @@ namespace Eveneum.Tests
             var response = await (this.Context.EventStore as IAdvancedEventStore).LoadAllEvents(e => { events.AddRange(e); return Task.CompletedTask; });
 
             this.Context.LoadAllEvents = events;
-            this.Context.RequestCharge = response.RequestCharge;
+            this.Context.Response = response;
         }
 
         [When(@"I load events using query (.*)")]
@@ -36,7 +36,7 @@ namespace Eveneum.Tests
             var response = await (this.Context.EventStore as IAdvancedEventStore).LoadEvents(query, e => { events.AddRange(e); return Task.CompletedTask; });
 
             this.Context.LoadAllEvents = events;
-            this.Context.RequestCharge = response.RequestCharge;
+            this.Context.Response = response;
         }
 
         [When(@"I load stream headers using query (.*)")]
@@ -47,7 +47,7 @@ namespace Eveneum.Tests
             var response = await (this.Context.EventStore as IAdvancedEventStore).LoadStreamHeaders(query, e => { headers.AddRange(e); return Task.CompletedTask; });
 
             this.Context.LoadAllStreamHeaders = headers;
-            this.Context.RequestCharge = response.RequestCharge;
+            this.Context.Response = response;
         }
 
         [Then(@"all (\d+) events are loaded")]

@@ -6,12 +6,11 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Azure.Cosmos;
-using Microsoft.Azure.Cosmos.Linq;
 using Microsoft.Azure.Cosmos.Scripts;
-using Newtonsoft.Json.Linq;
 using Eveneum.Advanced;
 using Eveneum.Documents;
 using Eveneum.Serialization;
+using Eveneum.StoredProcedures;
 
 namespace Eveneum
 {
@@ -22,10 +21,12 @@ namespace Eveneum
         public readonly Container Container;
 
         public DeleteMode DeleteMode { get; }
+        public uint BatchSize { get; }
         public EveneumDocumentSerializer Serializer { get; }
         
         private bool IsInitialized = false;
         private const string WriteEventsStoredProc = "Eveneum.WriteEvents";
+        private const string BulkDeleteStoredProc = "Eveneum.BulkDelete";
 
         public EventStore(CosmosClient client, string database, string container, EventStoreOptions options = null)
         {
@@ -33,14 +34,17 @@ namespace Eveneum
             this.Database = this.Client.GetDatabase(database ?? throw new ArgumentNullException(nameof(database)));
             this.Container = this.Database.GetContainer(container ?? throw new ArgumentNullException(nameof(container)));
 
-            this.DeleteMode = options?.DeleteMode ?? DeleteMode.SoftDelete;
+            options = options ?? new EventStoreOptions();
 
-            this.Serializer = new EveneumDocumentSerializer(options?.JsonSerializer, options?.TypeProvider);
+            this.DeleteMode = options.DeleteMode;
+            this.BatchSize = options.BatchSize;
+            this.Serializer = new EveneumDocumentSerializer(options.JsonSerializer, options.TypeProvider);
         }
 
         public async Task Initialize()
         {
             await CreateStoredProcedure(WriteEventsStoredProc, "WriteEvents");
+            await CreateStoredProcedure(BulkDeleteStoredProc, "BulkDelete");
 
             this.IsInitialized = true;
         }
@@ -156,18 +160,23 @@ namespace Eveneum
 
             var eventDocuments = (events ?? Enumerable.Empty<EventData>()).Select(@event => this.Serializer.SerializeEvent(@event, streamId)).ToList();
 
-            while(eventDocuments.Count > 0)
+            foreach (var batch in eventDocuments.Batch(this.BatchSize))
             {
-                var response = await this.Container.Scripts.ExecuteStoredProcedureAsync<int>(WriteEventsStoredProc, new PartitionKey(streamId), new[] { eventDocuments }, cancellationToken: cancellationToken);
-                requestCharge += response.RequestCharge;
+                var documents = batch.ToList();
 
-                eventDocuments.RemoveRange(0, response.Resource);
+                while (documents.Count > 0)
+                {
+                    var response = await this.Container.Scripts.ExecuteStoredProcedureAsync<int>(WriteEventsStoredProc, new PartitionKey(streamId), new[] { documents }, cancellationToken: cancellationToken);
+                    requestCharge += response.RequestCharge;
+
+                    documents.RemoveRange(0, response.Resource);
+                }
             }
 
             return new Response(requestCharge);
         }
 
-        public async Task<Response> DeleteStream(string streamId, ulong expectedVersion, CancellationToken cancellationToken = default)
+        public async Task<DeleteResponse> DeleteStream(string streamId, ulong expectedVersion, CancellationToken cancellationToken = default)
         {
             if (!this.IsInitialized)
                 throw new NotInitializedException();
@@ -184,35 +193,23 @@ namespace Eveneum
                 throw new OptimisticConcurrencyException(streamId, expectedVersion, existingHeader.Version);
 
             var partitionKey = new PartitionKey(streamId);
+            ulong deletedDocuments = 0;
 
-            var query = this.Container.GetItemQueryIterator<EveneumDocument>(new QueryDefinition("SELECT * FROM x"), requestOptions: new QueryRequestOptions { PartitionKey = partitionKey, MaxItemCount = -1 });
+            StoredProcedureExecuteResponse<BulkDeleteResponse> response;
+            var query = $"SELECT * FROM c";
+
+            if (this.DeleteMode == DeleteMode.SoftDelete)
+                query += " WHERE c.Deleted = false";
 
             do
             {
-                var page = await query.ReadNextAsync(cancellationToken);
-
-                requestCharge += page.RequestCharge;
-
-                foreach (var document in page)
-                {
-                    if (this.DeleteMode == DeleteMode.SoftDelete)
-                    {
-                        document.Deleted = true;
-
-                        var response = await this.Container.UpsertItemAsync(document, partitionKey, cancellationToken: cancellationToken);
-
-                        requestCharge += response.RequestCharge;
-                    }
-                    else
-                    { 
-                        var response = await this.Container.DeleteItemAsync<EveneumDocument>(document.Id, partitionKey, cancellationToken: cancellationToken);
-
-                        requestCharge += response.RequestCharge;
-                    }
-                }
-            } while (query.HasMoreResults);
-
-            return new Response(requestCharge);
+                response = await this.Container.Scripts.ExecuteStoredProcedureAsync<BulkDeleteResponse>(BulkDeleteStoredProc, new PartitionKey(streamId), new object[] { query, this.DeleteMode == DeleteMode.SoftDelete }, cancellationToken: cancellationToken);
+                requestCharge += response.RequestCharge;
+                deletedDocuments += response.Resource.Deleted;
+            }
+            while (response.Resource.Continuation);
+            
+            return new DeleteResponse(deletedDocuments, requestCharge);
         }
 
         public async Task<Response> CreateSnapshot(string streamId, ulong version, object snapshot, object metadata = null, bool deleteOlderSnapshots = false, CancellationToken cancellationToken = default)
@@ -244,7 +241,7 @@ namespace Eveneum
             return new Response(requestCharge);
         }
 
-        public async Task<Response> DeleteSnapshots(string streamId, ulong olderThanVersion, CancellationToken cancellationToken = default)
+        public async Task<DeleteResponse> DeleteSnapshots(string streamId, ulong olderThanVersion, CancellationToken cancellationToken = default)
         {
             if (!this.IsInitialized)
                 throw new NotInitializedException();
@@ -252,40 +249,22 @@ namespace Eveneum
             var headerResponse = await this.ReadHeader(streamId, cancellationToken);
 
             var requestCharge = headerResponse.RequestCharge;
+            ulong deletedSnapshots = 0;
+            StoredProcedureExecuteResponse<BulkDeleteResponse> response;
+            var query = $"SELECT * FROM c WHERE c.DocumentType = 'Snapshot' AND c.Version < {olderThanVersion}";
 
-            var partitionKey = new PartitionKey(streamId);
-
-            var query = this.Container.GetItemLinqQueryable<EveneumDocument>(requestOptions: new QueryRequestOptions { PartitionKey = partitionKey, MaxItemCount = -1 })
-                .Where(x => x.DocumentType == DocumentType.Snapshot)
-                .Where(x => x.Version < olderThanVersion)
-                .ToFeedIterator();
+            if (this.DeleteMode == DeleteMode.SoftDelete)
+                query += " and c.Deleted = false";
 
             do
             {
-                var page = await query.ReadNextAsync(cancellationToken);
+                response = await this.Container.Scripts.ExecuteStoredProcedureAsync<BulkDeleteResponse>(BulkDeleteStoredProc, new PartitionKey(streamId), new object[] { query, this.DeleteMode == DeleteMode.SoftDelete }, cancellationToken: cancellationToken);
+                requestCharge += response.RequestCharge;
+                deletedSnapshots += response.Resource.Deleted;
+            }
+            while (response.Resource.Continuation);
 
-                requestCharge += page.RequestCharge;
-
-                foreach (var document in page)
-                {
-                    if (this.DeleteMode == DeleteMode.SoftDelete)
-                    {
-                        document.Deleted = true;
-
-                        var response = await this.Container.UpsertItemAsync(document, partitionKey, cancellationToken: cancellationToken);
-
-                        requestCharge += response.RequestCharge;
-                    }
-                    else
-                    {
-                        var response = await this.Container.DeleteItemAsync<EveneumDocument>(document.Id, partitionKey, cancellationToken: cancellationToken);
-
-                        requestCharge += response.RequestCharge;
-                    }
-                }
-            } while (query.HasMoreResults);
-
-            return new Response(requestCharge);
+            return new DeleteResponse(deletedSnapshots, requestCharge);
         }
 
         public Task<Response> LoadAllEvents(Func<IReadOnlyCollection<EventData>, Task> callback, CancellationToken cancellationToken = default) =>

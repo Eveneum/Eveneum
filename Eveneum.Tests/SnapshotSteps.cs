@@ -42,7 +42,7 @@ namespace Eveneum.Tests
 
             var response = await this.Context.EventStore.CreateSnapshot(streamId, version, this.Context.Snapshot, this.Context.SnapshotMetadata);
 
-            this.Context.RequestCharge = response.RequestCharge;
+            this.Context.Response = response;
         }
 
         [When(@"I create snapshot with metadata for stream ([^\s-]) in version (\d+)")]
@@ -60,7 +60,7 @@ namespace Eveneum.Tests
 
             var response = await this.Context.EventStore.CreateSnapshot(streamId, version, this.Context.Snapshot, deleteOlderSnapshots: true);
 
-            this.Context.RequestCharge = response.RequestCharge;
+            this.Context.Response = response;
         }
 
         [When(@"I delete snapshots older than version (\d+) from stream ([^\s-])")]
@@ -68,7 +68,7 @@ namespace Eveneum.Tests
         {
             var response = await this.Context.EventStore.DeleteSnapshots(streamId, version);
 
-            this.Context.RequestCharge = response.RequestCharge;
+            this.Context.Response = response;
         }
 
         [Then(@"the snapshot for version (\d+) is persisted")]

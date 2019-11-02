@@ -25,7 +25,7 @@ namespace Eveneum.Tests
             var response = await this.Context.EventStore.ReadStream(streamId);
 
             this.Context.Stream = response.Stream;
-            this.Context.RequestCharge = response.RequestCharge;
+            this.Context.Response = response;
         }
 
         [When(@"I read stream ([^\s-]) as of version (\d+)")]
@@ -36,7 +36,7 @@ namespace Eveneum.Tests
             var response = await this.Context.EventStore.ReadStreamAsOfVersion(streamId, version);
 
             this.Context.Stream = response.Stream;
-            this.Context.RequestCharge = response.RequestCharge;
+            this.Context.Response = response;
         }
 
         [When(@"I read stream ([^\s-]) from version (\d+)")]
@@ -47,7 +47,7 @@ namespace Eveneum.Tests
             var response = await this.Context.EventStore.ReadStreamFromVersion(streamId, version);
 
             this.Context.Stream = response.Stream;
-            this.Context.RequestCharge = response.RequestCharge;
+            this.Context.Response = response;
         }
 
         [When(@"I read stream ([^\s-]) ignoring snapshots")]
@@ -58,7 +58,7 @@ namespace Eveneum.Tests
             var response = await this.Context.EventStore.ReadStreamIgnoringSnapshots(streamId);
 
             this.Context.Stream = response.Stream;
-            this.Context.RequestCharge = response.RequestCharge;
+            this.Context.Response = response;
         }
 
         [Then(@"the non-existing stream is returned")]
