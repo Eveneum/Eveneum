@@ -3,7 +3,7 @@
 namespace Eveneum
 {
     [Serializable]
-    public class OptimisticConcurrencyException : Exception
+    public class OptimisticConcurrencyException : EveneumException
     {
         public OptimisticConcurrencyException(string streamId, ulong expectedVersion, ulong actualVersion)
             : base($"Expected stream '{streamId}' to have version {expectedVersion} but was {actualVersion}.")

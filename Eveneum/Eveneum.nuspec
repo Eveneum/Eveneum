@@ -11,7 +11,7 @@
         <projectUrl>http://github.com/Eveneum/Eveneum</projectUrl>
         <licenseUrl>https://github.com/Eveneum/Eveneum/blob/master/LICENSE</licenseUrl>
         <dependencies>
-          <dependency id="Microsoft.Azure.Cosmos" version="[3.1.1,4)" />
+          <dependency id="Microsoft.Azure.Cosmos" version="[3.4.0,4)" />
           <dependency id="Newtonsoft.Json" version="[12.0.2]" />
         </dependencies>
     </metadata>

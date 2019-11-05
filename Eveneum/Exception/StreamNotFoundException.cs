@@ -3,7 +3,7 @@
 namespace Eveneum
 {
     [Serializable]
-    public class StreamNotFoundException : Exception
+    public class StreamNotFoundException : EveneumException
     {
         public StreamNotFoundException(string streamId) : base($"Stream '{streamId}' wasn't found")
         {

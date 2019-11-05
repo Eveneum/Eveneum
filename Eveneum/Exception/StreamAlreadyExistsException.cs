@@ -3,7 +3,7 @@
 namespace Eveneum
 {
     [Serializable]
-    public class StreamAlreadyExistsException : Exception
+    public class StreamAlreadyExistsException : EveneumException
     {
         public StreamAlreadyExistsException(string streamId) : base($"Stream '{streamId}' already exists.")
         {

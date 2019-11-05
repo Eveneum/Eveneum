@@ -3,7 +3,7 @@
 namespace Eveneum
 {
     [Serializable]
-    public class TypeNotFoundException : Exception
+    public class TypeNotFoundException : EveneumException
     {
         public TypeNotFoundException(string type) : base($"Type '{type}' wasn't found")
         {

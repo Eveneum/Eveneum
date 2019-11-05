@@ -3,7 +3,7 @@
 namespace Eveneum
 {
     [Serializable]
-    public class DeserializationException : Exception
+    public class DeserializationException : EveneumException
     {
         public DeserializationException(string type, string json, Exception innerException) : base($"Failed to deserialize an instance of '{type}'", innerException)
         {

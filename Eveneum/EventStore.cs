@@ -21,11 +21,10 @@ namespace Eveneum
         public readonly Container Container;
 
         public DeleteMode DeleteMode { get; }
-        public uint BatchSize { get; }
+        public byte BatchSize { get; }
         public EveneumDocumentSerializer Serializer { get; }
         
         private bool IsInitialized = false;
-        private const string WriteEventsStoredProc = "Eveneum.WriteEvents";
         private const string BulkDeleteStoredProc = "Eveneum.BulkDelete";
 
         public EventStore(CosmosClient client, string database, string container, EventStoreOptions options = null)
@@ -37,13 +36,12 @@ namespace Eveneum
             options = options ?? new EventStoreOptions();
 
             this.DeleteMode = options.DeleteMode;
-            this.BatchSize = options.BatchSize;
+            this.BatchSize = Math.Min(options.BatchSize, (byte)100); // Maximum batch size supported by CosmosDB
             this.Serializer = new EveneumDocumentSerializer(options.JsonSerializer, options.TypeProvider);
         }
 
         public async Task Initialize()
         {
-            await CreateStoredProcedure(WriteEventsStoredProc, "WriteEvents");
             await CreateStoredProcedure(BulkDeleteStoredProc, "BulkDelete");
 
             this.IsInitialized = true;
@@ -117,7 +115,7 @@ namespace Eveneum
             if (!this.IsInitialized)
                 throw new NotInitializedException();
 
-            EveneumDocument header;
+            var transaction = this.Container.CreateTransactionalBatch(new PartitionKey(streamId));
             double requestCharge = 0;
 
             // Existing stream
@@ -125,52 +123,52 @@ namespace Eveneum
             {
                 var headerResponse = await this.ReadHeader(streamId, cancellationToken);
 
-                header = headerResponse.Document;
+                var header = headerResponse.Document;
                 requestCharge += headerResponse.RequestCharge;
 
                 if (header.Version != expectedVersion)
                     throw new OptimisticConcurrencyException(streamId, expectedVersion.Value, header.Version);
-            }
-            else
-                header = new EveneumDocument(DocumentType.Header) { StreamId = streamId };
 
-            header.Version += (ulong)events.Length;
+                header.Version += (ulong)events.Length;
 
-            this.Serializer.SerializeHeaderMetadata(header, metadata);
-
-            if (!expectedVersion.HasValue)
-            {
-                try
-                {
-                    var response = await this.Container.CreateItemAsync(header, new PartitionKey(streamId), cancellationToken: cancellationToken);
-
-                    requestCharge += response.RequestCharge;
-                }
-                catch (CosmosException ex) when (ex.StatusCode == System.Net.HttpStatusCode.Conflict)
-                {
-                    throw new StreamAlreadyExistsException(streamId);
-                }
+                this.Serializer.SerializeHeaderMetadata(header, metadata);
+                
+                transaction.ReplaceItem(header.Id, header, new TransactionalBatchItemRequestOptions { IfMatchEtag = header.ETag });
             }
             else
             {
-                var response = await this.Container.ReplaceItemAsync(header, header.Id, new PartitionKey(streamId), new ItemRequestOptions { IfMatchEtag = header.ETag }, cancellationToken);
+                var header = new EveneumDocument(DocumentType.Header) { StreamId = streamId, Version = (ulong)events.Length };
 
+                this.Serializer.SerializeHeaderMetadata(header, metadata);
+
+                transaction.CreateItem(header);
+            }
+
+            var firstBatch = events.Take(this.BatchSize - 1).Select(@event => this.Serializer.SerializeEvent(@event, streamId));
+            foreach (var document in firstBatch)
+                transaction.CreateItem(document);
+
+            var response = await transaction.ExecuteAsync(cancellationToken);
+            requestCharge += response.RequestCharge;
+
+            if (response.StatusCode == System.Net.HttpStatusCode.Conflict)
+                throw new StreamAlreadyExistsException(streamId);
+            else
+                if (!response.IsSuccessStatusCode)
+                    throw new WriteException(response.ErrorMessage, response.StatusCode);
+
+            foreach (var batch in events.Skip(this.BatchSize - 1).Select(@event => this.Serializer.SerializeEvent(@event, streamId)).Batch(this.BatchSize))
+            {
+                transaction = this.Container.CreateTransactionalBatch(new PartitionKey(streamId));
+                
+                foreach (var document in batch)
+                    transaction.CreateItem(document);
+
+                response = await transaction.ExecuteAsync(cancellationToken);
                 requestCharge += response.RequestCharge;
-            }
 
-            var eventDocuments = (events ?? Enumerable.Empty<EventData>()).Select(@event => this.Serializer.SerializeEvent(@event, streamId)).ToList();
-
-            foreach (var batch in eventDocuments.Batch(this.BatchSize))
-            {
-                var documents = batch.ToList();
-
-                while (documents.Count > 0)
-                {
-                    var response = await this.Container.Scripts.ExecuteStoredProcedureAsync<int>(WriteEventsStoredProc, new PartitionKey(streamId), new[] { documents }, cancellationToken: cancellationToken);
-                    requestCharge += response.RequestCharge;
-
-                    documents.RemoveRange(0, response.Resource);
-                }
+                if (!response.IsSuccessStatusCode)
+                    throw new WriteException(response.ErrorMessage, response.StatusCode);
             }
 
             return new Response(requestCharge);
