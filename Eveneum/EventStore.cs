@@ -37,7 +37,7 @@ namespace Eveneum
 
             this.DeleteMode = options.DeleteMode;
             this.BatchSize = Math.Min(options.BatchSize, (byte)100); // Maximum batch size supported by CosmosDB
-            this.Serializer = new EveneumDocumentSerializer(options.JsonSerializer, options.TypeProvider);
+            this.Serializer = new EveneumDocumentSerializer(options.JsonSerializer, options.TypeProvider, options.IgnoreMissingTypes);
         }
 
         public async Task Initialize()

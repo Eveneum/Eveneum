@@ -9,11 +9,13 @@ namespace Eveneum.Serialization
     {
         public JsonSerializer JsonSerializer { get; }
         public ITypeProvider TypeProvider { get; }
+        public bool IgnoreMissingTypes { get; }
 
-        public EveneumDocumentSerializer(JsonSerializer jsonSerializer = null, ITypeProvider typeProvider = null)
+        public EveneumDocumentSerializer(JsonSerializer jsonSerializer = null, ITypeProvider typeProvider = null, bool ignoreMissingTypes = false)
         {
             this.JsonSerializer = jsonSerializer ?? JsonSerializer.CreateDefault();
             this.TypeProvider = typeProvider ?? new PlatformTypeProvider();
+            this.IgnoreMissingTypes = ignoreMissingTypes;
         }
 
         public EventData DeserializeEvent(EveneumDocument document)
@@ -85,8 +87,14 @@ namespace Eveneum.Serialization
                 return null;
 
             var type = this.TypeProvider.GetTypeForIdentifier(typeName);
+            
             if (type == null)
-                throw new TypeNotFoundException(typeName);
+            {
+                if (this.IgnoreMissingTypes)
+                    return null;
+                else
+                    throw new TypeNotFoundException(typeName);
+            }
 
             try
             {

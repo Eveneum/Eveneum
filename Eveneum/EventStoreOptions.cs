@@ -9,5 +9,6 @@ namespace Eveneum
         public byte BatchSize { get; set; } = 100;
         public JsonSerializer JsonSerializer { get; set; } = JsonSerializer.CreateDefault();
         public ITypeProvider TypeProvider { get; set; } = new PlatformTypeProvider();
+        public bool IgnoreMissingTypes { get; set; } = false;
     }
 }
