@@ -4,7 +4,7 @@ namespace Eveneum
 {
     public class Response
     {
-        internal Response(double requestCharge)
+        public Response(double requestCharge)
         {
             this.RequestCharge = requestCharge;
         }
@@ -14,7 +14,7 @@ namespace Eveneum
 
     public class StreamResponse : Response
     {
-        internal StreamResponse(Stream? stream, double requestCharge)
+        public StreamResponse(Stream? stream, double requestCharge)
             : base(requestCharge)
         {
             this.Stream = stream;
@@ -25,7 +25,7 @@ namespace Eveneum
 
     public class DeleteResponse : Response
     {
-        internal DeleteResponse(ulong deletedDocuments, double requestCharge)
+        public DeleteResponse(ulong deletedDocuments, double requestCharge)
             : base(requestCharge)
         {
             this.DeletedDocuments = deletedDocuments;
@@ -36,7 +36,7 @@ namespace Eveneum
 
     internal class DocumentResponse : Response
     {
-        internal DocumentResponse(EveneumDocument document, double requestCharge)
+        public DocumentResponse(EveneumDocument document, double requestCharge)
             : base(requestCharge)
         {
             this.Document = document;
