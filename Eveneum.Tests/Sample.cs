@@ -1,4 +1,6 @@
-﻿namespace Eveneum.Tests
+﻿using NodaTime;
+
+namespace Eveneum.Tests
 {
     public class SampleMetadata
     {
@@ -10,6 +12,8 @@
     {
         public int Version { get; set; }
         public decimal Number { get; set; }
+        public LocalDate LocalDate{ get; set; }
+        public LocalDateTime LocalDateTime { get; set; }
         public NestedContent Nested { get; set; }
     }
 

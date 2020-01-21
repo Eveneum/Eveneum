@@ -3,6 +3,9 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.Azure.Cosmos;
 using Eveneum.Documents;
+using Newtonsoft.Json;
+using NodaTime;
+using NodaTime.Serialization.JsonNet;
 
 namespace Eveneum.Tests.Infrastrature
 {
@@ -25,6 +28,8 @@ namespace Eveneum.Tests.Infrastrature
         public List<StreamHeader> LoadAllStreamHeaders { get; set; }
         public List<EveneumDocument> ExistingDocuments { get; set; }
 
+        public JsonSerializerSettings JsonSerializerSettings { get; set; } = new JsonSerializerSettings();
+
         public Response Response { get; set; }
 
         public CosmosDbContext()
@@ -35,7 +40,11 @@ namespace Eveneum.Tests.Infrastrature
 
         internal async Task Initialize(bool initializeEventStore = true)
         {
-            this.Client = await CosmosSetup.GetClient(this.Database, this.Container);
+            this.JsonSerializerSettings.ConfigureForNodaTime(DateTimeZoneProviders.Tzdb);
+
+            this.Client = await CosmosSetup.GetClient(this.Database, this.Container, this.JsonSerializerSettings);
+
+            this.EventStoreOptions.JsonSerializer = JsonSerializer.Create(this.JsonSerializerSettings);
             this.EventStore = new EventStore(this.Client, this.Database, this.Container, this.EventStoreOptions);
 
             if (initializeEventStore)

@@ -3,6 +3,7 @@ using NUnit.Framework;
 using TechTalk.SpecFlow;
 using Eveneum.Tests.Infrastrature;
 using Eveneum.Documents;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System.Linq;
 
@@ -157,7 +158,7 @@ namespace Eveneum.Tests
                 Assert.AreEqual(streamId, eventDocument.StreamId);
                 Assert.AreEqual(this.Context.EventStoreOptions.TypeProvider.GetIdentifierForType(newEvent.Body.GetType()), eventDocument.BodyType);
                 Assert.NotNull(eventDocument.Body);
-                Assert.AreEqual(JToken.FromObject(newEvent.Body), eventDocument.Body);
+                Assert.AreEqual(JToken.FromObject(newEvent.Body, JsonSerializer.Create(this.Context.JsonSerializerSettings)), eventDocument.Body);
                 Assert.NotNull(eventDocument.ETag);
                 Assert.False(eventDocument.Deleted);
 
@@ -170,7 +171,7 @@ namespace Eveneum.Tests
                 {
                     Assert.AreEqual(this.Context.EventStoreOptions.TypeProvider.GetIdentifierForType(newEvent.Metadata.GetType()), eventDocument.MetadataType);
                     Assert.NotNull(eventDocument.Metadata);
-                    Assert.AreEqual(JToken.FromObject(newEvent.Metadata), eventDocument.Metadata);
+                    Assert.AreEqual(JToken.FromObject(newEvent.Metadata, JsonSerializer.Create(this.Context.JsonSerializerSettings)), eventDocument.Metadata);
                 }
             }
         }

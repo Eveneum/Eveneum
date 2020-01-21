@@ -3,23 +3,25 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Eveneum.Documents;
+using Eveneum.Serialization;
 using Microsoft.Azure.Cosmos;
+using Newtonsoft.Json;
 
 namespace Eveneum.Tests.Infrastrature
 {
     static class CosmosSetup
     {
-        public static CosmosClient GetClient()
+        public static CosmosClient GetClient(JsonSerializerSettings serializerSettings = null)
         {
             var endpoint = Environment.GetEnvironmentVariable("CosmosDbEmulator.Endpoint", EnvironmentVariableTarget.User) ?? "https://localhost:8081";
             var key = Environment.GetEnvironmentVariable("CosmosDbEmulator.Key", EnvironmentVariableTarget.User) ?? "C2y6yDjf5/R+ob0N8A7Cgv30VRDJIWEHLM+4QDU5DE2nQ9nDuVTqobD4b8mGGyPMbIZnqyMsEcaGQy67XIw/Jw==";
 
-            return new CosmosClient(endpoint, key);
+            return new CosmosClient(endpoint, key, new CosmosClientOptions { Serializer = new JsonNetCosmosSerializer(JsonSerializer.Create(serializerSettings ?? new JsonSerializerSettings())) });
         }
 
-        public static async Task<CosmosClient> GetClient(string database, string container = null)
+        public static async Task<CosmosClient> GetClient(string database, string container = null, JsonSerializerSettings serializerSettings = null)
         {
-            var client = GetClient();
+            var client = GetClient(serializerSettings);
 
             await client.CreateDatabaseIfNotExistsAsync(database);
 
