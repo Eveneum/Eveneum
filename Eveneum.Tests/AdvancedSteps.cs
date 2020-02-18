@@ -4,6 +4,10 @@ using Eveneum.Tests.Infrastrature;
 using Eveneum.Advanced;
 using System.Collections.Generic;
 using NUnit.Framework;
+using Eveneum.Documents;
+using System.Linq;
+using Newtonsoft.Json.Linq;
+using Newtonsoft.Json;
 
 namespace Eveneum.Tests
 {
@@ -50,6 +54,16 @@ namespace Eveneum.Tests
             this.Context.Response = response;
         }
 
+        [When(@"I replace event in version (\d+) in stream (.*)")]
+        public async Task WhenIReplaceEventInVersionInStream(ulong version, string streamId)
+        {
+            this.Context.ReplacedEvent = TestSetup.GetEvents(1, (int)version, streamId)[0];
+
+            var response = await (this.Context.EventStore as IAdvancedEventStore).ReplaceEvent(this.Context.ReplacedEvent);
+
+            this.Context.Response = response;
+        }
+
         [Then(@"all (\d+) events are loaded")]
         public void ThenAllEventsAreLoaded(ulong events)
         {
@@ -60,6 +74,33 @@ namespace Eveneum.Tests
         public void ThenTheStreamHeaderForStreamInVersionIsReturned(string streamId, ulong version)
         {
             Assert.IsNotNull(this.Context.LoadAllStreamHeaders.Find(x => x.StreamId == streamId && x.Version == version));
+        }
+
+        [Then(@"the event in version (\d+) in stream (.*) is replaced")]
+        public async Task ThenTheEventInVersionInStreamIsReplaced(ulong version, string streamId)
+        {
+            var currentDocuments = await CosmosSetup.QueryAllDocumentsInStream(this.Context.Client, this.Context.Database, this.Context.Container, streamId, DocumentType.Event);
+            var eventDocument = currentDocuments.SingleOrDefault(x => x.Id == EveneumDocument.GenerateEventId(streamId, version));
+
+            Assert.AreEqual(DocumentType.Event, eventDocument.DocumentType);
+            Assert.AreEqual(streamId, eventDocument.StreamId);
+            Assert.AreEqual(this.Context.EventStoreOptions.TypeProvider.GetIdentifierForType(this.Context.ReplacedEvent.Body.GetType()), eventDocument.BodyType);
+            Assert.NotNull(eventDocument.Body);
+            Assert.AreEqual(JToken.FromObject(this.Context.ReplacedEvent.Body, JsonSerializer.Create(this.Context.JsonSerializerSettings)), eventDocument.Body);
+            Assert.NotNull(eventDocument.ETag);
+            Assert.False(eventDocument.Deleted);
+
+            if (this.Context.ReplacedEvent.Metadata == null)
+            {
+                Assert.IsNull(eventDocument.MetadataType);
+                Assert.IsNull(eventDocument.Metadata);
+            }
+            else
+            {
+                Assert.AreEqual(this.Context.EventStoreOptions.TypeProvider.GetIdentifierForType(this.Context.ReplacedEvent.Metadata.GetType()), eventDocument.MetadataType);
+                Assert.NotNull(eventDocument.Metadata);
+                Assert.AreEqual(JToken.FromObject(this.Context.ReplacedEvent.Metadata, JsonSerializer.Create(this.Context.JsonSerializerSettings)), eventDocument.Metadata);
+            }
         }
     }
 }

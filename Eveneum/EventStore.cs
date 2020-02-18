@@ -189,7 +189,7 @@ namespace Eveneum
 
             do
             {
-                response = await this.Container.Scripts.ExecuteStoredProcedureAsync<BulkDeleteResponse>(BulkDeleteStoredProc, new PartitionKey(streamId), new object[] { query, this.DeleteMode == DeleteMode.SoftDelete }, cancellationToken: cancellationToken);
+                response = await this.Container.Scripts.ExecuteStoredProcedureAsync<BulkDeleteResponse>(BulkDeleteStoredProc, partitionKey, new object[] { query, this.DeleteMode == DeleteMode.SoftDelete }, cancellationToken: cancellationToken);
                 requestCharge += response.RequestCharge;
                 deletedDocuments += response.Resource.Deleted;
             }
@@ -284,6 +284,13 @@ namespace Eveneum
             while (query.HasMoreResults);
 
             return new Response(requestCharge);
+        }
+
+        public async Task<Response> ReplaceEvent(EventData newEvent, CancellationToken cancellationToken = default)
+        {
+            var response = await this.Container.ReplaceItemAsync(this.Serializer.SerializeEvent(newEvent, newEvent.StreamId), EveneumDocument.GenerateEventId(newEvent.StreamId, newEvent.Version), new PartitionKey(newEvent.StreamId), cancellationToken: cancellationToken);
+            
+            return new Response(response.RequestCharge);
         }
 
         private async Task<DocumentResponse> ReadHeader(string streamId, CancellationToken cancellationToken = default)

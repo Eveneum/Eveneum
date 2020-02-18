@@ -7,9 +7,9 @@ namespace Eveneum.Tests.Infrastrature
 {
     static class TestSetup
     {
-        public static EventData[] GetEvents(int count = 5, int startVersion = 1)
+        public static EventData[] GetEvents(int count = 5, int startVersion = 1, string streamId = null)
         {
-            var streamId = Gen.Random.Text.Words()();
+            streamId = streamId ?? Gen.Random.Text.Words()();
             var numbers = Gen.Random.Numbers.Decimals();
             var strings = Gen.Random.Text.VeryLong();
             var dates = Gen.Random.Time.Dates(DateTime.MinValue);

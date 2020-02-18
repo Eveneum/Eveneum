@@ -57,3 +57,12 @@ Scenario: Querying stream headers
 	Then the stream header for stream B in version 100 is returned
 	And the stream header for stream C in version 200 is returned
 	And request charge is reported
+
+
+Scenario: Replace event
+	Given an event store backed by partitioned collection
+	And an existing stream A with 10 events
+	And an existing stream B with 100 events
+	When I replace event in version 5 in stream B
+	Then the event in version 5 in stream B is replaced
+	And request charge is reported

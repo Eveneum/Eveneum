@@ -26,6 +26,7 @@ namespace Eveneum.Tests.Infrastrature
         public EventData[] NewEvents { get; set; }
         public List<EventData> LoadAllEvents { get; set; }
         public List<StreamHeader> LoadAllStreamHeaders { get; set; }
+        public EventData ReplacedEvent { get; set; }
         public List<EveneumDocument> ExistingDocuments { get; set; }
 
         public JsonSerializerSettings JsonSerializerSettings { get; set; } = new JsonSerializerSettings();
