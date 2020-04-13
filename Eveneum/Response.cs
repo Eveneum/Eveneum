@@ -14,13 +14,15 @@ namespace Eveneum
 
     public class StreamResponse : Response
     {
-        public StreamResponse(Stream? stream, double requestCharge)
+        public StreamResponse(Stream? stream, bool softDeleted, double requestCharge)
             : base(requestCharge)
         {
             this.Stream = stream;
+            this.SoftDeleted = softDeleted;
         }
 
         public Stream? Stream { get; }
+        public bool SoftDeleted { get; }
     }
 
     public class DeleteResponse : Response

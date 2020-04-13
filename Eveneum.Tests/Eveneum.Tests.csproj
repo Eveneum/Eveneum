@@ -69,10 +69,10 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>CreatingSnapshotForNonExistentStream.feature</DependentUpon>
     </Compile>
-    <Compile Update="CreatingSnapshotForNonExistingEvent.feature.cs">
+    <Compile Update="CreatingSnapshotForNonExistentEvent.feature.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
-      <DependentUpon>CreatingSnapshotForNonExistingEvent.feature</DependentUpon>
+      <DependentUpon>CreatingSnapshotForNonExistentEvent.feature</DependentUpon>
     </Compile>
     <Compile Update="DeletingDeletedStream.feature.cs">
       <DesignTime>True</DesignTime>
@@ -94,10 +94,10 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>DeletingSnapshots.feature</DependentUpon>
     </Compile>
-    <Compile Update="DeletingSnapshotsForNonExistingStream.feature.cs">
+    <Compile Update="DeletingSnapshotsForNonExistentStream.feature.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
-      <DependentUpon>DeletingSnapshotsForNonExistingStream.feature</DependentUpon>
+      <DependentUpon>DeletingSnapshotsForNonExistentStream.feature</DependentUpon>
     </Compile>
     <Compile Update="DeletingStream.feature.cs">
       <DesignTime>True</DesignTime>
@@ -163,9 +163,9 @@
       <Generator>SpecFlowSingleFileGenerator</Generator>
       <LastGenOutput>CreatingSnapshotForNonExistentStream.feature.cs</LastGenOutput>
     </SpecFlowFeatureFiles>
-    <SpecFlowFeatureFiles Update="CreatingSnapshotForNonExistingEvent.feature">
+    <SpecFlowFeatureFiles Update="CreatingSnapshotForNonExistentEvent.feature">
       <Generator>SpecFlowSingleFileGenerator</Generator>
-      <LastGenOutput>CreatingSnapshotForNonExistingEvent.feature.cs</LastGenOutput>
+      <LastGenOutput>CreatingSnapshotForNonExistentEvent.feature.cs</LastGenOutput>
     </SpecFlowFeatureFiles>
     <SpecFlowFeatureFiles Update="DeletingDeletedStream.feature">
       <Generator>SpecFlowSingleFileGenerator</Generator>
@@ -183,9 +183,9 @@
       <Generator>SpecFlowSingleFileGenerator</Generator>
       <LastGenOutput>DeletingSnapshots.feature.cs</LastGenOutput>
     </SpecFlowFeatureFiles>
-    <SpecFlowFeatureFiles Update="DeletingSnapshotsForNonExistingStream.feature">
+    <SpecFlowFeatureFiles Update="DeletingSnapshotsForNonExistentStream.feature">
       <Generator>SpecFlowSingleFileGenerator</Generator>
-      <LastGenOutput>DeletingSnapshotsForNonExistingStream.feature.cs</LastGenOutput>
+      <LastGenOutput>DeletingSnapshotsForNonExistentStream.feature.cs</LastGenOutput>
     </SpecFlowFeatureFiles>
     <SpecFlowFeatureFiles Update="DeletingStream.feature">
       <Generator>SpecFlowSingleFileGenerator</Generator>

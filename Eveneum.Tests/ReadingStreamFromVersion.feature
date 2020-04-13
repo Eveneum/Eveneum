@@ -7,6 +7,21 @@ Scenario: Reading stream that doesn't exist
 	When I read stream S from version 10
 	Then the non-existing stream is returned
 	And request charge is reported
+	
+Scenario: Reading soft-deleted stream
+	Given an event store backed by partitioned collection
+	And a deleted stream S with 10 events
+	When I read stream S from version 10
+	Then the non-existing, soft-deleted stream is returned
+	And request charge is reported
+
+Scenario: Reading hard-deleted stream
+	Given hard-delete mode
+	And an event store backed by partitioned collection
+	And a deleted stream S with 10 events
+	When I read stream S from version 10
+	Then the non-existing stream is returned
+	And request charge is reported
 
 Scenario: Reading empty stream with no metadata
 	Given an event store backed by partitioned collection

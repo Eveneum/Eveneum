@@ -1,5 +1,5 @@
-﻿Feature: Deleting snapshots for non-existing stream
-	Deleting fnapshots from a stream that doesn't exist fails with StreamNotFound exception
+﻿Feature: Deleting snapshots for non-existent stream
+	Deleting snapshots from a stream that doesn't exist fails with StreamNotFound exception
 
 @ExpectException
 Scenario: Deleting some snapshots

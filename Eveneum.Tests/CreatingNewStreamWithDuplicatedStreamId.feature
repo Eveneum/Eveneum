@@ -32,3 +32,11 @@ Scenario: Creating new stream with metadata and some events fails if stream id a
 	When I write a new stream S with metadata and 100 events
 	Then the action fails as stream S already exists
 	And no events are appended
+
+@ExpectException
+Scenario: Creating new stream with no metadata and no events fails if stream id already exists for soft-deleted stream
+	Given an event store backed by partitioned collection
+	And a deleted stream S with 5 events
+	When I write a new stream S with 0 events
+	Then the action fails as stream S already exists
+	And no events are appended

@@ -67,6 +67,16 @@ namespace Eveneum.Tests
             var stream = this.Context.Stream;
 
             Assert.IsFalse(stream.HasValue);
+            Assert.IsFalse((this.Context.Response as StreamResponse).SoftDeleted);
+        }
+
+        [Then(@"the non-existing, soft-deleted stream is returned")]
+        public void ThenTheNon_ExistingSoft_DeletedStreamIsReturned()
+        {
+            var stream = this.Context.Stream;
+
+            Assert.IsFalse(stream.HasValue);
+            Assert.IsTrue((this.Context.Response as StreamResponse).SoftDeleted);
         }
 
         [Then(@"the stream ([^\s-]) in version (\d+) is returned")]

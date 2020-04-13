@@ -75,7 +75,7 @@ namespace Eveneum
                 foreach (var eveneumDoc in page)
                 {
                     if (eveneumDoc.DocumentType == DocumentType.Header && eveneumDoc.Deleted)
-                        throw new StreamNotFoundException(streamId);
+                        return new StreamResponse(null, true, requestCharge);
 
                     if (eveneumDoc.Deleted)
                         continue;
@@ -94,14 +94,14 @@ namespace Eveneum
             }
 
             if (documents.Count == 0)
-                return new StreamResponse(null, requestCharge);
+                return new StreamResponse(null, false, requestCharge);
 
             var headerDocument = documents.First(x => x.DocumentType == DocumentType.Header);
             var events = documents.Where(x => x.DocumentType == DocumentType.Event).Select(this.Serializer.DeserializeEvent).Reverse().ToArray();
             var snapshot = documents.Where(x => x.DocumentType == DocumentType.Snapshot).Select(this.Serializer.DeserializeSnapshot).Cast<Snapshot?>().FirstOrDefault();
             var metadata = this.Serializer.DeserializeObject(headerDocument.MetadataType, headerDocument.Metadata);
 
-            return new StreamResponse(new Stream(streamId, headerDocument.Version, metadata, events, snapshot), requestCharge);
+            return new StreamResponse(new Stream(streamId, headerDocument.Version, metadata, events, snapshot), false, requestCharge);
         }
 
         public async Task<Response> WriteToStream(string streamId, EventData[] events, ulong? expectedVersion = null, object metadata = null, CancellationToken cancellationToken = default)
@@ -116,6 +116,9 @@ namespace Eveneum
 
                 var header = headerResponse.Document;
                 requestCharge += headerResponse.RequestCharge;
+
+                if (header.Deleted)
+                    throw new StreamDeletedException(streamId);
 
                 if (header.Version != expectedVersion)
                     throw new OptimisticConcurrencyException(streamId, expectedVersion.Value, header.Version);
@@ -172,8 +175,11 @@ namespace Eveneum
             var existingHeader = headerResponse.Document;
             var requestCharge = headerResponse.RequestCharge;
 
-            if (existingHeader.Deleted)
+            if (existingHeader == null)
                 throw new StreamNotFoundException(streamId);
+
+            if (existingHeader.Deleted)
+                throw new StreamDeletedException(streamId);
 
             if (existingHeader.Version != expectedVersion)
                 throw new OptimisticConcurrencyException(streamId, expectedVersion, existingHeader.Version);
@@ -204,6 +210,12 @@ namespace Eveneum
 
             var header = headerResponse.Document;
             var requestCharge = headerResponse.RequestCharge;
+
+            if (header == null)
+                throw new StreamNotFoundException(streamId);
+
+            if (header.Deleted)
+                throw new StreamDeletedException(streamId);
 
             if (header.Version < version)
                 throw new OptimisticConcurrencyException(streamId, version, header.Version);

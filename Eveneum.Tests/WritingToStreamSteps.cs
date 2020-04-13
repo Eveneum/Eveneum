@@ -95,7 +95,6 @@ namespace Eveneum.Tests
         [Then(@"the action fails as stream ([^\s-]) already exists")]
         public void ThenTheActionFailsAsStreamAlreadyExists(string streamId)
         {
-            Assert.NotNull(this.ScenarioContext.TestError);
             Assert.IsInstanceOf<StreamAlreadyExistsException>(this.ScenarioContext.TestError);
 
             var exception = this.ScenarioContext.TestError as StreamAlreadyExistsException;
@@ -103,19 +102,26 @@ namespace Eveneum.Tests
         }
 
         [Then(@"the action fails as stream ([^\s-]) doesn't exist")]
-        public void ThenTheActionFailsAsStreamDoesnTExist(string streamId)
+        public void ThenTheActionFailsAsStreamDoesntExist(string streamId)
         {
-            Assert.NotNull(this.ScenarioContext.TestError);
             Assert.IsInstanceOf<StreamNotFoundException>(this.ScenarioContext.TestError);
 
             var exception = this.ScenarioContext.TestError as StreamNotFoundException;
             Assert.AreEqual(streamId, exception.StreamId);
         }
 
+        [Then(@"the action fails as stream ([^\s-]) has been deleted")]
+        public void ThenTheActionFailsAsStreamHasBeenDeleted(string streamId)
+        {
+            Assert.IsInstanceOf<StreamDeletedException>(this.ScenarioContext.TestError);
+
+            var exception = this.ScenarioContext.TestError as StreamDeletedException;
+            Assert.AreEqual(streamId, exception.StreamId);
+        }
+
         [Then(@"the action fails as expected version (\d+) doesn't match the current version (\d+) of stream ([^\s-])")]
         public void ThenTheActionFailsAsExpectedVersionDoesnTMatchTheCurrentVersionOfStream(ulong expectedVersion, ulong currentVersion, string streamId)
         {
-            Assert.NotNull(this.ScenarioContext.TestError);
             Assert.IsInstanceOf<OptimisticConcurrencyException>(this.ScenarioContext.TestError);
 
             var exception = this.ScenarioContext.TestError as OptimisticConcurrencyException;

@@ -10,10 +10,15 @@ namespace Eveneum
             this.StreamId = streamId;
         }
 
+        protected StreamNotFoundException(string streamId, string message) : base(message)
+        {
+            this.StreamId = streamId;
+        }
+
         public string StreamId
         {
             get { return (string)this.Data[nameof(StreamId)]; }
-            private set { this.Data[nameof(StreamId)] = value; }
+            protected set { this.Data[nameof(StreamId)] = value; }
         }
 
         protected StreamNotFoundException(

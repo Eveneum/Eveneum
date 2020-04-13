@@ -18,21 +18,21 @@ namespace Eveneum.Tests
     [System.CodeDom.Compiler.GeneratedCodeAttribute("TechTalk.SpecFlow", "3.0.0.0")]
     [System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     [NUnit.Framework.TestFixtureAttribute()]
-    [NUnit.Framework.DescriptionAttribute("Deleting snapshots for non-existing stream")]
-    public partial class DeletingSnapshotsForNon_ExistingStreamFeature
+    [NUnit.Framework.DescriptionAttribute("Creating snapshot for non-existing event")]
+    public partial class CreatingSnapshotForNon_ExistingEventFeature
     {
         
         private TechTalk.SpecFlow.ITestRunner testRunner;
         
-#line 1 "DeletingSnapshotsForNonExistingStream.feature"
+#line 1 "CreatingSnapshotForNonExistentEvent.feature"
 #line hidden
         
         [NUnit.Framework.OneTimeSetUpAttribute()]
         public virtual void FeatureSetup()
         {
             testRunner = TechTalk.SpecFlow.TestRunnerManager.GetTestRunner();
-            TechTalk.SpecFlow.FeatureInfo featureInfo = new TechTalk.SpecFlow.FeatureInfo(new System.Globalization.CultureInfo("en-US"), "Deleting snapshots for non-existing stream", "\tDeleting fnapshots from a stream that doesn\'t exist fails with StreamNotFound ex" +
-                    "ception", ProgrammingLanguage.CSharp, ((string[])(null)));
+            TechTalk.SpecFlow.FeatureInfo featureInfo = new TechTalk.SpecFlow.FeatureInfo(new System.Globalization.CultureInfo("en-US"), "Creating snapshot for non-existing event", "\tCreating a snapshot for a events version that is higher than stream version fail" +
+                    "s with OptimisticConcurrency exception", ProgrammingLanguage.CSharp, ((string[])(null)));
             testRunner.OnFeatureStart(featureInfo);
         }
         
@@ -71,11 +71,11 @@ namespace Eveneum.Tests
         }
         
         [NUnit.Framework.TestAttribute()]
-        [NUnit.Framework.DescriptionAttribute("Deleting some snapshots")]
+        [NUnit.Framework.DescriptionAttribute("Creating snapshot for non-existent event")]
         [NUnit.Framework.CategoryAttribute("ExpectException")]
-        public virtual void DeletingSomeSnapshots()
+        public virtual void CreatingSnapshotForNon_ExistentEvent()
         {
-            TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Deleting some snapshots", null, new string[] {
+            TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Creating snapshot for non-existent event", null, new string[] {
                         "ExpectException"});
 #line 5
 this.ScenarioInitialize(scenarioInfo);
@@ -85,15 +85,10 @@ this.ScenarioInitialize(scenarioInfo);
 #line 7
  testRunner.And("an existing stream S with 10 events", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
 #line 8
- testRunner.And("an existing snapshot for version 3", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
+ testRunner.When("I create snapshot for stream S in version 20", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
 #line 9
- testRunner.And("an existing snapshot for version 7", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
-#line 10
- testRunner.When("I delete snapshots older than version 10 from stream X", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
-#line 11
- testRunner.Then("the action fails as stream X doesn\'t exist", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
-#line 12
- testRunner.And("stream S is not soft-deleted", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
+ testRunner.Then("the action fails as expected version 20 doesn\'t match the current version 10 of s" +
+                    "tream S", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
 #line hidden
             this.ScenarioCleanup();
         }
