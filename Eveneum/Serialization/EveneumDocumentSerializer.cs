@@ -102,7 +102,7 @@ namespace Eveneum.Serialization
             }
             catch (Exception exc)
             {
-                throw new DeserializationException(typeName, data.ToString(), exc);
+                throw new JsonDeserializationException(typeName, data.ToString(), exc);
             }
         }
     }

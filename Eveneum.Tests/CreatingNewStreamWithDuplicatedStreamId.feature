@@ -8,6 +8,7 @@ Scenario: Creating new stream with no metadata and no events fails if stream id 
 	When I write a new stream S with 0 events
 	Then the action fails as stream S already exists
 	And no events are appended
+	And request charge is reported
 
 @ExpectException
 Scenario: Creating new stream with metadata and no events fails if stream id already exists
@@ -16,6 +17,7 @@ Scenario: Creating new stream with metadata and no events fails if stream id alr
 	When I write a new stream S with metadata and 0 events
 	Then the action fails as stream S already exists
 	And no events are appended
+	And request charge is reported
 
 @ExpectException
 Scenario: Creating new stream with no metadata and some events fails if stream id already exists
@@ -24,6 +26,7 @@ Scenario: Creating new stream with no metadata and some events fails if stream i
 	When I write a new stream S with 10 events
 	Then the action fails as stream S already exists
 	And no events are appended
+	And request charge is reported
 
 @ExpectException
 Scenario: Creating new stream with metadata and some events fails if stream id already exists
@@ -32,6 +35,7 @@ Scenario: Creating new stream with metadata and some events fails if stream id a
 	When I write a new stream S with metadata and 100 events
 	Then the action fails as stream S already exists
 	And no events are appended
+	And request charge is reported
 
 @ExpectException
 Scenario: Creating new stream with no metadata and no events fails if stream id already exists for soft-deleted stream
@@ -40,3 +44,4 @@ Scenario: Creating new stream with no metadata and no events fails if stream id 
 	When I write a new stream S with 0 events
 	Then the action fails as stream S already exists
 	And no events are appended
+	And request charge is reported

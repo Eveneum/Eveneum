@@ -89,6 +89,8 @@ this.ScenarioInitialize(scenarioInfo);
 #line 9
  testRunner.Then("the action fails as expected version 20 doesn\'t match the current version 10 of s" +
                     "tream S", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
+#line 10
+ testRunner.And("request charge is reported", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
 #line hidden
             this.ScenarioCleanup();
         }

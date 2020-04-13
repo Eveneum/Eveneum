@@ -10,10 +10,12 @@ namespace Eveneum.Tests
     class CommonSteps
     {
         private readonly CosmosDbContext Context;
+        private readonly ScenarioContext ScenarioContext;
 
-        public CommonSteps(CosmosDbContext context)
+        public CommonSteps(CosmosDbContext context, ScenarioContext scenarioContext)
         {
             this.Context = context;
+            this.ScenarioContext = scenarioContext;
         }
 
         [Given(@"an event store backed by partitioned collection")]
@@ -63,9 +65,13 @@ namespace Eveneum.Tests
         [Then(@"request charge is reported")]
         public void ThenRequestChargeIsReported()
         {
-            Assert.Greater(this.Context.Response.RequestCharge, 0);
+            var requestCharge = this.ScenarioContext.TestError is EveneumException
+                ? (this.ScenarioContext.TestError as EveneumException).RequestCharge
+                : this.Context.Response.RequestCharge;
 
-            Console.WriteLine("Request charge: " + this.Context.Response.RequestCharge);
+            Console.WriteLine("Request charge: " + requestCharge);
+
+            Assert.Greater(requestCharge, 0);
         }
 
         [Then(@"(\d+) deleted documents are reported")]

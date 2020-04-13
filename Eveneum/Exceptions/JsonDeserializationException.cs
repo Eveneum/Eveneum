@@ -3,9 +3,9 @@
 namespace Eveneum
 {
     [Serializable]
-    public class DeserializationException : EveneumException
+    public class JsonDeserializationException : Exception
     {
-        public DeserializationException(string type, string json, Exception innerException) : base($"Failed to deserialize an instance of '{type}'", innerException)
+        public JsonDeserializationException(string type, string json, Exception innerException) : base($"Failed to deserialize an instance of '{type}'", innerException)
         {
             this.Type = type;
             this.Json = json;
@@ -23,7 +23,7 @@ namespace Eveneum
             private set { this.Data[nameof(Json)] = value; }
         }
 
-        protected DeserializationException(
+        protected JsonDeserializationException(
           System.Runtime.Serialization.SerializationInfo info,
           System.Runtime.Serialization.StreamingContext context) : base(info, context) { }
     }

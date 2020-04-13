@@ -5,18 +5,11 @@ namespace Eveneum
     [Serializable]
     public class OptimisticConcurrencyException : EveneumException
     {
-        public OptimisticConcurrencyException(string streamId, ulong expectedVersion, ulong actualVersion)
-            : base($"Expected stream '{streamId}' to have version {expectedVersion} but was {actualVersion}.")
+        public OptimisticConcurrencyException(string streamId, double requestCharge, ulong expectedVersion, ulong actualVersion)
+            : base(streamId, requestCharge, $"Expected stream '{streamId}' to have version {expectedVersion} but was {actualVersion}.")
         {
-            this.StreamId = streamId;
             this.ExpectedVersion = expectedVersion;
             this.ActualVersion = actualVersion;
-        }
-
-        public string StreamId
-        {
-            get { return (string)this.Data[nameof(StreamId)]; }
-            private set { this.Data[nameof(StreamId)] = value; }
         }
 
         public ulong ExpectedVersion

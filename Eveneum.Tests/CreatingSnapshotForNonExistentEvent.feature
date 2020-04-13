@@ -7,3 +7,4 @@ Scenario: Creating snapshot for non-existent event
 	And an existing stream S with 10 events
 	When I create snapshot for stream S in version 20
 	Then the action fails as expected version 20 doesn't match the current version 10 of stream S
+	And request charge is reported

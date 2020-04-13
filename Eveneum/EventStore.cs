@@ -97,11 +97,23 @@ namespace Eveneum
                 return new StreamResponse(null, false, requestCharge);
 
             var headerDocument = documents.First(x => x.DocumentType == DocumentType.Header);
-            var events = documents.Where(x => x.DocumentType == DocumentType.Event).Select(this.Serializer.DeserializeEvent).Reverse().ToArray();
-            var snapshot = documents.Where(x => x.DocumentType == DocumentType.Snapshot).Select(this.Serializer.DeserializeSnapshot).Cast<Snapshot?>().FirstOrDefault();
-            var metadata = this.Serializer.DeserializeObject(headerDocument.MetadataType, headerDocument.Metadata);
 
-            return new StreamResponse(new Stream(streamId, headerDocument.Version, metadata, events, snapshot), false, requestCharge);
+            try
+            {
+                var events = documents.Where(x => x.DocumentType == DocumentType.Event).Select(this.Serializer.DeserializeEvent).Reverse().ToArray();
+                var snapshot = documents.Where(x => x.DocumentType == DocumentType.Snapshot).Select(this.Serializer.DeserializeSnapshot).Cast<Snapshot?>().FirstOrDefault();
+                var metadata = this.Serializer.DeserializeObject(headerDocument.MetadataType, headerDocument.Metadata);
+
+                return new StreamResponse(new Stream(streamId, headerDocument.Version, metadata, events, snapshot), false, requestCharge);
+            }
+            catch(TypeNotFoundException ex)
+            {
+                throw new StreamDeserializationException(streamId, requestCharge, ex.Type, ex);
+            }
+            catch (JsonDeserializationException ex)
+            {
+                throw new StreamDeserializationException(streamId, requestCharge, ex.Type, ex);
+            }
         }
 
         public async Task<Response> WriteToStream(string streamId, EventData[] events, ulong? expectedVersion = null, object metadata = null, CancellationToken cancellationToken = default)
@@ -118,10 +130,10 @@ namespace Eveneum
                 requestCharge += headerResponse.RequestCharge;
 
                 if (header.Deleted)
-                    throw new StreamDeletedException(streamId);
+                    throw new StreamDeletedException(streamId, requestCharge);
 
                 if (header.Version != expectedVersion)
-                    throw new OptimisticConcurrencyException(streamId, expectedVersion.Value, header.Version);
+                    throw new OptimisticConcurrencyException(streamId, requestCharge, expectedVersion.Value, header.Version);
 
                 header.Version += (ulong)events.Length;
 
@@ -146,10 +158,10 @@ namespace Eveneum
             requestCharge += response.RequestCharge;
 
             if (response.StatusCode == System.Net.HttpStatusCode.Conflict)
-                throw new StreamAlreadyExistsException(streamId);
+                throw new StreamAlreadyExistsException(streamId, requestCharge);
             else
                 if (!response.IsSuccessStatusCode)
-                    throw new WriteException(response.ErrorMessage, response.StatusCode);
+                    throw new WriteException(streamId, requestCharge, response.ErrorMessage, response.StatusCode);
 
             foreach (var batch in events.Skip(this.BatchSize - 1).Select(@event => this.Serializer.SerializeEvent(@event, streamId)).Batch(this.BatchSize))
             {
@@ -162,7 +174,7 @@ namespace Eveneum
                 requestCharge += response.RequestCharge;
 
                 if (!response.IsSuccessStatusCode)
-                    throw new WriteException(response.ErrorMessage, response.StatusCode);
+                    throw new WriteException(streamId, requestCharge, response.ErrorMessage, response.StatusCode);
             }
 
             return new Response(requestCharge);
@@ -176,13 +188,13 @@ namespace Eveneum
             var requestCharge = headerResponse.RequestCharge;
 
             if (existingHeader == null)
-                throw new StreamNotFoundException(streamId);
+                throw new StreamNotFoundException(streamId, requestCharge);
 
             if (existingHeader.Deleted)
-                throw new StreamDeletedException(streamId);
+                throw new StreamDeletedException(streamId, requestCharge);
 
             if (existingHeader.Version != expectedVersion)
-                throw new OptimisticConcurrencyException(streamId, expectedVersion, existingHeader.Version);
+                throw new OptimisticConcurrencyException(streamId, requestCharge, expectedVersion, existingHeader.Version);
 
             var partitionKey = new PartitionKey(streamId);
             ulong deletedDocuments = 0;
@@ -212,13 +224,13 @@ namespace Eveneum
             var requestCharge = headerResponse.RequestCharge;
 
             if (header == null)
-                throw new StreamNotFoundException(streamId);
+                throw new StreamNotFoundException(streamId, requestCharge);
 
             if (header.Deleted)
-                throw new StreamDeletedException(streamId);
+                throw new StreamDeletedException(streamId, requestCharge);
 
             if (header.Version < version)
-                throw new OptimisticConcurrencyException(streamId, version, header.Version);
+                throw new OptimisticConcurrencyException(streamId, requestCharge, version, header.Version);
 
             var document = this.Serializer.SerializeSnapshot(snapshot, metadata, version, streamId);
 
@@ -300,9 +312,16 @@ namespace Eveneum
 
         public async Task<Response> ReplaceEvent(EventData newEvent, CancellationToken cancellationToken = default)
         {
-            var response = await this.Container.ReplaceItemAsync(this.Serializer.SerializeEvent(newEvent, newEvent.StreamId), EveneumDocument.GenerateEventId(newEvent.StreamId, newEvent.Version), new PartitionKey(newEvent.StreamId), cancellationToken: cancellationToken);
+            try
+            {
+                var response = await this.Container.ReplaceItemAsync(this.Serializer.SerializeEvent(newEvent, newEvent.StreamId), EveneumDocument.GenerateEventId(newEvent.StreamId, newEvent.Version), new PartitionKey(newEvent.StreamId), cancellationToken: cancellationToken);
             
-            return new Response(response.RequestCharge);
+                return new Response(response.RequestCharge);
+            }
+            catch (CosmosException ex)
+            {
+                throw new WriteException(newEvent.StreamId, ex.RequestCharge, ex.Message, ex.StatusCode, ex);
+            }
         }
 
         private async Task<DocumentResponse> ReadHeader(string streamId, CancellationToken cancellationToken = default)
@@ -315,7 +334,7 @@ namespace Eveneum
             }
             catch (CosmosException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
             {
-                throw new StreamNotFoundException(streamId);
+                throw new StreamNotFoundException(streamId, ex.RequestCharge);
             }
         }
 

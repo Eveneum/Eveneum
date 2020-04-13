@@ -5,10 +5,9 @@ namespace Eveneum
     [Serializable]
     public class StreamDeletedException : StreamNotFoundException
     {
-        public StreamDeletedException(string streamId) : base(streamId, $"Stream '{streamId}' has been deleted")
-        {
-            this.StreamId = streamId;
-        }
+        public StreamDeletedException(string streamId, double requestCharge)
+            : base(streamId, requestCharge, $"Stream '{streamId}' has been deleted")
+        {}
 
         protected StreamDeletedException(
           System.Runtime.Serialization.SerializationInfo info,

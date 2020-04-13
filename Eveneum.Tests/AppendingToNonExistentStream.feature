@@ -8,6 +8,7 @@ Scenario: Appending to non-existent stream
 	When I append 5 events to stream X in expected version 10
 	Then the action fails as stream X doesn't exist
 	And no events are appended
+	And request charge is reported
 	
 @ExpectException
 Scenario: Appending to soft-deleted stream
@@ -17,6 +18,7 @@ Scenario: Appending to soft-deleted stream
 	Then the action fails as stream S doesn't exist
 	And the action fails as stream S has been deleted
 	And no events are appended	
+	And request charge is reported
 
 @ExpectException
 Scenario: Appending to hard-deleted stream
@@ -26,3 +28,4 @@ Scenario: Appending to hard-deleted stream
 	When I append 5 events to stream S in expected version 10
 	Then the action fails as stream S doesn't exist
 	And no events are appended
+	And request charge is reported

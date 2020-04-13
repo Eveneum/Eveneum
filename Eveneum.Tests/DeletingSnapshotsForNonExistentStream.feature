@@ -10,3 +10,4 @@ Scenario: Deleting some snapshots
 	When I delete snapshots older than version 10 from stream X
 	Then the action fails as stream X doesn't exist
 	And stream S is not soft-deleted
+	And request charge is reported

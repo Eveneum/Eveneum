@@ -5,15 +5,9 @@ namespace Eveneum
     [Serializable]
     public class StreamAlreadyExistsException : EveneumException
     {
-        public StreamAlreadyExistsException(string streamId) : base($"Stream '{streamId}' already exists.")
+        public StreamAlreadyExistsException(string streamId, double requestCharge)
+            : base(streamId, requestCharge, $"Stream '{streamId}' already exists.")
         {
-            this.StreamId = streamId;
-        }
-
-        public string StreamId
-        {
-            get { return (string)this.Data[nameof(StreamId)]; }
-            private set { this.Data[nameof(StreamId)] = value; }
         }
 
         protected StreamAlreadyExistsException(

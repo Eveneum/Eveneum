@@ -6,7 +6,12 @@ namespace Eveneum
     [Serializable]
     public class WriteException : EveneumException
     {
-        public WriteException(string message, HttpStatusCode statusCode) : base(message)
+        public WriteException(string streamId, double requestCharge, string message, HttpStatusCode statusCode)
+            : this(streamId, requestCharge, message, statusCode, null)
+        {}
+
+        public WriteException(string streamId, double requestCharge, string message, HttpStatusCode statusCode, Exception inner)
+            : base(streamId, requestCharge, message, inner)
         {
             this.StatusCode = statusCode;
         }
