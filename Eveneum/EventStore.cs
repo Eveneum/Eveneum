@@ -61,7 +61,7 @@ namespace Eveneum
             if (streamId == null)
                 throw new ArgumentNullException(nameof(streamId));
 
-            var iterator = GetFeedIterator<EveneumDocument>(sql, requestOptions: new QueryRequestOptions { PartitionKey = new PartitionKey(streamId), MaxItemCount = maxItemCount });
+            var iterator = this.Container.GetItemQueryIterator<EveneumDocument>(sql, requestOptions: new QueryRequestOptions { PartitionKey = new PartitionKey(streamId), MaxItemCount = maxItemCount });
 
             var documents = new List<EveneumDocument>();
             var finishLoading = false;
@@ -275,20 +275,12 @@ namespace Eveneum
             this.LoadEvents($"SELECT * FROM c WHERE c.{nameof(EveneumDocument.DocumentType)} = '{nameof(DocumentType.Event)}'", callback, cancellationToken);
 
         public Task<Response> LoadEvents(string query, Func<IReadOnlyCollection<EventData>, Task> callback, CancellationToken cancellationToken = default)
-        {
-            var iterator = GetFeedIterator<EveneumDocument>(query, new QueryRequestOptions { MaxItemCount = -1 });
-            return LoadEvents(iterator, callback, cancellationToken);
-        }
+            => this.LoadEvents(new QueryDefinition(query), callback, cancellationToken);
 
-        public Task<Response> LoadEvents(QueryDefinition query, Func<IReadOnlyCollection<EventData>, Task> callback, CancellationToken cancellationToken = default)
+        public async Task<Response> LoadEvents(QueryDefinition query, Func<IReadOnlyCollection<EventData>, Task> callback, CancellationToken cancellationToken = default)
         {
-            var iterator = GetFeedIterator<EveneumDocument>(query, new QueryRequestOptions { MaxItemCount = -1 });
-            return LoadEvents(iterator, callback, cancellationToken);
-        }
+            var iterator = this.Container.GetItemQueryIterator<EveneumDocument>(query, requestOptions: new QueryRequestOptions { MaxItemCount = -1 });
 
-        private async Task<Response> LoadEvents(FeedIterator<EveneumDocument> iterator, Func<IReadOnlyCollection<EventData>, Task> callback,
-            CancellationToken cancellationToken = default)
-        {
             double requestCharge = 0;
 
             do
@@ -305,20 +297,12 @@ namespace Eveneum
         }
 
         public Task<Response> LoadStreamHeaders(string query, Func<IReadOnlyCollection<StreamHeader>, Task> callback, CancellationToken cancellationToken = default)
-        {
-            var iterator = GetFeedIterator<EveneumDocument>(query, new QueryRequestOptions { MaxItemCount = -1 });
-            return LoadStreamHeaders(iterator, callback, cancellationToken);
-        }
+            => this.LoadStreamHeaders(new QueryDefinition(query), callback, cancellationToken);
 
-        public Task<Response> LoadStreamHeaders(QueryDefinition query, Func<IReadOnlyCollection<StreamHeader>, Task> callback, CancellationToken cancellationToken = default)
+        public async Task<Response> LoadStreamHeaders(QueryDefinition query, Func<IReadOnlyCollection<StreamHeader>, Task> callback, CancellationToken cancellationToken = default)
         {
-            var iterator = GetFeedIterator<EveneumDocument>(query, new QueryRequestOptions { MaxItemCount = -1 });
-            return LoadStreamHeaders(iterator, callback, cancellationToken);
-        }
+            var iterator = this.Container.GetItemQueryIterator<EveneumDocument>(query, requestOptions: new QueryRequestOptions { MaxItemCount = -1 });
 
-        private async Task<Response> LoadStreamHeaders(FeedIterator<EveneumDocument> iterator,
-            Func<IReadOnlyCollection<StreamHeader>, Task> callback, CancellationToken cancellationToken = default)
-        {
             double requestCharge = 0;
 
             do
@@ -346,16 +330,6 @@ namespace Eveneum
             {
                 throw new WriteException(newEvent.StreamId, ex.RequestCharge, ex.Message, ex.StatusCode, ex);
             }
-        }
-
-        private FeedIterator<T> GetFeedIterator<T>(string query, QueryRequestOptions requestOptions = null)
-        {
-            return this.Container.GetItemQueryIterator<T>(query, requestOptions: requestOptions);
-        }
-
-        private FeedIterator<T> GetFeedIterator<T>(QueryDefinition query, QueryRequestOptions requestOptions = null)
-        {
-            return this.Container.GetItemQueryIterator<T>(query, requestOptions: requestOptions);
         }
 
         private async Task<DocumentResponse> ReadHeader(string streamId, CancellationToken cancellationToken = default)
