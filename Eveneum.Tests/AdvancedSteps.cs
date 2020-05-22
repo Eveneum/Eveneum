@@ -8,6 +8,7 @@ using Eveneum.Documents;
 using System.Linq;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json;
+using Microsoft.Azure.Cosmos;
 
 namespace Eveneum.Tests
 {
@@ -32,8 +33,8 @@ namespace Eveneum.Tests
             this.Context.Response = response;
         }
 
-        [When(@"I load events using query (.*)")]
-        public async Task WhenIQueryEventsUsing(string query)
+        [When(@"I load events using query text (.*)")]
+        public async Task WhenIQueryEventsUsingQueryText(string query)
         {
             var events = new List<EventData>();
 
@@ -43,8 +44,30 @@ namespace Eveneum.Tests
             this.Context.Response = response;
         }
 
-        [When(@"I load stream headers using query (.*)")]
-        public async Task WhenIQueryStreamHeadersUsing(string query)
+        [When(@"I load events using query definition (.*)")]
+        public async Task WhenIQueryEventsUsingQueryDefinition(string query)
+        {
+            var events = new List<EventData>();
+
+            var response = await (this.Context.EventStore as IAdvancedEventStore).LoadEvents(new QueryDefinition(query), e => { events.AddRange(e); return Task.CompletedTask; });
+
+            this.Context.LoadAllEvents = events;
+            this.Context.Response = response;
+        }
+
+        [When(@"I load stream headers using query text(.*)")]
+        public async Task WhenIQueryStreamHeadersUsingQueryText(string query)
+        {
+            var headers = new List<StreamHeader>();
+
+            var response = await (this.Context.EventStore as IAdvancedEventStore).LoadStreamHeaders(query, e => { headers.AddRange(e); return Task.CompletedTask; });
+
+            this.Context.LoadAllStreamHeaders = headers;
+            this.Context.Response = response;
+        }
+
+        [When(@"I load stream headers using query definition (.*)")]
+        public async Task WhenIQueryStreamHeadersUsingQueryDefinition(string query)
         {
             var headers = new List<StreamHeader>();
 

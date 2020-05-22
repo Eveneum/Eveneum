@@ -1,16 +1,16 @@
-﻿using System;
+﻿using Eveneum.Advanced;
+using Eveneum.Documents;
+using Eveneum.Serialization;
+using Eveneum.StoredProcedures;
+using Microsoft.Azure.Cosmos;
+using Microsoft.Azure.Cosmos.Scripts;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.Azure.Cosmos;
-using Microsoft.Azure.Cosmos.Scripts;
-using Eveneum.Advanced;
-using Eveneum.Documents;
-using Eveneum.Serialization;
-using Eveneum.StoredProcedures;
 
 namespace Eveneum
 {
@@ -23,12 +23,12 @@ namespace Eveneum
         public DeleteMode DeleteMode { get; }
         public byte BatchSize { get; }
         public EveneumDocumentSerializer Serializer { get; }
-        
+
         private const string BulkDeleteStoredProc = "Eveneum.BulkDelete";
 
         public EventStore(CosmosClient client, string database, string container, EventStoreOptions options = null)
         {
-            this.Client = client ?? throw new ArgumentNullException(nameof(client)); 
+            this.Client = client ?? throw new ArgumentNullException(nameof(client));
             this.Database = this.Client.GetDatabase(database ?? throw new ArgumentNullException(nameof(database)));
             this.Container = this.Database.GetContainer(container ?? throw new ArgumentNullException(nameof(container)));
 
@@ -61,15 +61,15 @@ namespace Eveneum
             if (streamId == null)
                 throw new ArgumentNullException(nameof(streamId));
 
-            var query = this.Container.GetItemQueryIterator<EveneumDocument>(sql, requestOptions: new QueryRequestOptions { PartitionKey = new PartitionKey(streamId), MaxItemCount = maxItemCount });
+            var iterator = this.Container.GetItemQueryIterator<EveneumDocument>(sql, requestOptions: new QueryRequestOptions { PartitionKey = new PartitionKey(streamId), MaxItemCount = maxItemCount });
 
             var documents = new List<EveneumDocument>();
             var finishLoading = false;
             double requestCharge = 0;
 
-            while (query.HasMoreResults)
+            while (iterator.HasMoreResults)
             {
-                var page = await query.ReadNextAsync(cancellationToken);
+                var page = await iterator.ReadNextAsync(cancellationToken);
                 requestCharge += page.RequestCharge;
 
                 foreach (var eveneumDoc in page)
@@ -106,7 +106,7 @@ namespace Eveneum
 
                 return new StreamResponse(new Stream(streamId, headerDocument.Version, metadata, events, snapshot), false, requestCharge);
             }
-            catch(TypeNotFoundException ex)
+            catch (TypeNotFoundException ex)
             {
                 throw new StreamDeserializationException(streamId, requestCharge, ex.Type, ex);
             }
@@ -138,7 +138,7 @@ namespace Eveneum
                 header.Version += (ulong)events.Length;
 
                 this.Serializer.SerializeHeaderMetadata(header, metadata);
-                
+
                 transaction.ReplaceItem(header.Id, header, new TransactionalBatchItemRequestOptions { IfMatchEtag = header.ETag });
             }
             else
@@ -161,12 +161,12 @@ namespace Eveneum
                 throw new StreamAlreadyExistsException(streamId, requestCharge);
             else
                 if (!response.IsSuccessStatusCode)
-                    throw new WriteException(streamId, requestCharge, response.ErrorMessage, response.StatusCode);
+                throw new WriteException(streamId, requestCharge, response.ErrorMessage, response.StatusCode);
 
             foreach (var batch in events.Skip(this.BatchSize - 1).Select(@event => this.Serializer.SerializeEvent(@event, streamId)).Batch(this.BatchSize))
             {
                 transaction = this.Container.CreateTransactionalBatch(new PartitionKey(streamId));
-                
+
                 foreach (var document in batch)
                     transaction.CreateItem(document);
 
@@ -212,7 +212,7 @@ namespace Eveneum
                 deletedDocuments += response.Resource.Deleted;
             }
             while (response.Resource.Continuation);
-            
+
             return new DeleteResponse(deletedDocuments, requestCharge);
         }
 
@@ -274,38 +274,46 @@ namespace Eveneum
         public Task<Response> LoadAllEvents(Func<IReadOnlyCollection<EventData>, Task> callback, CancellationToken cancellationToken = default) =>
             this.LoadEvents($"SELECT * FROM c WHERE c.{nameof(EveneumDocument.DocumentType)} = '{nameof(DocumentType.Event)}'", callback, cancellationToken);
 
-        public async Task<Response> LoadEvents(string sql, Func<IReadOnlyCollection<EventData>, Task> callback, CancellationToken cancellationToken = default)
+        public Task<Response> LoadEvents(string query, Func<IReadOnlyCollection<EventData>, Task> callback, CancellationToken cancellationToken = default)
+            => this.LoadEvents(new QueryDefinition(query), callback, cancellationToken);
+
+        public async Task<Response> LoadEvents(QueryDefinition query, Func<IReadOnlyCollection<EventData>, Task> callback, CancellationToken cancellationToken = default)
         {
+            var iterator = this.Container.GetItemQueryIterator<EveneumDocument>(query, requestOptions: new QueryRequestOptions { MaxItemCount = -1 });
+
             double requestCharge = 0;
-            var query = this.Container.GetItemQueryIterator<EveneumDocument>(sql, requestOptions: new QueryRequestOptions { MaxItemCount = -1 });
 
             do
             {
-                var page = await query.ReadNextAsync(cancellationToken);
+                var page = await iterator.ReadNextAsync(cancellationToken);
 
                 requestCharge += page.RequestCharge;
 
                 await callback(page.Where(x => x.DocumentType == DocumentType.Event).Where(x => !x.Deleted).Select(this.Serializer.DeserializeEvent).ToList());
             }
-            while (query.HasMoreResults);
+            while (iterator.HasMoreResults);
 
             return new Response(requestCharge);
         }
 
-        public async Task<Response> LoadStreamHeaders(string sql, Func<IReadOnlyCollection<StreamHeader>, Task> callback, CancellationToken cancellationToken = default)
+        public Task<Response> LoadStreamHeaders(string query, Func<IReadOnlyCollection<StreamHeader>, Task> callback, CancellationToken cancellationToken = default)
+            => this.LoadStreamHeaders(new QueryDefinition(query), callback, cancellationToken);
+
+        public async Task<Response> LoadStreamHeaders(QueryDefinition query, Func<IReadOnlyCollection<StreamHeader>, Task> callback, CancellationToken cancellationToken = default)
         {
+            var iterator = this.Container.GetItemQueryIterator<EveneumDocument>(query, requestOptions: new QueryRequestOptions { MaxItemCount = -1 });
+
             double requestCharge = 0;
-            var query = this.Container.GetItemQueryIterator<EveneumDocument>(sql, requestOptions: new QueryRequestOptions { MaxItemCount = -1 });
 
             do
             {
-                var page = await query.ReadNextAsync(cancellationToken);
+                var page = await iterator.ReadNextAsync(cancellationToken);
 
                 requestCharge += page.RequestCharge;
 
                 await callback(page.Where(x => x.DocumentType == DocumentType.Header).Where(x => !x.Deleted).Select(x => new StreamHeader(x.StreamId, x.Version, this.Serializer.DeserializeObject(x.MetadataType, x.Metadata))).ToList());
             }
-            while (query.HasMoreResults);
+            while (iterator.HasMoreResults);
 
             return new Response(requestCharge);
         }
@@ -315,7 +323,7 @@ namespace Eveneum
             try
             {
                 var response = await this.Container.ReplaceItemAsync(this.Serializer.SerializeEvent(newEvent, newEvent.StreamId), EveneumDocument.GenerateEventId(newEvent.StreamId, newEvent.Version), new PartitionKey(newEvent.StreamId), cancellationToken: cancellationToken);
-            
+
                 return new Response(response.RequestCharge);
             }
             catch (CosmosException ex)
