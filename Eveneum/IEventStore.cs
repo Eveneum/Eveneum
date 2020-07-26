@@ -30,6 +30,6 @@ namespace Eveneum
 
     public interface IEventStore : IReadStream, IWriteToStream, IDeleteStream, IManageSnapshots
     {
-        Task Initialize();
+        Task Initialize(CancellationToken cancellationToken = default);
     }
 }
