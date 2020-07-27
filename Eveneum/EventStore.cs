@@ -78,7 +78,8 @@ namespace Eveneum
 
             while (iterator.HasMoreResults)
             {
-                var page = await this.RetryPolicy.ExecuteAsync(token => iterator.ReadNextAsync(token), cancellationToken);
+                var page = await this.RetryPolicy.ExecuteAsync(token => iterator.ReadNextAsync(token), cancellationToken, continueOnCapturedContext: true);
+
                 requestCharge += page.RequestCharge;
 
                 foreach (var eveneumDoc in page)
@@ -163,7 +164,7 @@ namespace Eveneum
             foreach (var document in firstBatch)
                 transaction.CreateItem(document);
 
-            var response = await this.BatchRetryPolicy.ExecuteAsync(token => transaction.ExecuteAsync(token), cancellationToken);
+            var response = await this.BatchRetryPolicy.ExecuteAsync(token => transaction.ExecuteAsync(token), cancellationToken, continueOnCapturedContext: true);
             requestCharge += response.RequestCharge;
 
             if (response.StatusCode == System.Net.HttpStatusCode.Conflict)
@@ -179,7 +180,7 @@ namespace Eveneum
                 foreach (var document in batch)
                     transaction.CreateItem(document);
 
-                response = await this.BatchRetryPolicy.ExecuteAsync(token => transaction.ExecuteAsync(token), cancellationToken);
+                response = await this.BatchRetryPolicy.ExecuteAsync(token => transaction.ExecuteAsync(token), cancellationToken, continueOnCapturedContext: true);
                 requestCharge += response.RequestCharge;
 
                 if (!response.IsSuccessStatusCode)
@@ -217,7 +218,7 @@ namespace Eveneum
             do
             {
                 response = await this.RetryPolicy.ExecuteAsync(token => 
-                    this.Container.Scripts.ExecuteStoredProcedureAsync<BulkDeleteResponse>(BulkDeleteStoredProc, partitionKey, new object[] { query, this.DeleteMode == DeleteMode.SoftDelete }, cancellationToken: token), cancellationToken);
+                    this.Container.Scripts.ExecuteStoredProcedureAsync<BulkDeleteResponse>(BulkDeleteStoredProc, partitionKey, new object[] { query, this.DeleteMode == DeleteMode.SoftDelete }, cancellationToken: token), cancellationToken, continueOnCapturedContext: true);
 
                 requestCharge += response.RequestCharge;
                 deletedDocuments += response.Resource.Deleted;
@@ -245,7 +246,7 @@ namespace Eveneum
 
             var document = this.Serializer.SerializeSnapshot(snapshot, metadata, version, streamId);
 
-            var response = await this.RetryPolicy.ExecuteAsync(token => this.Container.UpsertItemAsync(document, new PartitionKey(streamId), cancellationToken: token), cancellationToken);
+            var response = await this.RetryPolicy.ExecuteAsync(token => this.Container.UpsertItemAsync(document, new PartitionKey(streamId), cancellationToken: token), cancellationToken, continueOnCapturedContext: true);
 
             requestCharge += response.RequestCharge;
 
@@ -274,7 +275,7 @@ namespace Eveneum
             do
             {
                 response = await this.RetryPolicy.ExecuteAsync(token =>
-                    this.Container.Scripts.ExecuteStoredProcedureAsync<BulkDeleteResponse>(BulkDeleteStoredProc, new PartitionKey(streamId), new object[] { query, this.DeleteMode == DeleteMode.SoftDelete }, cancellationToken: token), cancellationToken);
+                    this.Container.Scripts.ExecuteStoredProcedureAsync<BulkDeleteResponse>(BulkDeleteStoredProc, new PartitionKey(streamId), new object[] { query, this.DeleteMode == DeleteMode.SoftDelete }, cancellationToken: token), cancellationToken, continueOnCapturedContext: true);
                 requestCharge += response.RequestCharge;
                 deletedSnapshots += response.Resource.Deleted;
             }
@@ -297,7 +298,7 @@ namespace Eveneum
 
             do
             {
-                var page = await this.RetryPolicy.ExecuteAsync(token => iterator.ReadNextAsync(token), cancellationToken);
+                var page = await this.RetryPolicy.ExecuteAsync(token => iterator.ReadNextAsync(token), cancellationToken, continueOnCapturedContext: true);
 
                 requestCharge += page.RequestCharge;
 
@@ -319,7 +320,7 @@ namespace Eveneum
 
             do
             {
-                var page = await this.RetryPolicy.ExecuteAsync(token => iterator.ReadNextAsync(token), cancellationToken);
+                var page = await this.RetryPolicy.ExecuteAsync(token => iterator.ReadNextAsync(token), cancellationToken, continueOnCapturedContext: true);
 
                 requestCharge += page.RequestCharge;
 
@@ -348,7 +349,7 @@ namespace Eveneum
         {
             try
             {
-                var result = await this.RetryPolicy.ExecuteAsync(token => this.Container.ReadItemAsync<EveneumDocument>(streamId, new PartitionKey(streamId), cancellationToken: token), cancellationToken);
+                var result = await this.RetryPolicy.ExecuteAsync(token => this.Container.ReadItemAsync<EveneumDocument>(streamId, new PartitionKey(streamId), cancellationToken: token), cancellationToken, continueOnCapturedContext: true);
 
                 return new DocumentResponse(result.Resource, result.RequestCharge);
             }
@@ -371,12 +372,12 @@ namespace Eveneum
 
                 try
                 {
-                    await this.RetryPolicy.ExecuteAsync(token => this.Container.Scripts.ReadStoredProcedureAsync(procedureId, cancellationToken: token), cancellationToken);
-                    await this.RetryPolicy.ExecuteAsync(token => this.Container.Scripts.ReplaceStoredProcedureAsync(properties, cancellationToken: token), cancellationToken);
+                    await this.RetryPolicy.ExecuteAsync(token => this.Container.Scripts.ReadStoredProcedureAsync(procedureId, cancellationToken: token), cancellationToken, continueOnCapturedContext: true);
+                    await this.RetryPolicy.ExecuteAsync(token => this.Container.Scripts.ReplaceStoredProcedureAsync(properties, cancellationToken: token), cancellationToken, continueOnCapturedContext: true);
                 }
                 catch (CosmosException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
                 {
-                    await this.RetryPolicy.ExecuteAsync(token => this.Container.Scripts.CreateStoredProcedureAsync(properties, cancellationToken: token), cancellationToken);
+                    await this.RetryPolicy.ExecuteAsync(token => this.Container.Scripts.CreateStoredProcedureAsync(properties, cancellationToken: token), cancellationToken, continueOnCapturedContext: true);
                 }
             }
         }
