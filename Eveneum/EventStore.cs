@@ -31,6 +31,7 @@ namespace Eveneum
 
         public DeleteMode DeleteMode { get; }
         public byte BatchSize { get; }
+        public int QueryMaxItemCount { get; }
         public EveneumDocumentSerializer Serializer { get; }
 
         private const string BulkDeleteStoredProc = "Eveneum.BulkDelete";
@@ -45,6 +46,7 @@ namespace Eveneum
 
             this.DeleteMode = options.DeleteMode;
             this.BatchSize = Math.Min(options.BatchSize, (byte)100); // Maximum batch size supported by CosmosDB
+            this.QueryMaxItemCount = options.QueryMaxItemCount;
             this.Serializer = new EveneumDocumentSerializer(options.JsonSerializer, options.TypeProvider, options.IgnoreMissingTypes);
         }
 
@@ -60,10 +62,10 @@ namespace Eveneum
             this.ReadStream(streamId, $"SELECT * FROM x WHERE x.{nameof(EveneumDocument.Version)} <= {version} OR x.{nameof(EveneumDocument.DocumentType)} = '{nameof(DocumentType.Header)}' ORDER BY x.{nameof(EveneumDocument.SortOrder)} DESC", 100, cancellationToken);
 
         public Task<StreamResponse> ReadStreamFromVersion(string streamId, ulong version, CancellationToken cancellationToken = default) =>
-            this.ReadStream(streamId, $"SELECT * FROM x WHERE (x.{nameof(EveneumDocument.Version)} >= {version} AND x.{nameof(EveneumDocument.DocumentType)} <> '{nameof(DocumentType.Snapshot)}') OR x.{nameof(EveneumDocument.DocumentType)} = '{nameof(DocumentType.Header)}' ORDER BY x.{nameof(EveneumDocument.SortOrder)} DESC", -1, cancellationToken);
+            this.ReadStream(streamId, $"SELECT * FROM x WHERE (x.{nameof(EveneumDocument.Version)} >= {version} AND x.{nameof(EveneumDocument.DocumentType)} <> '{nameof(DocumentType.Snapshot)}') OR x.{nameof(EveneumDocument.DocumentType)} = '{nameof(DocumentType.Header)}' ORDER BY x.{nameof(EveneumDocument.SortOrder)} DESC", this.QueryMaxItemCount, cancellationToken);
 
         public Task<StreamResponse> ReadStreamIgnoringSnapshots(string streamId, CancellationToken cancellationToken = default) =>
-            this.ReadStream(streamId, $"SELECT * FROM x WHERE x.{nameof(EveneumDocument.DocumentType)} <> '{nameof(DocumentType.Snapshot)}' ORDER BY x.{nameof(EveneumDocument.SortOrder)} DESC", -1, cancellationToken);
+            this.ReadStream(streamId, $"SELECT * FROM x WHERE x.{nameof(EveneumDocument.DocumentType)} <> '{nameof(DocumentType.Snapshot)}' ORDER BY x.{nameof(EveneumDocument.SortOrder)} DESC", this.QueryMaxItemCount, cancellationToken);
 
         private async Task<StreamResponse> ReadStream(string streamId, string sql, int maxItemCount, CancellationToken cancellationToken)
         {
@@ -78,7 +80,7 @@ namespace Eveneum
 
             while (iterator.HasMoreResults)
             {
-                var page = await this.RetryPolicy.ExecuteAsync(token => iterator.ReadNextAsync(token), cancellationToken, continueOnCapturedContext: true);
+                var page = await iterator.ReadNextAsync(cancellationToken);
 
                 requestCharge += page.RequestCharge;
 
@@ -292,13 +294,13 @@ namespace Eveneum
 
         public async Task<Response> LoadEvents(QueryDefinition query, Func<IReadOnlyCollection<EventData>, Task> callback, CancellationToken cancellationToken = default)
         {
-            var iterator = this.Container.GetItemQueryIterator<EveneumDocument>(query, requestOptions: new QueryRequestOptions { MaxItemCount = -1 });
+            var iterator = this.Container.GetItemQueryIterator<EveneumDocument>(query, requestOptions: new QueryRequestOptions { MaxItemCount = this.QueryMaxItemCount });
 
             double requestCharge = 0;
 
             do
             {
-                var page = await this.RetryPolicy.ExecuteAsync(token => iterator.ReadNextAsync(token), cancellationToken, continueOnCapturedContext: true);
+                var page = await iterator.ReadNextAsync(cancellationToken);
 
                 requestCharge += page.RequestCharge;
 
@@ -314,13 +316,13 @@ namespace Eveneum
 
         public async Task<Response> LoadStreamHeaders(QueryDefinition query, Func<IReadOnlyCollection<StreamHeader>, Task> callback, CancellationToken cancellationToken = default)
         {
-            var iterator = this.Container.GetItemQueryIterator<EveneumDocument>(query, requestOptions: new QueryRequestOptions { MaxItemCount = -1 });
+            var iterator = this.Container.GetItemQueryIterator<EveneumDocument>(query, requestOptions: new QueryRequestOptions { MaxItemCount = this.QueryMaxItemCount });
 
             double requestCharge = 0;
 
             do
             {
-                var page = await this.RetryPolicy.ExecuteAsync(token => iterator.ReadNextAsync(token), cancellationToken, continueOnCapturedContext: true);
+                var page = await iterator.ReadNextAsync(cancellationToken);
 
                 requestCharge += page.RequestCharge;
 
