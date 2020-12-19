@@ -5,8 +5,7 @@
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
   </PropertyGroup>
   <PropertyGroup>
-    <IncludeSymbols>true</IncludeSymbols>
-    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <NuspecFile>Eveneum.nuspec</NuspecFile>
   </PropertyGroup>
   <ItemGroup>
     <None Remove="StoredProcedures\BulkDelete.js" />
