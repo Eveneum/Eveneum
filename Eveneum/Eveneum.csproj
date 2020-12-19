@@ -1,21 +1,20 @@
-﻿<Project Sdk="Microsoft.NET.Sdk" ToolsVersion="Current">
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <LangVersion>7.1</LangVersion>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
   </PropertyGroup>
-  <PropertyGroup>
-    <NuspecFile>Eveneum.nuspec</NuspecFile>
-  </PropertyGroup>
+
   <ItemGroup>
     <Content Remove="C:\Users\Jakub Konecki\.nuget\packages\microsoft.azure.cosmos\3.15.0\contentFiles\any\netstandard2.0\ThirdPartyNotice.txt" />
-  </ItemGroup>
+  </ItemGroup> 
   <ItemGroup>
     <None Remove="StoredProcedures\BulkDelete.js" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="StoredProcedures\BulkDelete.js" />
   </ItemGroup>
+  
   <ItemGroup>
     <PackageReference Include="Microsoft.Azure.Cosmos" Version="3.15.0" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.2" />
