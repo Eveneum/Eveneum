@@ -11,7 +11,7 @@ namespace Eveneum
         {}
 
         public WriteException(string streamId, double requestCharge, string message, HttpStatusCode statusCode, Exception inner)
-            : base(streamId, requestCharge, message, inner)
+            : base(streamId, requestCharge, $"Failed to write to CosmosDB (response: {statusCode}): {message}", inner)
         {
             this.StatusCode = statusCode;
         }
