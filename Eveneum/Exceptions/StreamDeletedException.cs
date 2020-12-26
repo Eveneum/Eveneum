@@ -6,7 +6,7 @@ namespace Eveneum
     public class StreamDeletedException : StreamNotFoundException
     {
         public StreamDeletedException(string streamId, double requestCharge)
-            : base(streamId, requestCharge, $"Stream '{streamId}' has been deleted")
+            : base(streamId, requestCharge, $"Stream '{streamId}' has been deleted", null)
         {}
 
         protected StreamDeletedException(

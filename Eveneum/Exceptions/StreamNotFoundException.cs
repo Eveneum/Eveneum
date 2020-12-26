@@ -5,12 +5,16 @@ namespace Eveneum
     [Serializable]
     public class StreamNotFoundException : EveneumException
     {
-        public StreamNotFoundException(string streamId, double requestCharge) 
-            : base(streamId, requestCharge, $"Stream '{streamId}' wasn't found")
-        {}
+        public StreamNotFoundException(string streamId, double requestCharge)
+            : this(streamId, requestCharge, null)
+        { }
 
-        protected StreamNotFoundException(string streamId, double requestCharge, string message)
-            : base(streamId, requestCharge, message)
+        public StreamNotFoundException(string streamId, double requestCharge, Exception inner)
+            : this(streamId, requestCharge, $"Stream '{streamId}' wasn't found", inner)
+        { }
+
+        protected StreamNotFoundException(string streamId, double requestCharge, string message, Exception inner)
+            : base(streamId, requestCharge, message, inner)
         {}
 
         protected StreamNotFoundException(

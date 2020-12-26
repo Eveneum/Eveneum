@@ -5,7 +5,8 @@ namespace Eveneum
     [Serializable]
     public class JsonDeserializationException : Exception
     {
-        public JsonDeserializationException(string type, string json, Exception innerException) : base($"Failed to deserialize an instance of '{type}'", innerException)
+        public JsonDeserializationException(string type, string json, Exception innerException) 
+            : base($"Failed to deserialize an instance of '{type}'", innerException)
         {
             this.Type = type;
             this.Json = json;

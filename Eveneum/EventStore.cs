@@ -162,8 +162,7 @@ namespace Eveneum
 
             if (response.StatusCode == System.Net.HttpStatusCode.Conflict)
                 throw new StreamAlreadyExistsException(streamId, requestCharge);
-            else
-                if (!response.IsSuccessStatusCode)
+            else if (!response.IsSuccessStatusCode)
                 throw new WriteException(streamId, requestCharge, response.ErrorMessage, response.StatusCode);
 
             foreach (var batch in events.Skip(this.BatchSize - 1).Select(@event => this.Serializer.SerializeEvent(@event, streamId)).Batch(this.BatchSize))
@@ -346,7 +345,7 @@ namespace Eveneum
             }
             catch (CosmosException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
             {
-                throw new StreamNotFoundException(streamId, ex.RequestCharge);
+                throw new StreamNotFoundException(streamId, ex.RequestCharge, ex);
             }
         }
 
