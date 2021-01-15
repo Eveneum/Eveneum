@@ -96,7 +96,13 @@ namespace Eveneum.Tests
         [Then(@"the stream header for stream (.*) in version (\d+) is returned")]
         public void ThenTheStreamHeaderForStreamInVersionIsReturned(string streamId, ulong version)
         {
-            Assert.IsNotNull(this.Context.LoadAllStreamHeaders.Find(x => x.StreamId == streamId && x.Version == version));
+            Assert.IsTrue(this.Context.LoadAllStreamHeaders.Any(x => x.StreamId == streamId && x.Version == version));
+        }
+
+        [Then(@"the stream header for stream (.*) in version (\d+) is not returned")]
+        public void ThenTheStreamHeaderForStreamInVersionIsNotReturned(string streamId, ulong version)
+        {
+            Assert.IsFalse(this.Context.LoadAllStreamHeaders.Any(x => x.StreamId == streamId && x.Version == version));
         }
 
         [Then(@"the event in version (\d+) in stream (.*) is replaced")]

@@ -22,7 +22,7 @@ namespace Eveneum.Tests
         [Given(@"an existing snapshot for version (\d+)")]
         public async Task GivenAnExistingSnapshotForVersion(ulong version)
         {
-            this.Context.Snapshot = TestSetup.GetSnapshot();;
+            this.Context.Snapshot = TestSetup.GetSnapshot();
 
             await this.Context.EventStore.CreateSnapshot(this.Context.StreamId, version, this.Context.Snapshot, this.Context.SnapshotMetadata);
         }

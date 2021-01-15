@@ -292,7 +292,7 @@ namespace Eveneum
 
                 requestCharge += page.RequestCharge;
 
-                await callback(page.Where(x => x.DocumentType == DocumentType.Event).Where(x => !x.Deleted).Select(this.Serializer.DeserializeEvent).ToList());
+                await callback(page.Where(x => x.DocumentType == DocumentType.Event).Select(this.Serializer.DeserializeEvent).ToList());
             }
             while (iterator.HasMoreResults);
 
@@ -314,7 +314,7 @@ namespace Eveneum
 
                 requestCharge += page.RequestCharge;
 
-                await callback(page.Where(x => x.DocumentType == DocumentType.Header).Where(x => !x.Deleted).Select(x => new StreamHeader(x.StreamId, x.Version, this.Serializer.DeserializeObject(x.MetadataType, x.Metadata))).ToList());
+                await callback(page.Where(x => x.DocumentType == DocumentType.Header).Select(x => new StreamHeader(x.StreamId, x.Version, this.Serializer.DeserializeObject(x.MetadataType, x.Metadata))).ToList());
             }
             while (iterator.HasMoreResults);
 

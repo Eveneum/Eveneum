@@ -56,6 +56,7 @@ namespace Eveneum.Tests
         [Given(@"a deleted stream ([^\s-]) with (\d+) events")]
         public async Task GivenADeletedStream(string streamId, ushort events)
         {
+            this.Context.StreamId = streamId;
             var eventData = TestSetup.GetEvents(events);
 
             await this.Context.EventStore.WriteToStream(streamId, eventData);
