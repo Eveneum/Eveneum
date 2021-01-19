@@ -16,7 +16,7 @@ namespace Eveneum.Tests.Infrastrature
 
         public CosmosClient Client { get; private set; }
         public IEventStore EventStore { get; private set; }
-        public EventStoreOptions EventStoreOptions { get; } = new EventStoreOptions();
+        public EventStoreOptions EventStoreOptions { get; } = new EventStoreOptions() { QueryMaxItemCount = 100 };
 
         public string StreamId { get; set; }
         public Stream? Stream { get; set; }

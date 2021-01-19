@@ -280,46 +280,14 @@ namespace Eveneum
         public Task<Response> LoadEvents(string query, Func<IReadOnlyCollection<EventData>, Task> callback, CancellationToken cancellationToken = default)
             => this.LoadEvents(new QueryDefinition(query), callback, cancellationToken);
 
-        public async Task<Response> LoadEvents(QueryDefinition query, Func<IReadOnlyCollection<EventData>, Task> callback, CancellationToken cancellationToken = default)
-        {
-            var iterator = this.Container.GetItemQueryIterator<EveneumDocument>(query, requestOptions: new QueryRequestOptions { MaxItemCount = this.QueryMaxItemCount });
-
-            double requestCharge = 0;
-
-            do
-            {
-                var page = await iterator.ReadNextAsync(cancellationToken);
-
-                requestCharge += page.RequestCharge;
-
-                await callback(page.Where(x => x.DocumentType == DocumentType.Event).Select(this.Serializer.DeserializeEvent).ToList());
-            }
-            while (iterator.HasMoreResults);
-
-            return new Response(requestCharge);
-        }
+        public Task<Response> LoadEvents(QueryDefinition query, Func<IReadOnlyCollection<EventData>, Task> callback, CancellationToken cancellationToken = default)
+            => LoadDocuments(query, response => callback(response.Where(x => x.DocumentType == DocumentType.Event).Select(this.Serializer.DeserializeEvent).ToList()), cancellationToken);
 
         public Task<Response> LoadStreamHeaders(string query, Func<IReadOnlyCollection<StreamHeader>, Task> callback, CancellationToken cancellationToken = default)
             => this.LoadStreamHeaders(new QueryDefinition(query), callback, cancellationToken);
 
-        public async Task<Response> LoadStreamHeaders(QueryDefinition query, Func<IReadOnlyCollection<StreamHeader>, Task> callback, CancellationToken cancellationToken = default)
-        {
-            var iterator = this.Container.GetItemQueryIterator<EveneumDocument>(query, requestOptions: new QueryRequestOptions { MaxItemCount = this.QueryMaxItemCount });
-
-            double requestCharge = 0;
-
-            do
-            {
-                var page = await iterator.ReadNextAsync(cancellationToken);
-
-                requestCharge += page.RequestCharge;
-
-                await callback(page.Where(x => x.DocumentType == DocumentType.Header).Select(x => new StreamHeader(x.StreamId, x.Version, this.Serializer.DeserializeObject(x.MetadataType, x.Metadata))).ToList());
-            }
-            while (iterator.HasMoreResults);
-
-            return new Response(requestCharge);
-        }
+        public Task<Response> LoadStreamHeaders(QueryDefinition query, Func<IReadOnlyCollection<StreamHeader>, Task> callback, CancellationToken cancellationToken = default)
+            => LoadDocuments(query, response => callback(response.Where(x => x.DocumentType == DocumentType.Header).Select(x => new StreamHeader(x.StreamId, x.Version, this.Serializer.DeserializeObject(x.MetadataType, x.Metadata))).ToList()), cancellationToken);
 
         public async Task<Response> ReplaceEvent(EventData newEvent, CancellationToken cancellationToken = default)
         {
@@ -333,6 +301,30 @@ namespace Eveneum
             {
                 throw new WriteException(newEvent.StreamId, ex.RequestCharge, ex.Message, ex.StatusCode, ex);
             }
+        }
+
+        private async Task<Response> LoadDocuments(QueryDefinition query, Func<FeedResponse<EveneumDocument>, Task> callback, CancellationToken cancellationToken = default)
+        {
+            var iterator = this.Container.GetItemQueryIterator<EveneumDocument>(query, requestOptions: new QueryRequestOptions { MaxItemCount = this.QueryMaxItemCount });
+
+            double requestCharge = 0;
+            var callbackProcessing = Task.CompletedTask;
+
+            do
+            {
+                var response = await iterator.ReadNextAsync(cancellationToken);
+
+                requestCharge += response.RequestCharge;
+
+                await callbackProcessing;
+
+                callbackProcessing = callback(response);
+            }
+            while (iterator.HasMoreResults);
+
+            await callbackProcessing;
+
+            return new Response(requestCharge);
         }
 
         private async Task<DocumentResponse> ReadHeader(string streamId, CancellationToken cancellationToken = default)
