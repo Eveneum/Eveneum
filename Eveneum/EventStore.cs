@@ -287,7 +287,7 @@ namespace Eveneum
             => this.LoadStreamHeaders(new QueryDefinition(query), callback, cancellationToken);
 
         public Task<Response> LoadStreamHeaders(QueryDefinition query, Func<IReadOnlyCollection<StreamHeader>, Task> callback, CancellationToken cancellationToken = default)
-            => LoadDocuments(query, response => callback(response.Where(x => x.DocumentType == DocumentType.Header).Select(x => new StreamHeader(x.StreamId, x.Version, this.Serializer.DeserializeObject(x.MetadataType, x.Metadata))).ToList()), cancellationToken);
+            => LoadDocuments(query, response => callback(response.Where(x => x.DocumentType == DocumentType.Header).Select(x => new StreamHeader(x.StreamId, x.Version, this.Serializer.DeserializeObject(x.MetadataType, x.Metadata), x.Deleted)).ToList()), cancellationToken);
 
         public async Task<Response> ReplaceEvent(EventData newEvent, CancellationToken cancellationToken = default)
         {

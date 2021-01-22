@@ -23,7 +23,7 @@ namespace Eveneum.Serialization
             var metadata = DeserializeObject(document.MetadataType, document.Metadata);
             var body = DeserializeObject(document.BodyType, document.Body);
 
-            return new EventData(document.StreamId, body, metadata, document.Version);
+            return new EventData(document.StreamId, body, metadata, document.Version, document.Deleted);
         }
 
         public Snapshot DeserializeSnapshot(EveneumDocument document)
