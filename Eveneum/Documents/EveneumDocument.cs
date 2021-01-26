@@ -39,6 +39,9 @@ namespace Eveneum.Documents
         [JsonProperty(PropertyName = "_etag")]
         public string ETag { get; set; }
 
+        [JsonProperty(PropertyName = "_ts")]
+        public string Timestamp { get; set; }
+
         internal string GenerateId()
         {
             switch(this.DocumentType)

@@ -26,7 +26,7 @@ namespace Eveneum.Tests.Infrastrature
                         Content = strings()
                     }
                 })
-                .Select(x => new EventData(streamId, x, GetMetadata(), (ulong)x.Version))
+                .Select(x => new EventData(streamId, x, GetMetadata(), (ulong)x.Version, numbers().ToString()))
                 .ToArray();
         }
 
