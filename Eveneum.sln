@@ -10,6 +10,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{6425DCA9-49EC-48E2-AD32-A9CFDBD23832}"
 	ProjectSection(SolutionItems) = preProject
 		README.md = README.md
+		.runsettings = .runsettings
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Eveneum.ApplicationInsights", "Eveneum.ApplicationInsights\Eveneum.ApplicationInsights.csproj", "{CB1D882C-0194-4C71-9471-65BB2BF8B7A9}"
