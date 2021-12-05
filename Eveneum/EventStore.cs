@@ -46,17 +46,36 @@ namespace Eveneum
             await CreateStoredProcedure(BulkDeleteStoredProc, "BulkDelete", cancellationToken);
         }
 
-        public Task<StreamResponse> ReadStream(string streamId, CancellationToken cancellationToken = default) =>
-            this.ReadStream(streamId, $"SELECT * FROM x ORDER BY x.{nameof(EveneumDocument.SortOrder)} DESC", 100, cancellationToken);
-
         public Task<StreamResponse> ReadStreamAsOfVersion(string streamId, ulong version, CancellationToken cancellationToken = default) =>
-            this.ReadStream(streamId, $"SELECT * FROM x WHERE x.{nameof(EveneumDocument.Version)} <= {version} OR x.{nameof(EveneumDocument.DocumentType)} = '{nameof(DocumentType.Header)}' ORDER BY x.{nameof(EveneumDocument.SortOrder)} DESC", 100, cancellationToken);
-
+            ReadStream(streamId, new ReadStreamOptions { FromVersion = null, ToVersion = version, IgnoreSnapshots = false, MaxItemCount = 100 }, cancellationToken);
         public Task<StreamResponse> ReadStreamFromVersion(string streamId, ulong version, CancellationToken cancellationToken = default) =>
-            this.ReadStream(streamId, $"SELECT * FROM x WHERE (x.{nameof(EveneumDocument.Version)} >= {version} AND x.{nameof(EveneumDocument.DocumentType)} <> '{nameof(DocumentType.Snapshot)}') OR x.{nameof(EveneumDocument.DocumentType)} = '{nameof(DocumentType.Header)}' ORDER BY x.{nameof(EveneumDocument.SortOrder)} DESC", this.QueryMaxItemCount, cancellationToken);
-
+            ReadStream(streamId, new ReadStreamOptions { FromVersion = version, ToVersion = null, IgnoreSnapshots = true, MaxItemCount = null }, cancellationToken);
         public Task<StreamResponse> ReadStreamIgnoringSnapshots(string streamId, CancellationToken cancellationToken = default) =>
-            this.ReadStream(streamId, $"SELECT * FROM x WHERE x.{nameof(EveneumDocument.DocumentType)} <> '{nameof(DocumentType.Snapshot)}' ORDER BY x.{nameof(EveneumDocument.SortOrder)} DESC", this.QueryMaxItemCount, cancellationToken);
+            ReadStream(streamId, new ReadStreamOptions { FromVersion = null, ToVersion = null, IgnoreSnapshots = true, MaxItemCount = null }, cancellationToken);
+
+        public Task<StreamResponse> ReadStream(string streamId, ReadStreamOptions options = null, CancellationToken cancellationToken = default)
+        {
+            var maxItemCount = options?.MaxItemCount ?? QueryMaxItemCount;
+
+            if (options == null || (!options.FromVersion.HasValue && !options.ToVersion.HasValue && !options.IgnoreSnapshots))
+                return ReadStream(streamId, $"SELECT * FROM x ORDER BY x.{nameof(EveneumDocument.SortOrder)} DESC", maxItemCount, cancellationToken);
+            if (!options.FromVersion.HasValue && !options.ToVersion.HasValue && options.IgnoreSnapshots)
+                return ReadStream(streamId, $"SELECT * FROM x WHERE x.{nameof(EveneumDocument.DocumentType)} <> '{nameof(DocumentType.Snapshot)}' ORDER BY x.{nameof(EveneumDocument.SortOrder)} DESC", maxItemCount, cancellationToken);
+            if (options.FromVersion.HasValue && !options.ToVersion.HasValue && !options.IgnoreSnapshots)
+                return ReadStream(streamId, $"SELECT * FROM x WHERE x.{nameof(EveneumDocument.Version)} >= {options.FromVersion.Value} OR x.{nameof(EveneumDocument.DocumentType)} = '{nameof(DocumentType.Header)}' ORDER BY x.{nameof(EveneumDocument.SortOrder)} DESC", maxItemCount, cancellationToken);
+            if (options.FromVersion.HasValue && !options.ToVersion.HasValue && options.IgnoreSnapshots)
+                return ReadStream(streamId, $"SELECT * FROM x WHERE x.{nameof(EveneumDocument.DocumentType)} <> '{nameof(DocumentType.Snapshot)}' AND x.{nameof(EveneumDocument.Version)} >= {options.FromVersion.Value} OR x.{nameof(EveneumDocument.DocumentType)} = '{nameof(DocumentType.Header)}' ORDER BY x.{nameof(EveneumDocument.SortOrder)} DESC", maxItemCount, cancellationToken);
+            if (!options.FromVersion.HasValue && options.ToVersion.HasValue && !options.IgnoreSnapshots)
+                return ReadStream(streamId, $"SELECT * FROM x WHERE x.{nameof(EveneumDocument.Version)} <= {options.ToVersion.Value} OR x.{nameof(EveneumDocument.DocumentType)} = '{nameof(DocumentType.Header)}' ORDER BY x.{nameof(EveneumDocument.SortOrder)} DESC", maxItemCount, cancellationToken);
+            if (!options.FromVersion.HasValue && options.ToVersion.HasValue && options.IgnoreSnapshots)
+                return ReadStream(streamId, $"SELECT * FROM x WHERE x.{nameof(EveneumDocument.DocumentType)} <> '{nameof(DocumentType.Snapshot)}' AND x.{nameof(EveneumDocument.Version)} <= {options.ToVersion.Value} OR x.{nameof(EveneumDocument.DocumentType)} = '{nameof(DocumentType.Header)}' ORDER BY x.{nameof(EveneumDocument.SortOrder)} DESC", maxItemCount, cancellationToken);
+            if (options.FromVersion.HasValue && options.ToVersion.HasValue && !options.IgnoreSnapshots)
+                return ReadStream(streamId, $"SELECT * FROM x WHERE x.{nameof(EveneumDocument.Version)} >= {options.FromVersion.Value} AND x.{nameof(EveneumDocument.Version)} <= {options.ToVersion.Value} OR x.{nameof(EveneumDocument.DocumentType)} = '{nameof(DocumentType.Header)}' ORDER BY x.{nameof(EveneumDocument.SortOrder)} DESC", maxItemCount, cancellationToken);
+            if (options.FromVersion.HasValue && options.ToVersion.HasValue && options.IgnoreSnapshots)
+                return ReadStream(streamId, $"SELECT * FROM x WHERE x.{nameof(EveneumDocument.DocumentType)} <> '{nameof(DocumentType.Snapshot)}' AND x.{nameof(EveneumDocument.Version)} >= {options.FromVersion.Value} AND x.{nameof(EveneumDocument.Version)} <= {options.ToVersion.Value} OR x.{nameof(EveneumDocument.DocumentType)} = '{nameof(DocumentType.Header)}' ORDER BY x.{nameof(EveneumDocument.SortOrder)} DESC", maxItemCount, cancellationToken);
+            
+            throw new ArgumentException("Unexpected option configuration received");
+        }
 
         private async Task<StreamResponse> ReadStream(string streamId, string sql, int maxItemCount, CancellationToken cancellationToken)
         {
