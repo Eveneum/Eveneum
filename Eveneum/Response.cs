@@ -36,7 +36,7 @@ namespace Eveneum
         public ulong DeletedDocuments { get; }
     }
 
-    internal class DocumentResponse : Response
+    public class DocumentResponse : Response
     {
         public DocumentResponse(EveneumDocument document, double requestCharge)
             : base(requestCharge)

@@ -346,7 +346,7 @@ namespace Eveneum
             return new Response(requestCharge);
         }
 
-        private async Task<DocumentResponse> ReadHeader(string streamId, CancellationToken cancellationToken = default)
+        public async Task<DocumentResponse> ReadHeader(string streamId, CancellationToken cancellationToken = default)
         {
             try
             {

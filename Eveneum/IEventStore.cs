@@ -6,6 +6,7 @@ namespace Eveneum
 {
     public interface IReadStream
     {
+        Task<DocumentResponse> ReadHeader(string streamId, CancellationToken cancellationToken = default);
         Task<StreamResponse> ReadStream(string streamId, ReadStreamOptions options = default, CancellationToken cancellationToken = default);
         
         [Obsolete("Replaced by the version of ReadStream that accepts ReadStreamOptions")]
