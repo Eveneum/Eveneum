@@ -33,7 +33,7 @@ namespace Eveneum.Tests
         {
             this.Context.StreamId = streamId;
 
-            var response = await this.Context.EventStore.ReadStreamAsOfVersion(streamId, version);
+            var response = await this.Context.EventStore.ReadStream(streamId, new ReadStreamOptions { ToVersion = version });
 
             this.Context.Stream = response.Stream;
             this.Context.Response = response;
@@ -44,7 +44,40 @@ namespace Eveneum.Tests
         {
             this.Context.StreamId = streamId;
 
-            var response = await this.Context.EventStore.ReadStreamFromVersion(streamId, version);
+            var response = await this.Context.EventStore.ReadStream(streamId, new ReadStreamOptions { FromVersion = version });
+
+            this.Context.Stream = response.Stream;
+            this.Context.Response = response;
+        }
+
+        [When(@"I read stream ([^\s-]) from version (\d+) ignoring snapshots")]
+        public async Task WhenIReadStreamFromVersionIgnoringSnapshots(string streamId, ulong version)
+        {
+            this.Context.StreamId = streamId;
+
+            var response = await this.Context.EventStore.ReadStream(streamId, new ReadStreamOptions { FromVersion = version, IgnoreSnapshots = true });
+
+            this.Context.Stream = response.Stream;
+            this.Context.Response = response;
+        }
+
+        [When(@"I read stream ([^\s-]) from version (\d+) to version (\d+)")]
+        public async Task WhenIReadStreamFromVersionToVersion(string streamId, ulong fromVersion, ulong toVersion)
+        {
+            this.Context.StreamId = streamId;
+
+            var response = await this.Context.EventStore.ReadStream(streamId, new ReadStreamOptions { FromVersion = fromVersion, ToVersion = toVersion });
+
+            this.Context.Stream = response.Stream;
+            this.Context.Response = response;
+        }
+
+        [When(@"I read stream ([^\s-]) from version (\d+) to version (\d+) ignoring snapshots")]
+        public async Task WhenIReadStreamFromVersionToVersionIgnoringSnapshots(string streamId, ulong fromVersion, ulong toVersion)
+        {
+            this.Context.StreamId = streamId;
+
+            var response = await this.Context.EventStore.ReadStream(streamId, new ReadStreamOptions { FromVersion = fromVersion, ToVersion = toVersion, IgnoreSnapshots = true });
 
             this.Context.Stream = response.Stream;
             this.Context.Response = response;
@@ -55,7 +88,7 @@ namespace Eveneum.Tests
         {
             this.Context.StreamId = streamId;
 
-            var response = await this.Context.EventStore.ReadStreamIgnoringSnapshots(streamId);
+            var response = await this.Context.EventStore.ReadStream(streamId, new ReadStreamOptions { IgnoreSnapshots = true });
 
             this.Context.Stream = response.Stream;
             this.Context.Response = response;
