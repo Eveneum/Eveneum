@@ -46,17 +46,40 @@ namespace Eveneum
             await CreateStoredProcedure(BulkDeleteStoredProc, "BulkDelete", cancellationToken);
         }
 
-        public Task<StreamResponse> ReadStream(string streamId, CancellationToken cancellationToken = default) =>
-            this.ReadStream(streamId, $"SELECT * FROM x ORDER BY x.{nameof(EveneumDocument.SortOrder)} DESC", 100, cancellationToken);
-
         public Task<StreamResponse> ReadStreamAsOfVersion(string streamId, ulong version, CancellationToken cancellationToken = default) =>
-            this.ReadStream(streamId, $"SELECT * FROM x WHERE x.{nameof(EveneumDocument.Version)} <= {version} OR x.{nameof(EveneumDocument.DocumentType)} = '{nameof(DocumentType.Header)}' ORDER BY x.{nameof(EveneumDocument.SortOrder)} DESC", 100, cancellationToken);
-
+            ReadStream(streamId, new ReadStreamOptions { FromVersion = null, ToVersion = version, IgnoreSnapshots = false, MaxItemCount = 100 }, cancellationToken);
         public Task<StreamResponse> ReadStreamFromVersion(string streamId, ulong version, CancellationToken cancellationToken = default) =>
-            this.ReadStream(streamId, $"SELECT * FROM x WHERE (x.{nameof(EveneumDocument.Version)} >= {version} AND x.{nameof(EveneumDocument.DocumentType)} <> '{nameof(DocumentType.Snapshot)}') OR x.{nameof(EveneumDocument.DocumentType)} = '{nameof(DocumentType.Header)}' ORDER BY x.{nameof(EveneumDocument.SortOrder)} DESC", this.QueryMaxItemCount, cancellationToken);
-
+            ReadStream(streamId, new ReadStreamOptions { FromVersion = version, ToVersion = null, IgnoreSnapshots = true, MaxItemCount = null }, cancellationToken);
         public Task<StreamResponse> ReadStreamIgnoringSnapshots(string streamId, CancellationToken cancellationToken = default) =>
-            this.ReadStream(streamId, $"SELECT * FROM x WHERE x.{nameof(EveneumDocument.DocumentType)} <> '{nameof(DocumentType.Snapshot)}' ORDER BY x.{nameof(EveneumDocument.SortOrder)} DESC", this.QueryMaxItemCount, cancellationToken);
+            ReadStream(streamId, new ReadStreamOptions { FromVersion = null, ToVersion = null, IgnoreSnapshots = true, MaxItemCount = null }, cancellationToken);
+
+        public Task<StreamResponse> ReadStream(string streamId, ReadStreamOptions options = null, CancellationToken cancellationToken = default)
+        {
+            options = options ?? new ReadStreamOptions();
+
+            var maxItemCount = options.MaxItemCount ?? QueryMaxItemCount;
+
+            var whereTerms = new List<string>();
+
+            if (options.IgnoreSnapshots)
+                whereTerms.Add($"x.{nameof(EveneumDocument.DocumentType)} <> '{nameof(DocumentType.Snapshot)}'");
+
+            if (options.FromVersion.HasValue)
+                whereTerms.Add($"(x.{nameof(EveneumDocument.Version)} >= {options.FromVersion.Value} OR x.{nameof(EveneumDocument.DocumentType)} = '{nameof(DocumentType.Header)}')");
+
+            if (options.ToVersion.HasValue)
+                whereTerms.Add($"(x.{nameof(EveneumDocument.Version)} <= {options.ToVersion.Value} OR x.{nameof(EveneumDocument.DocumentType)} = '{nameof(DocumentType.Header)}')");
+
+            var selectClause = "SELECT * FROM x";
+            var whereClause = whereTerms.Count > 0 
+                ? $"WHERE {string.Join(" AND ", whereTerms)}" 
+                : string.Empty;
+            var orderByClause = $"ORDER BY x.{nameof(EveneumDocument.SortOrder)} DESC";
+
+            var query = $"{selectClause} {whereClause} {orderByClause}";
+
+            return ReadStream(streamId, query, maxItemCount, cancellationToken);
+        }
 
         private async Task<StreamResponse> ReadStream(string streamId, string sql, int maxItemCount, CancellationToken cancellationToken)
         {
@@ -327,7 +350,7 @@ namespace Eveneum
             return new Response(requestCharge);
         }
 
-        private async Task<DocumentResponse> ReadHeader(string streamId, CancellationToken cancellationToken = default)
+        public async Task<DocumentResponse> ReadHeader(string streamId, CancellationToken cancellationToken = default)
         {
             try
             {

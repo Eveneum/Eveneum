@@ -12,12 +12,12 @@
     <PackageReference Include="Microsoft.Azure.Cosmos" Version="3.15.0" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.2" />
     <PackageReference Include="NodaTime.Serialization.JsonNet" Version="2.2.0" />
-    <PackageReference Include="NUnit" Version="3.12.0" />
-    <PackageReference Include="NUnit3TestAdapter" Version="3.15.1" />
-    <PackageReference Include="RandomGen" Version="1.1.4" />
-    <PackageReference Include="SpecFlow" Version="3.0.225" />
-    <PackageReference Include="SpecFlow.NUnit.Runners" Version="3.0.225" />
-    <PackageReference Include="SpecFlow.Tools.MsBuild.Generation" Version="3.0.225" />
+    <PackageReference Include="NUnit" Version="3.13.1" />
+    <PackageReference Include="NUnit3TestAdapter" Version="4.1.0" />
+    <PackageReference Include="RandomGen" Version="1.1.5" />
+    <PackageReference Include="SpecFlow" Version="3.9.40" />
+    <PackageReference Include="SpecFlow.NUnit.Runners" Version="3.9.40" />
+    <PackageReference Include="SpecFlow.Tools.MsBuild.Generation" Version="3.9.40" />
     <ProjectReference Include="..\Eveneum\Eveneum.csproj" />
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -112,6 +112,9 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>DeletingStreamWithNonExpectedVersion.feature</DependentUpon>
     </Compile>
+    <Compile Update="ReadingStreamBetweenVersions.feature.cs">
+      <DesignTime>True</DesignTime>
+    </Compile>
     <Compile Update="ReadingStreamFromVersion.feature.cs">
       <DependentUpon>ReadingStreamFromVersion.feature</DependentUpon>
     </Compile>
@@ -197,6 +200,10 @@
     <SpecFlowFeatureFiles Update="DeletingStreamWithNonExpectedVersion.feature">
       <Generator>SpecFlowSingleFileGenerator</Generator>
       <LastGenOutput>DeletingStreamWithNonExpectedVersion.feature.cs</LastGenOutput>
+    </SpecFlowFeatureFiles>
+    <SpecFlowFeatureFiles Update="ReadingStreamBetweenVersions.feature">
+      <Generator Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">SpecFlowSingleFileGenerator</Generator>
+      <LastGenOutput>ReadingStreamBetweenVersions.feature.cs</LastGenOutput>
     </SpecFlowFeatureFiles>
     <SpecFlowFeatureFiles Update="ReadingStreamFromVersion.feature">
       <Visible>$(UsingMicrosoftNETSdk)</Visible>
