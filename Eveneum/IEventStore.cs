@@ -1,20 +1,12 @@
-﻿using System;
-using System.Threading;
+﻿using System.Threading;
 using System.Threading.Tasks;
 
 namespace Eveneum
 {
     public interface IReadStream
     {
-        Task<DocumentResponse> ReadHeader(string streamId, CancellationToken cancellationToken = default);
+        Task<StreamHeaderResponse> ReadHeader(string streamId, CancellationToken cancellationToken = default);
         Task<StreamResponse> ReadStream(string streamId, ReadStreamOptions options = default, CancellationToken cancellationToken = default);
-        
-        [Obsolete("Replaced by the version of ReadStream that accepts ReadStreamOptions")]
-        Task<StreamResponse> ReadStreamAsOfVersion(string streamId, ulong version, CancellationToken cancellationToken = default);
-        [Obsolete("Replaced by the version of ReadStream that accepts ReadStreamOptions")]
-        Task<StreamResponse> ReadStreamFromVersion(string streamId, ulong version, CancellationToken cancellationToken = default);
-        [Obsolete("Replaced by the version of ReadStream that accepts ReadStreamOptions")]
-        Task<StreamResponse> ReadStreamIgnoringSnapshots(string streamId, CancellationToken cancellationToken = default);
     }
 
     public interface IWriteToStream

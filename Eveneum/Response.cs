@@ -36,7 +36,18 @@ namespace Eveneum
         public ulong DeletedDocuments { get; }
     }
 
-    public class DocumentResponse : Response
+    public class StreamHeaderResponse : Response
+    {
+        public StreamHeaderResponse(StreamHeader streamHeader, double requestCharge)
+            : base(requestCharge)
+        {
+            this.StreamHeader = streamHeader;
+        }
+
+        public StreamHeader StreamHeader { get; }
+    }
+
+    internal class DocumentResponse : Response
     {
         public DocumentResponse(EveneumDocument document, double requestCharge)
             : base(requestCharge)

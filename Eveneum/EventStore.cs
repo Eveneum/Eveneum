@@ -150,7 +150,7 @@ namespace Eveneum
             // Existing stream
             if (expectedVersion.HasValue)
             {
-                var headerResponse = await this.ReadHeader(streamId, cancellationToken);
+                var headerResponse = await this.ReadHeaderDocument(streamId, cancellationToken);
 
                 var header = headerResponse.Document;
                 requestCharge += headerResponse.RequestCharge;
@@ -207,7 +207,7 @@ namespace Eveneum
 
         public async Task<DeleteResponse> DeleteStream(string streamId, ulong expectedVersion, CancellationToken cancellationToken = default)
         {
-            var headerResponse = await this.ReadHeader(streamId, cancellationToken);
+            var headerResponse = await this.ReadHeaderDocument(streamId, cancellationToken);
 
             var existingHeader = headerResponse.Document;
             var requestCharge = headerResponse.RequestCharge;
@@ -244,7 +244,7 @@ namespace Eveneum
 
         public async Task<Response> CreateSnapshot(string streamId, ulong version, object snapshot, object metadata = null, bool deleteOlderSnapshots = false, CancellationToken cancellationToken = default)
         {
-            var headerResponse = await this.ReadHeader(streamId, cancellationToken);
+            var headerResponse = await this.ReadHeaderDocument(streamId, cancellationToken);
 
             var header = headerResponse.Document;
             var requestCharge = headerResponse.RequestCharge;
@@ -326,6 +326,13 @@ namespace Eveneum
             }
         }
 
+        public async Task<StreamHeaderResponse> ReadHeader(string streamId, CancellationToken cancellationToken = default)
+        {
+            var result = await this.ReadHeaderDocument(streamId, cancellationToken);
+
+            return new StreamHeaderResponse(new StreamHeader(streamId, result.Document.Version, this.Serializer.DeserializeObject(result.Document.MetadataType, result.Document.Metadata), result.Document.Deleted), result.RequestCharge);
+        }
+
         private async Task<Response> LoadDocuments(QueryDefinition query, Func<FeedResponse<EveneumDocument>, Task> callback, CancellationToken cancellationToken = default)
         {
             var iterator = this.Container.GetItemQueryIterator<EveneumDocument>(query, requestOptions: new QueryRequestOptions { MaxItemCount = this.QueryMaxItemCount });
@@ -350,7 +357,7 @@ namespace Eveneum
             return new Response(requestCharge);
         }
 
-        public async Task<DocumentResponse> ReadHeader(string streamId, CancellationToken cancellationToken = default)
+        private async Task<DocumentResponse> ReadHeaderDocument(string streamId, CancellationToken cancellationToken = default)
         {
             try
             {
