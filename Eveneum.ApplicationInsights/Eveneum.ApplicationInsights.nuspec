@@ -1,8 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
     <metadata>
-        <id>Eveneum</id>
-        <version>$version$</version>
+        <id>Eveneum.ApplicationInsights</id>
         <authors>Jakub Konecki</authors>
         <owners>Jakub Konecki</owners>
         <requireLicenseAcceptance>false</requireLicenseAcceptance>
