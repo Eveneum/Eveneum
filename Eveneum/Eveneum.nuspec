@@ -15,4 +15,7 @@
           <dependency id="Newtonsoft.Json" version="[12.0.2,13)" />
         </dependencies>
     </metadata>
+	<files>
+		<file src="bin\Release\**\*" target="lib" />
+	</files>
 </package>

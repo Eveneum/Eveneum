@@ -14,7 +14,7 @@
           <dependency id="Eveneum" version="[#{GitVersion.NuGetVersion}#]" />
         </dependencies>
     </metadata>
-    <files>        
-        <file src="bin\$configuration$\**\*" target="" />
-    </files>
+    <files>
+		<file src="bin\Release\**\*" target="lib" />
+	</files>
 </package>
