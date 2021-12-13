@@ -15,6 +15,7 @@
         </dependencies>
     </metadata>
     <files>
-		<file src="bin\Release\**\*" target="lib" />
+		<file src="bin\Release\**\Eveneum.ApplicationInsights.dll" target="lib" />
+		<file src="bin\Release\**\Eveneum.ApplicationInsights.pdb" target="lib" />
 	</files>
 </package>

@@ -16,6 +16,7 @@
         </dependencies>
     </metadata>
 	<files>
-		<file src="bin\Release\**\*" target="lib" />
+		<file src="bin\Release\**\Eveneum.dll" target="lib" />
+		<file src="bin\Release\**\Eveneum.pdb" target="lib" />
 	</files>
 </package>
