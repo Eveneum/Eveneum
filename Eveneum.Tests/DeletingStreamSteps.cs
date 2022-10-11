@@ -31,12 +31,19 @@ namespace Eveneum.Tests
         [Then(@"the header is soft-deleted")]
         public async Task ThenTheHeaderIsSoft_Deleted()
         {
+            await ThenTheHeaderIsSoft_Deleted(null);
+        }
+
+        [Then(@"the header is soft-deleted with TTL set to (\d+) seconds")]
+        public async Task ThenTheHeaderIsSoft_Deleted(int? ttl)
+        {
             var documents = await CosmosSetup.QueryAllDocumentsInStream(this.Context.Client, this.Context.Database, this.Context.Container, this.Context.StreamId, DocumentType.Header);
             Assert.AreEqual(1, documents.Count);
 
             var headerDocument = documents[0];
 
             Assert.IsTrue(headerDocument.Deleted);
+            Assert.AreEqual(ttl, headerDocument.TimeToLive);
         }
 
         [Then(@"the header is hard-deleted")]
@@ -50,12 +57,22 @@ namespace Eveneum.Tests
         [Then(@"all events are soft-deleted")]
         public async Task ThenAllEventsAreSoft_Deleted()
         {
+            await ThenAllEventsAreSoft_Deleted(null);
+        }
+
+        [Then(@"all events are soft-deleted with TTL set to (\d+) seconds")]
+        public async Task ThenAllEventsAreSoft_Deleted(int? ttl)
+        {
             var streamId = this.Context.StreamId;
             var eventDocuments = await CosmosSetup.QueryAllDocumentsInStream(this.Context.Client, this.Context.Database, this.Context.Container, streamId, DocumentType.Event);
 
             foreach (var eventDocument in eventDocuments)
+            {
                 Assert.IsTrue(eventDocument.Deleted);
+                Assert.AreEqual(ttl,eventDocument.TimeToLive);
+            }
         }
+
 
         [Then(@"all events are hard-deleted")]
         public async Task ThenAllEventsAreHard_Deleted()
@@ -69,12 +86,22 @@ namespace Eveneum.Tests
         [Then(@"all snapshots are soft-deleted")]
         public async Task ThenAllSnapshotsAreSoft_Deleted()
         {
+            await ThenAllSnapshotsAreSoft_Deleted(null);
+        }
+
+        [Then(@"all snapshots are soft-deleted with TTL set to (\d+) seconds")]
+        public async Task ThenAllSnapshotsAreSoft_Deleted(int? ttl)
+        {
             var streamId = this.Context.StreamId;
             var snapshotDocuments = await CosmosSetup.QueryAllDocumentsInStream(this.Context.Client, this.Context.Database, this.Context.Container, streamId, DocumentType.Snapshot);
 
             foreach (var snapshotDocument in snapshotDocuments)
+            {
                 Assert.IsTrue(snapshotDocument.Deleted);
+                Assert.AreEqual(ttl, snapshotDocument.TimeToLive);
+            }
         }
+
 
         [Then(@"all snapshots are hard-deleted")]
         public async Task ThenAllSnapshotsAreHard_Deleted()

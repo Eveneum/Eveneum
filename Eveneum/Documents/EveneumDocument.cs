@@ -42,6 +42,9 @@ namespace Eveneum.Documents
         [JsonProperty(PropertyName = "_ts")]
         public string Timestamp { get; set; }
 
+        [JsonProperty(PropertyName = "ttl", NullValueHandling = NullValueHandling.Ignore)]
+        public int? TimeToLive { get; set; }
+
         internal string GenerateId()
         {
             switch(this.DocumentType)

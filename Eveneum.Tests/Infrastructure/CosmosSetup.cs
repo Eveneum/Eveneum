@@ -26,7 +26,10 @@ namespace Eveneum.Tests.Infrastrature
             await client.CreateDatabaseIfNotExistsAsync(database);
 
             if (container != null)
-                await client.GetDatabase(database).CreateContainerAsync(new ContainerProperties(container, "/" + nameof(EveneumDocument.StreamId)));
+            {
+                var containerProperties = new ContainerProperties(container, "/" + nameof(EveneumDocument.StreamId)) { DefaultTimeToLive = -1 };
+                await client.GetDatabase(database).CreateContainerAsync(containerProperties);
+            }
             
             return client;
         }

@@ -58,8 +58,8 @@ Scenario: Hard-deleting stream with some events
 	And all events are hard-deleted
 	And stream P is not hard-deleted
 	And request charge is reported
-	And 6 deleted documents are reported
-	
+	And 6 deleted documents are reported	
+
 Scenario: Hard-deleting stream with some events and snapshots
 	Given hard-delete mode
 	And an event store backed by partitioned collection
@@ -98,3 +98,15 @@ Scenario: Hard-deleting stream with many events and snapshots
 	And stream P is not hard-deleted
 	And request charge is reported
 	And 10011 deleted documents are reported
+
+Scenario: TTl-delete stream with events and snapshots
+	Given ttl-delete mode with 10 seconds as ttl
+	And an event store backed by partitioned collection
+	And an existing stream Z with 13 events
+	And an existing stream P with 10 events
+	And an existing snapshot for version 5
+	When I delete stream P in expected version 10
+	Then the header is soft-deleted with TTL set to 10 seconds
+	And all events are soft-deleted with TTL set to 10 seconds
+	And all snapshots are soft-deleted with TTL set to 10 seconds
+	And stream Z is not soft-deleted
