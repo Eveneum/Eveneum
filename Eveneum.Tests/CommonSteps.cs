@@ -70,6 +70,12 @@ namespace Eveneum.Tests
             await this.Context.EventStore.DeleteStream(streamId, (ulong)eventData.Length);
         }
 
+        [When(@"I wait for (\d+) seconds")]
+        public async Task Wait(int waitForSeconds)
+        {
+            await Task.Delay(TimeSpan.FromSeconds(waitForSeconds));
+        }
+
         [Then(@"request charge is reported")]
         public void ThenRequestChargeIsReported()
         {

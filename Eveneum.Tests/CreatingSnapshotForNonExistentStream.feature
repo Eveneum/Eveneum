@@ -26,3 +26,13 @@ Scenario: Creating snapshot for hard-deleted stream
 	When I create snapshot for stream S in version 5
 	Then the action fails as stream S doesn't exist
 	And request charge is reported
+
+@ExpectException
+Scenario: Creating snapshot for ttl-deleted stream
+	Given ttl-delete mode with 100 seconds as ttl 
+	And an event store backed by partitioned collection
+	And a deleted stream S with 10 events
+	When I create snapshot for stream S in version 5
+	Then the action fails as stream S doesn't exist
+	And the action fails as stream S has been deleted
+	And request charge is reported

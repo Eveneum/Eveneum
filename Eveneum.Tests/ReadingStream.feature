@@ -22,6 +22,24 @@ Scenario: Reading hard-deleted stream
 	Then the non-existing stream is returned
 	And request charge is reported
 
+Scenario: Reading ttl-deleted stream
+	Given ttl-delete mode with 100 seconds as ttl
+	And an event store backed by partitioned collection
+	And a deleted stream S with 10 events
+	When I read stream S
+	Then the non-existing, soft-deleted stream is returned
+	And request charge is reported
+
+Scenario: Reading ttl-deleted stream when cosmos disposed the deleted stream
+	Given ttl-delete mode with 1 seconds as ttl
+	And an event store backed by partitioned collection
+	And a deleted stream S with 10 events
+	# we need to wait a bit extra, to make sure cosmos cleanup happens.
+	When I wait for 2 seconds
+	And I read stream S
+	Then the non-existing stream is returned
+	And request charge is reported
+
 Scenario: Reading empty stream with no metadata
 	Given an event store backed by partitioned collection
 	And an existing stream S with 0 events
