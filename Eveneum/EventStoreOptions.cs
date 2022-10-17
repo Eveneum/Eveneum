@@ -13,8 +13,8 @@ namespace Eveneum
         public ITypeProvider TypeProvider { get; set; } = new PlatformTypeProvider();
         public bool IgnoreMissingTypes { get; set; } = false;
 
-        // calcluate document TTL based on given timespan in case Delete mode is set to TtlDelete
-        public TimeSpan StreamTimeToLiveSecondsAfterDelete { get; set; } = TimeSpan.FromHours(24);
+        // calculate document TTL based on given timespan in case Delete mode is set to TtlDelete
+        public TimeSpan StreamTimeToLiveAfterDelete { get; set; } = TimeSpan.FromHours(24);
 
     }
 }

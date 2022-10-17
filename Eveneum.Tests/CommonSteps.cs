@@ -40,7 +40,7 @@ namespace Eveneum.Tests
         public void GivenTTlDeleteMode(int streamTtlAfterDelete)
         {
             this.Context.EventStoreOptions.DeleteMode = DeleteMode.TtlDelete;
-            this.Context.EventStoreOptions.StreamTimeToLiveSecondsAfterDelete = TimeSpan.FromSeconds(streamTtlAfterDelete);
+            this.Context.EventStoreOptions.StreamTimeToLiveAfterDelete = TimeSpan.FromSeconds(streamTtlAfterDelete);
         }
 
         [Given(@"an existing stream ([^\s-]) with (\d+) events")]

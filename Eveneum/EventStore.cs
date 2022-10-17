@@ -37,7 +37,7 @@ namespace Eveneum
             options = options ?? new EventStoreOptions();
 
             this.DeleteMode = options.DeleteMode;
-            this.StreamTimeToLiveAfterDelete = options.StreamTimeToLiveSecondsAfterDelete;
+            this.StreamTimeToLiveAfterDelete = options.StreamTimeToLiveAfterDelete;
             this.BatchSize = Math.Min(options.BatchSize, (byte)100); // Maximum batch size supported by CosmosDB
             this.QueryMaxItemCount = options.QueryMaxItemCount;
             this.Serializer = new EveneumDocumentSerializer(options.JsonSerializer, options.TypeProvider, options.IgnoreMissingTypes);
