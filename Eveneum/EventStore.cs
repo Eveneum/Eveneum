@@ -21,6 +21,7 @@ namespace Eveneum
         public readonly Container Container;
 
         public DeleteMode DeleteMode { get; }
+        public TimeSpan StreamTimeToLiveAfterDelete { get; }
         public byte BatchSize { get; }
         public int QueryMaxItemCount { get; }
         public EveneumDocumentSerializer Serializer { get; }
@@ -36,6 +37,7 @@ namespace Eveneum
             options = options ?? new EventStoreOptions();
 
             this.DeleteMode = options.DeleteMode;
+            this.StreamTimeToLiveAfterDelete = options.StreamTimeToLiveAfterDelete;
             this.BatchSize = Math.Min(options.BatchSize, (byte)100); // Maximum batch size supported by CosmosDB
             this.QueryMaxItemCount = options.QueryMaxItemCount;
             this.Serializer = new EveneumDocumentSerializer(options.JsonSerializer, options.TypeProvider, options.IgnoreMissingTypes);
@@ -227,12 +229,15 @@ namespace Eveneum
             StoredProcedureExecuteResponse<BulkDeleteResponse> response;
             var query = $"SELECT * FROM c";
 
-            if (this.DeleteMode == DeleteMode.SoftDelete)
+            var useSoftDeleteMode = (this.DeleteMode == DeleteMode.SoftDelete) || (this.DeleteMode == DeleteMode.TtlDelete);
+
+            if (useSoftDeleteMode)
                 query += " WHERE c.Deleted = false";
 
             do
             {
-                response = await this.Container.Scripts.ExecuteStoredProcedureAsync<BulkDeleteResponse>(BulkDeleteStoredProc, partitionKey, new object[] { query, this.DeleteMode == DeleteMode.SoftDelete }, cancellationToken: cancellationToken);
+                var ttl = this.DeleteMode == DeleteMode.TtlDelete ? StreamTimeToLiveAfterDelete.TotalSeconds  : -1;                
+                response = await this.Container.Scripts.ExecuteStoredProcedureAsync<BulkDeleteResponse>(BulkDeleteStoredProc, partitionKey, new object[] { query, useSoftDeleteMode, ttl}, cancellationToken: cancellationToken);
 
                 requestCharge += response.RequestCharge;
                 deletedDocuments += response.Resource.Deleted;

@@ -36,6 +36,13 @@ namespace Eveneum.Tests
             this.Context.EventStoreOptions.DeleteMode = DeleteMode.HardDelete;
         }
 
+        [Given(@"ttl-delete mode with (\d+) seconds as ttl")]
+        public void GivenTTlDeleteMode(int streamTtlAfterDelete)
+        {
+            this.Context.EventStoreOptions.DeleteMode = DeleteMode.TtlDelete;
+            this.Context.EventStoreOptions.StreamTimeToLiveAfterDelete = TimeSpan.FromSeconds(streamTtlAfterDelete);
+        }
+
         [Given(@"an existing stream ([^\s-]) with (\d+) events")]
         public async Task GivenAnExistingStream(string streamId, ushort events)
         {
@@ -61,6 +68,12 @@ namespace Eveneum.Tests
 
             await this.Context.EventStore.WriteToStream(streamId, eventData);
             await this.Context.EventStore.DeleteStream(streamId, (ulong)eventData.Length);
+        }
+
+        [When(@"I wait for (\d+) seconds")]
+        public async Task Wait(int waitForSeconds)
+        {
+            await Task.Delay(TimeSpan.FromSeconds(waitForSeconds));
         }
 
         [Then(@"request charge is reported")]

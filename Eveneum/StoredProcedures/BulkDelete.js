@@ -1,4 +1,4 @@
-﻿function BulkDelete(query, softDelete) {
+﻿function BulkDelete(query, softDelete, ttl) {
     var collection = getContext().getCollection();
     var collectionLink = collection.getSelfLink();
     var response = getContext().getResponse();
@@ -51,6 +51,10 @@
 
             if (softDelete) {
                 documents[0].Deleted = true;
+
+                if (ttl > 0) {
+                    documents[0].ttl = ttl;
+                }
 
                 isAccepted = collection.replaceDocument(documents[0]._self, documents[0], requestOptions, function (err, responseOptions) {
                     if (err) throw err;
