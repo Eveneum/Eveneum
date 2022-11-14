@@ -15,5 +15,6 @@ namespace Eveneum
 
         // calculate document TTL based on given timespan in case Delete mode is set to TtlDelete
         public TimeSpan StreamTimeToLiveAfterDelete { get; set; } = TimeSpan.FromHours(24);
+
     }
 }

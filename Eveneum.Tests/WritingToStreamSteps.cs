@@ -6,6 +6,7 @@ using Eveneum.Documents;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System.Linq;
+using Eveneum.Serialization;
 
 namespace Eveneum.Tests
 {
@@ -75,6 +76,8 @@ namespace Eveneum.Tests
         [Then(@"the header version (\d+) with metadata is persisted")]
         public async Task ThenTheHeaderVersionWithMetadataIsPersisted(ulong version)
         {
+            var typeProvider = this.Context.EventStoreOptions.TypeProvider ?? new PlatformTypeProvider(this.Context.EventStoreOptions.IgnoreMissingTypes);
+
             var headerDocuments = await CosmosSetup.QueryAllDocumentsInStream(this.Context.Client, this.Context.Database, this.Context.Container, this.Context.StreamId, DocumentType.Header);
 
             Assert.AreEqual(1, headerDocuments.Count);
@@ -85,7 +88,7 @@ namespace Eveneum.Tests
             Assert.AreEqual(this.Context.StreamId, headerDocument.StreamId);
             Assert.AreEqual(version, headerDocument.Version);
             Assert.AreEqual(version + EveneumDocument.GetOrderingFraction(DocumentType.Header), headerDocument.SortOrder);
-            Assert.AreEqual(this.Context.EventStoreOptions.TypeProvider.GetIdentifierForType(typeof(SampleMetadata)), headerDocument.MetadataType);
+            Assert.AreEqual(typeProvider.GetIdentifierForType(typeof(SampleMetadata)), headerDocument.MetadataType);
             Assert.NotNull(headerDocument.Metadata);
             Assert.AreEqual(JToken.FromObject(this.Context.HeaderMetadata), headerDocument.Metadata);
             Assert.NotNull(headerDocument.ETag);
@@ -145,6 +148,8 @@ namespace Eveneum.Tests
         [Then(@"new events are appended")]
         public async Task ThenNewEventsAreAppended()
         {
+            var typeProvider = this.Context.EventStoreOptions.TypeProvider ?? new PlatformTypeProvider(this.Context.EventStoreOptions.IgnoreMissingTypes);
+
             var streamId = this.Context.StreamId;
             var currentDocuments = await CosmosSetup.QueryAllDocumentsInStream(this.Context.Client, this.Context.Database, this.Context.Container, streamId, DocumentType.Event);
             var existingDocumentIds = this.Context.ExistingDocuments.Select(x => x.Id);
@@ -162,7 +167,7 @@ namespace Eveneum.Tests
                 Assert.IsNotNull(eventDocument);
                 Assert.AreEqual(DocumentType.Event, eventDocument.DocumentType);
                 Assert.AreEqual(streamId, eventDocument.StreamId);
-                Assert.AreEqual(this.Context.EventStoreOptions.TypeProvider.GetIdentifierForType(newEvent.Body.GetType()), eventDocument.BodyType);
+                Assert.AreEqual(typeProvider.GetIdentifierForType(newEvent.Body.GetType()), eventDocument.BodyType);
                 Assert.NotNull(eventDocument.Body);
                 Assert.AreEqual(JToken.FromObject(newEvent.Body, JsonSerializer.Create(this.Context.JsonSerializerSettings)), eventDocument.Body);
                 Assert.NotNull(eventDocument.ETag);
@@ -175,7 +180,7 @@ namespace Eveneum.Tests
                 }
                 else
                 {
-                    Assert.AreEqual(this.Context.EventStoreOptions.TypeProvider.GetIdentifierForType(newEvent.Metadata.GetType()), eventDocument.MetadataType);
+                    Assert.AreEqual(typeProvider.GetIdentifierForType(newEvent.Metadata.GetType()), eventDocument.MetadataType);
                     Assert.NotNull(eventDocument.Metadata);
                     Assert.AreEqual(JToken.FromObject(newEvent.Metadata, JsonSerializer.Create(this.Context.JsonSerializerSettings)), eventDocument.Metadata);
                 }

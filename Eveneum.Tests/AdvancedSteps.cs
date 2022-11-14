@@ -9,6 +9,7 @@ using System.Linq;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json;
 using Microsoft.Azure.Cosmos;
+using Eveneum.Serialization;
 
 namespace Eveneum.Tests
 {
@@ -108,12 +109,14 @@ namespace Eveneum.Tests
         [Then(@"the event in version (\d+) in stream (.*) is replaced")]
         public async Task ThenTheEventInVersionInStreamIsReplaced(ulong version, string streamId)
         {
+            var typeProvider = this.Context.EventStoreOptions.TypeProvider ?? new PlatformTypeProvider(this.Context.EventStoreOptions.IgnoreMissingTypes);
+
             var currentDocuments = await CosmosSetup.QueryAllDocumentsInStream(this.Context.Client, this.Context.Database, this.Context.Container, streamId, DocumentType.Event);
             var eventDocument = currentDocuments.SingleOrDefault(x => x.Id == EveneumDocument.GenerateEventId(streamId, version));
 
             Assert.AreEqual(DocumentType.Event, eventDocument.DocumentType);
             Assert.AreEqual(streamId, eventDocument.StreamId);
-            Assert.AreEqual(this.Context.EventStoreOptions.TypeProvider.GetIdentifierForType(this.Context.ReplacedEvent.Body.GetType()), eventDocument.BodyType);
+            Assert.AreEqual(typeProvider.GetIdentifierForType(this.Context.ReplacedEvent.Body.GetType()), eventDocument.BodyType);
             Assert.NotNull(eventDocument.Body);
             Assert.AreEqual(JToken.FromObject(this.Context.ReplacedEvent.Body, JsonSerializer.Create(this.Context.JsonSerializerSettings)), eventDocument.Body);
             Assert.NotNull(eventDocument.ETag);
@@ -126,7 +129,7 @@ namespace Eveneum.Tests
             }
             else
             {
-                Assert.AreEqual(this.Context.EventStoreOptions.TypeProvider.GetIdentifierForType(this.Context.ReplacedEvent.Metadata.GetType()), eventDocument.MetadataType);
+                Assert.AreEqual(typeProvider.GetIdentifierForType(this.Context.ReplacedEvent.Metadata.GetType()), eventDocument.MetadataType);
                 Assert.NotNull(eventDocument.Metadata);
                 Assert.AreEqual(JToken.FromObject(this.Context.ReplacedEvent.Metadata, JsonSerializer.Create(this.Context.JsonSerializerSettings)), eventDocument.Metadata);
             }
