@@ -3,7 +3,6 @@ using NUnit.Framework;
 using TechTalk.SpecFlow;
 using Eveneum.Tests.Infrastrature;
 using Eveneum.Documents;
-using Microsoft.Azure.Cosmos;
 
 namespace Eveneum.Tests
 {

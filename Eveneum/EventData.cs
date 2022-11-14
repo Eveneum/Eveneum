@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Eveneum
+﻿namespace Eveneum
 {
     public struct EventData
     {

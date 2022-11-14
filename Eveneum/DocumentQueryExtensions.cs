@@ -1,12 +1,4 @@
-﻿using Eveneum.Documents;
-using Microsoft.Azure.Cosmos;
-using Microsoft.Azure.Cosmos.Linq;
-using Newtonsoft.Json;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-
-namespace Eveneum
+﻿namespace Eveneum
 {
     static class DocumentQueryExtensions
     {
