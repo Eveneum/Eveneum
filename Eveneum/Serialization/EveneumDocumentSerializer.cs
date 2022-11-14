@@ -14,7 +14,7 @@ namespace Eveneum.Serialization
         public EveneumDocumentSerializer(JsonSerializer jsonSerializer = null, ITypeProvider typeProvider = null, bool ignoreMissingTypes = false)
         {
             this.JsonSerializer = jsonSerializer ?? JsonSerializer.CreateDefault();
-            this.TypeProvider = typeProvider ?? new PlatformTypeProvider();
+            this.TypeProvider = typeProvider ?? new PlatformTypeProvider(ignoreMissingTypes);
             this.IgnoreMissingTypes = ignoreMissingTypes;
         }
 
