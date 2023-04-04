@@ -1,5 +1,5 @@
 ﻿using TechTalk.SpecFlow;
-using Eveneum.Tests.Infrastrature;
+using Eveneum.Tests.Infrastructure;
 using Eveneum.Serialization;
 using System;
 

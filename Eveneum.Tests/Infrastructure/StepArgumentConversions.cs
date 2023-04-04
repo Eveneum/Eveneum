@@ -2,7 +2,7 @@
 using TechTalk.SpecFlow;
 using TechTalk.SpecFlow.Bindings;
 
-namespace Eveneum.Tests.Infrastrature
+namespace Eveneum.Tests.Infrastructure
 {
     [Binding]
     public class StepArgumentConversions

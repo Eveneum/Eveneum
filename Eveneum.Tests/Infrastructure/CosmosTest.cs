@@ -2,7 +2,7 @@
 using System.Threading.Tasks;
 using NUnit.Framework;
 
-namespace Eveneum.Tests.Infrastrature
+namespace Eveneum.Tests.Infrastructure
 {
     /// <summary>
     /// Base class for integration tests that use CosmosDB. Each test will execute against a new Collection.
@@ -16,14 +16,14 @@ namespace Eveneum.Tests.Infrastrature
         [SetUp]
         public void SetUp()
         {
-            this.Database = "EveneumDB";
-            this.Collection = Guid.NewGuid().ToString();
+            Database = "EveneumDB";
+            Collection = Guid.NewGuid().ToString();
         }
 
         [TearDown]
         public async Task TearDown()
         {
-            await CosmosSetup.GetClient().GetDatabase(this.Database).GetContainer(this.Collection).DeleteContainerAsync();
+            await CosmosSetup.GetClient().GetDatabase(Database).GetContainer(Collection).DeleteContainerAsync();
         }
     }
 }

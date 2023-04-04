@@ -3,7 +3,7 @@ using System.Linq;
 using NodaTime;
 using RandomGen;
 
-namespace Eveneum.Tests.Infrastrature
+namespace Eveneum.Tests.Infrastructure
 {
     static class TestSetup
     {
