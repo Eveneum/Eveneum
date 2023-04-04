@@ -7,7 +7,7 @@ using Eveneum.Serialization;
 using Microsoft.Azure.Cosmos;
 using Newtonsoft.Json;
 
-namespace Eveneum.Tests.Infrastrature
+namespace Eveneum.Tests.Infrastructure
 {
     static class CosmosSetup
     {

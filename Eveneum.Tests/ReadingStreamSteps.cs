@@ -1,7 +1,7 @@
 ﻿using System.Linq;
 using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
-using Eveneum.Tests.Infrastrature;
+using Eveneum.Tests.Infrastructure;
 using NUnit.Framework;
 using TechTalk.SpecFlow;
 

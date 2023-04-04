@@ -6,8 +6,9 @@ using Eveneum.Documents;
 using Newtonsoft.Json;
 using NodaTime;
 using NodaTime.Serialization.JsonNet;
+using Eveneum.Snapshots;
 
-namespace Eveneum.Tests.Infrastrature
+namespace Eveneum.Tests.Infrastructure
 {
     class CosmosDbContext : IDisposable
     {
@@ -23,6 +24,7 @@ namespace Eveneum.Tests.Infrastrature
         public SampleMetadata HeaderMetadata { get; set; }
         public SampleSnapshot Snapshot { get; set; }
         public SampleMetadata SnapshotMetadata { get; set; }
+        public SnapshotWriterSnapshot SnapshotWriterSnapshot { get; set; }
         public EventData[] NewEvents { get; set; }
         public List<EventData> LoadAllEvents { get; set; }
         public List<StreamHeader> LoadAllStreamHeaders { get; set; }
