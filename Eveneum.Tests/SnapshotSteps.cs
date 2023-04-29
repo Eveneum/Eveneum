@@ -170,7 +170,7 @@ namespace Eveneum.Tests
                 Assert.AreEqual(JToken.FromObject(snapshotMetadata), snapshotDocument.Metadata);
             }
 
-            Assert.AreEqual(EveneumDocumentSerializer.SnapshotWriterSnapshotTypeIdentifier, snapshotDocument.BodyType);
+            Assert.AreEqual(snapshot.GetType().AssemblyQualifiedName, snapshotDocument.BodyType);
             Assert.AreEqual(JToken.FromObject(snapshot), snapshotDocument.Body);
             Assert.False(snapshotDocument.Deleted);
             Assert.IsNotNull(snapshotDocument.ETag);
