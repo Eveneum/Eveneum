@@ -2,6 +2,7 @@
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Eveneum.Documents;
+using Eveneum.Snapshots;
 
 namespace Eveneum.Serialization
 {
@@ -10,6 +11,8 @@ namespace Eveneum.Serialization
         public JsonSerializer JsonSerializer { get; }
         public ITypeProvider TypeProvider { get; }
         public bool IgnoreMissingTypes { get; }
+
+        public const string SnapshotWriterSnapshotTypeIdentifier = "Eveneum.SnapshotWriterSnapshot";
 
         public EveneumDocumentSerializer(JsonSerializer jsonSerializer = null, ITypeProvider typeProvider = null, bool ignoreMissingTypes = false)
         {
@@ -38,7 +41,7 @@ namespace Eveneum.Serialization
         {
             if (metadata != null)
             {
-                header.MetadataType = this.TypeProvider.GetIdentifierForType(metadata.GetType());
+                header.MetadataType = this.GetIdentifierForType(metadata.GetType());
                 header.Metadata = JToken.FromObject(metadata, this.JsonSerializer);
             }
         }
@@ -49,13 +52,13 @@ namespace Eveneum.Serialization
             {
                 StreamId = streamId,
                 Version = @event.Version,
-                BodyType = this.TypeProvider.GetIdentifierForType(@event.Body.GetType()),
+                BodyType = this.GetIdentifierForType(@event.Body.GetType()),
                 Body = JToken.FromObject(@event.Body, this.JsonSerializer)
             };
 
             if (@event.Metadata != null)
             {
-                document.MetadataType = this.TypeProvider.GetIdentifierForType(@event.Metadata.GetType());
+                document.MetadataType = this.GetIdentifierForType(@event.Metadata.GetType());
                 document.Metadata = JToken.FromObject(@event.Metadata, this.JsonSerializer);
             }
 
@@ -68,13 +71,13 @@ namespace Eveneum.Serialization
             {
                 StreamId = streamId,
                 Version = version,
-                BodyType = this.TypeProvider.GetIdentifierForType(snapshot.GetType()),
+                BodyType = this.GetIdentifierForType(snapshot.GetType()),
                 Body = JToken.FromObject(snapshot, this.JsonSerializer)
             };
 
             if (metadata != null)
             {
-                document.MetadataType = this.TypeProvider.GetIdentifierForType(metadata.GetType());
+                document.MetadataType = this.GetIdentifierForType(metadata.GetType());
                 document.Metadata = JToken.FromObject(metadata, this.JsonSerializer);
             }
 
@@ -86,9 +89,9 @@ namespace Eveneum.Serialization
             if (string.IsNullOrEmpty(typeName))
                 return null;
 
-            var type = this.TypeProvider.GetTypeForIdentifier(typeName);
+            var type = this.GetTypeForIdentifier(typeName);
             
-            if (type == null)
+            if (type is null)
             {
                 if (this.IgnoreMissingTypes)
                     return null;
@@ -105,5 +108,11 @@ namespace Eveneum.Serialization
                 throw new JsonDeserializationException(typeName, data.ToString(), exc);
             }
         }
+
+        private string GetIdentifierForType(Type type) =>
+            type == typeof(SnapshotWriterSnapshot) ? SnapshotWriterSnapshotTypeIdentifier : this.TypeProvider.GetIdentifierForType(type);
+
+        private Type GetTypeForIdentifier(string identifier) =>
+            identifier == SnapshotWriterSnapshotTypeIdentifier ? typeof(SnapshotWriterSnapshot) : this.TypeProvider.GetTypeForIdentifier(identifier);
     }
 }

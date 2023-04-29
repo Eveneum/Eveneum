@@ -8,6 +8,7 @@ using System.Linq;
 using Eveneum.Snapshots;
 using System.Threading;
 using System;
+using Eveneum.Serialization;
 
 namespace Eveneum.Tests
 {
@@ -169,7 +170,7 @@ namespace Eveneum.Tests
                 Assert.AreEqual(JToken.FromObject(snapshotMetadata), snapshotDocument.Metadata);
             }
 
-            Assert.AreEqual(snapshot.GetType().AssemblyQualifiedName, snapshotDocument.BodyType);
+            Assert.AreEqual(EveneumDocumentSerializer.SnapshotWriterSnapshotTypeIdentifier, snapshotDocument.BodyType);
             Assert.AreEqual(JToken.FromObject(snapshot), snapshotDocument.Body);
             Assert.False(snapshotDocument.Deleted);
             Assert.IsNotNull(snapshotDocument.ETag);
@@ -196,7 +197,7 @@ namespace Eveneum.Tests
             Assert.IsNull(snapshotDocument.MetadataType);
             Assert.IsFalse(snapshotDocument.Metadata.HasValues);
 
-            Assert.AreEqual(snapshot.GetType().AssemblyQualifiedName, snapshotDocument.BodyType);
+            Assert.AreEqual(EveneumDocumentSerializer.SnapshotWriterSnapshotTypeIdentifier, snapshotDocument.BodyType);
             Assert.AreEqual(JToken.FromObject(snapshot), snapshotDocument.Body);
             Assert.False(snapshotDocument.Deleted);
             Assert.IsNotNull(snapshotDocument.ETag);
