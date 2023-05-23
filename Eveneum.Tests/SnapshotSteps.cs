@@ -80,11 +80,6 @@ namespace Eveneum.Tests
         {
             this.Context.Snapshot = TestSetup.GetSnapshot();
             this.Context.SnapshotWriterSnapshot = new SnapshotWriterSnapshot(typeof(CustomSnapshotWriter).AssemblyQualifiedName);
-            
-            //var customSnapshotWriter = this.Context.EventStoreOptions.SnapshotWriter as CustomSnapshotWriter;
-            //customSnapshotWriter.Metadata = this.Context.SnapshotMetadata;
-            //customSnapshotWriter.Snapshot = this.Context.Snapshot;
-            //customSnapshotWriter.Version = version;
 
             await this.Context.EventStore.CreateSnapshot(this.Context.StreamId, version, this.Context.Snapshot, this.Context.SnapshotMetadata);
         }
@@ -197,7 +192,7 @@ namespace Eveneum.Tests
             Assert.IsNull(snapshotDocument.MetadataType);
             Assert.IsFalse(snapshotDocument.Metadata.HasValues);
 
-            Assert.AreEqual(EveneumDocumentSerializer.SnapshotWriterSnapshotTypeIdentifier, snapshotDocument.BodyType);
+            Assert.AreEqual(PlatformTypeProvider.SnapshotWriterSnapshotTypeIdentifier, snapshotDocument.BodyType);
             Assert.AreEqual(JToken.FromObject(snapshot), snapshotDocument.Body);
             Assert.False(snapshotDocument.Deleted);
             Assert.IsNotNull(snapshotDocument.ETag);

@@ -9,7 +9,7 @@ Scenario: Creating snapshot
 	And the custom snapshot for version 5 is persisted 
 	And request charge is reported
 
-Scenario: Creating snapshot wth metadata
+Scenario: Creating snapshot with metadata
 	Given a custom Snapshot Writer
 	And an event store backed by partitioned collection
 	And an existing stream S with 10 events

@@ -1,11 +1,14 @@
-﻿using System;
+﻿using Eveneum.Snapshots;
+using System;
 using System.Collections.Concurrent;
 
 namespace Eveneum.Serialization
 {
     class PlatformTypeProvider : ITypeProvider
     {
-        private readonly ConcurrentDictionary<string, Type> Cache = new ConcurrentDictionary<string, Type>();
+		public const string SnapshotWriterSnapshotTypeIdentifier = "Eveneum.SnapshotWriterSnapshot";
+
+		private readonly ConcurrentDictionary<string, Type> Cache = new ConcurrentDictionary<string, Type>();
         private readonly bool IgnoreMissingTypes;
 
         public PlatformTypeProvider(bool ignoreMissingTypes) 
@@ -13,8 +16,8 @@ namespace Eveneum.Serialization
             this.IgnoreMissingTypes = ignoreMissingTypes;
         }
 
-        public string GetIdentifierForType(Type type) => type.AssemblyQualifiedName;
+        public string GetIdentifierForType(Type type) => type == typeof(SnapshotWriterSnapshot) ? SnapshotWriterSnapshotTypeIdentifier : type.AssemblyQualifiedName;
 
-        public Type GetTypeForIdentifier(string identifier) => this.Cache.GetOrAdd(identifier, t => Type.GetType(t, throwOnError: !this.IgnoreMissingTypes));
+        public Type GetTypeForIdentifier(string identifier) => identifier == SnapshotWriterSnapshotTypeIdentifier ? typeof(SnapshotWriterSnapshot) : this.Cache.GetOrAdd(identifier, t => Type.GetType(t, throwOnError: !this.IgnoreMissingTypes));
     }
 }
