@@ -7,3 +7,11 @@ Scenario: Creating new stream with metadata and some events
 	When I write a new stream S with metadata and 10 events
 	Then the header version 10 with metadata is persisted
 	And new events are appended
+
+Scenario: Creating new snapshot with custom Snapshot Writer
+	Given a custom Type Provider
+	And a custom Snapshot Writer
+	And an event store backed by partitioned collection
+	And an existing stream S with 10 events
+	When I create snapshot with metadata for stream S in version 5
+	Then the Snapshot Writer snapshot for version 5 is persisted
