@@ -3,7 +3,11 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
-	<NuspecProperties>version=$(Version)</NuspecProperties>
+	  <NuspecProperties>version=$(Version)</NuspecProperties>
+
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
   </PropertyGroup>
   
   <ItemGroup>
@@ -12,6 +16,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Eveneum\Eveneum.csproj" />
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1" PrivateAssets="All"/>
   </ItemGroup>
 
 </Project>
