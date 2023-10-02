@@ -5,9 +5,11 @@
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
 	  <NuspecProperties>version=$(Version)</NuspecProperties>
 
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
   </PropertyGroup>
   
   <ItemGroup>
