@@ -162,7 +162,7 @@ namespace Eveneum.Tests
 
             foreach (var newEvent in newEvents)
             {
-                var eventDocument = newEventDocuments.Find(x => x.Id == EveneumDocument.GenerateEventId(streamId, newEvent.Version));
+                var eventDocument = newEventDocuments.Find(x => x.Id == EveneumDocumentSerializer.GenerateEventId(streamId, newEvent.Version));
 
                 Assert.IsNotNull(eventDocument);
                 Assert.AreEqual(DocumentType.Event, eventDocument.DocumentType);

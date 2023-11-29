@@ -149,6 +149,7 @@ namespace Eveneum.Tests
 
             var snapshotMetadata = this.Context.SnapshotMetadata;
 
+            Assert.AreEqual(EveneumDocumentSerializer.GenerateSnapshotId(this.Context.EventStoreOptions.SnapshotMode, streamId, version), snapshotDocument.Id);
             Assert.AreEqual(DocumentType.Snapshot, snapshotDocument.DocumentType);
             Assert.AreEqual(streamId, snapshotDocument.StreamId);
             Assert.AreEqual(version, snapshotDocument.Version);

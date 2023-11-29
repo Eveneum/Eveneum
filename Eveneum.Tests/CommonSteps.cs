@@ -43,6 +43,12 @@ namespace Eveneum.Tests
             this.Context.EventStoreOptions.StreamTimeToLiveAfterDelete = TimeSpan.FromSeconds(streamTtlAfterDelete);
         }
 
+        [Given(@"single snapshot mode")]
+        public void GivenSingleSnapshotMode()
+        {
+            this.Context.EventStoreOptions.SnapshotMode = SnapshotMode.Single;
+        }
+
         [Given(@"an existing stream ([^\s-]) with (\d+) events")]
         public async Task GivenAnExistingStream(string streamId, ushort events)
         {
