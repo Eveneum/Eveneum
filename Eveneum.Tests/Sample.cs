@@ -12,9 +12,17 @@ namespace Eveneum.Tests
     {
         public int Version { get; set; }
         public decimal Number { get; set; }
+        public SampleEnum Enum { get; set; }
         public LocalDate LocalDate{ get; set; }
         public LocalDateTime LocalDateTime { get; set; }
         public NestedContent Nested { get; set; }
+    }
+
+    public enum SampleEnum
+    {
+        Value1,
+        Value2,
+        Value3
     }
 
     public struct SampleSnapshot
