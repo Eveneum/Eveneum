@@ -1,6 +1,6 @@
 ﻿using System.Threading.Tasks;
 using TechTalk.SpecFlow;
-using Eveneum.Tests.Infrastrature;
+using Eveneum.Tests.Infrastructure;
 using Eveneum.Advanced;
 using System.Collections.Generic;
 using NUnit.Framework;

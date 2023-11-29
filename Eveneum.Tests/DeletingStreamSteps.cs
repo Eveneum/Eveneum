@@ -1,7 +1,7 @@
 ﻿using System.Threading.Tasks;
 using NUnit.Framework;
 using TechTalk.SpecFlow;
-using Eveneum.Tests.Infrastrature;
+using Eveneum.Tests.Infrastructure;
 using Eveneum.Documents;
 
 namespace Eveneum.Tests

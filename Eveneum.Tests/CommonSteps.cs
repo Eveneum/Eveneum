@@ -1,4 +1,4 @@
-﻿using Eveneum.Tests.Infrastrature;
+﻿using Eveneum.Tests.Infrastructure;
 using NUnit.Framework;
 using System;
 using System.Threading.Tasks;

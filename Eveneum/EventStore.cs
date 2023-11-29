@@ -1,6 +1,7 @@
 ﻿using Eveneum.Advanced;
 using Eveneum.Documents;
 using Eveneum.Serialization;
+using Eveneum.Snapshots;
 using Eveneum.StoredProcedures;
 using Microsoft.Azure.Cosmos;
 using Microsoft.Azure.Cosmos.Scripts;
@@ -25,6 +26,7 @@ namespace Eveneum
         public byte BatchSize { get; }
         public int QueryMaxItemCount { get; }
         public EveneumDocumentSerializer Serializer { get; }
+        public ISnapshotWriter SnapshotWriter { get; }
 
         private const string BulkDeleteStoredProc = "Eveneum.BulkDelete";
 
@@ -41,6 +43,7 @@ namespace Eveneum
             this.BatchSize = Math.Min(options.BatchSize, (byte)100); // Maximum batch size supported by CosmosDB
             this.QueryMaxItemCount = options.QueryMaxItemCount;
             this.Serializer = new EveneumDocumentSerializer(options.JsonSerializer, options.TypeProvider, options.IgnoreMissingTypes);
+            this.SnapshotWriter = options.SnapshotWriter;
         }
 
         public async Task Initialize(CancellationToken cancellationToken = default)
@@ -129,8 +132,19 @@ namespace Eveneum
             try
             {
                 var events = documents.Where(x => x.DocumentType == DocumentType.Event).Select(this.Serializer.DeserializeEvent).Reverse().ToArray();
-                var snapshot = documents.Where(x => x.DocumentType == DocumentType.Snapshot).Select(this.Serializer.DeserializeSnapshot).Cast<Snapshot?>().FirstOrDefault();
                 var metadata = this.Serializer.DeserializeObject(headerDocument.MetadataType, headerDocument.Metadata);
+                
+                var snapshotDocument = documents.Where(x => x.DocumentType == DocumentType.Snapshot).FirstOrDefault();
+
+                Snapshot? snapshot = null;
+
+                if(snapshotDocument is object)
+                {
+                    snapshot = this.Serializer.DeserializeSnapshot(snapshotDocument);
+
+                    if (snapshot.Value.Data is SnapshotWriterSnapshot)
+                        snapshot = await this.SnapshotWriter.ReadSnapshot(streamId, snapshot.Value.Version, cancellationToken);
+                }
 
                 return new StreamResponse(new Stream(streamId, headerDocument.Version, metadata, events, snapshot), false, requestCharge);
             }
@@ -263,7 +277,14 @@ namespace Eveneum
             if (header.Version < version)
                 throw new OptimisticConcurrencyException(streamId, requestCharge, version, header.Version);
 
-            var document = this.Serializer.SerializeSnapshot(snapshot, metadata, version, streamId);
+            var customSnapshotCreated = false;
+
+            if(this.SnapshotWriter is object)
+                customSnapshotCreated = await this.SnapshotWriter.CreateSnapshot(streamId, version, snapshot, metadata, cancellationToken);
+
+            var document = customSnapshotCreated
+                ? this.Serializer.SerializeSnapshot(new SnapshotWriterSnapshot(this.SnapshotWriter.GetType().AssemblyQualifiedName), null, version, streamId)
+                : this.Serializer.SerializeSnapshot(snapshot, metadata, version, streamId);
 
             var response = await this.Container.UpsertItemAsync(document, new PartitionKey(streamId), cancellationToken: cancellationToken);
 

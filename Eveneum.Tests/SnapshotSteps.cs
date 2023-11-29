@@ -1,13 +1,54 @@
 ﻿using System.Threading.Tasks;
 using NUnit.Framework;
 using TechTalk.SpecFlow;
-using Eveneum.Tests.Infrastrature;
+using Eveneum.Tests.Infrastructure;
 using Eveneum.Documents;
 using Newtonsoft.Json.Linq;
 using System.Linq;
+using Eveneum.Snapshots;
+using System.Threading;
+using System;
+using Eveneum.Serialization;
 
 namespace Eveneum.Tests
 {
+    class CustomSnapshotWriter : ISnapshotWriter
+    {
+        public string StreamId { get; private set; }
+        public ulong Version { get; private set; }
+        public object Snapshot { get; private set; }
+        public object Metadata { get; private set; }
+
+        public Task<bool> CreateSnapshot(string streamId, ulong version, object snapshot, object metadata = null, CancellationToken cancellationToken = default)
+        {
+            this.StreamId = streamId;
+            this.Version = version;
+            this.Snapshot = snapshot;
+            this.Metadata = metadata;
+
+            Console.WriteLine("Custom snapshot created for stream {0} in version {1}", streamId, version);
+
+            return Task.FromResult(true);
+        }
+
+        public Task DeleteSnapshots(string streamId, ulong olderThanVersion, CancellationToken cancellationToken = default)
+        {
+            this.StreamId = streamId;
+            this.Version = olderThanVersion;
+            
+            Console.WriteLine("Custom snapshots deleted for stream {0} in version older than {1}", streamId, olderThanVersion);
+
+            return Task.CompletedTask;
+        }
+
+        public Task<Snapshot> ReadSnapshot(string streamId, ulong version, CancellationToken cancellationToken = default)
+        {
+            Console.WriteLine("Reading custom snapshot for stream {0} in version {1}", streamId, version);
+            
+            return Task.FromResult(new Snapshot(this.Snapshot, this.Metadata, this.Version));
+        }
+    }
+    
     [Binding]
     public class SnapshotSteps
     {
@@ -34,10 +75,33 @@ namespace Eveneum.Tests
             await this.GivenAnExistingSnapshotForVersion(version);
         }
 
+        [Given(@"an existing custom snapshot for version (\d+)")]
+        public async Task GivenAnExistingCustomSnapshotForVersion(ulong version)
+        {
+            this.Context.Snapshot = TestSetup.GetSnapshot();
+            this.Context.SnapshotWriterSnapshot = new SnapshotWriterSnapshot(typeof(CustomSnapshotWriter).AssemblyQualifiedName);
+
+            await this.Context.EventStore.CreateSnapshot(this.Context.StreamId, version, this.Context.Snapshot, this.Context.SnapshotMetadata);
+        }
+
+        [Given(@"an existing custom snapshot with metadata for version (\d+)")]
+        public async Task GivenAnExistingCustomSnapshotWithMetadataForVersion(ulong version)
+        {
+            this.Context.SnapshotMetadata = TestSetup.GetMetadata();
+
+            await this.GivenAnExistingCustomSnapshotForVersion(version);
+        }
+
+        [Given(@"a custom Snapshot Writer")]
+        public void GivenACustomSnapshotWriter()
+        {
+            this.Context.EventStoreOptions.SnapshotWriter = new CustomSnapshotWriter();
+        }
+
         [When(@"I create snapshot for stream ([^\s-]) in version (\d+)")]
         public async Task WhenICreateSnapshotForStreamInVersion(string streamId, ulong version)
         {
-            this.Context.Snapshot = TestSetup.GetSnapshot();;
+            this.Context.Snapshot = TestSetup.GetSnapshot();
 
             var response = await this.Context.EventStore.CreateSnapshot(streamId, version, this.Context.Snapshot, this.Context.SnapshotMetadata);
 
@@ -105,6 +169,48 @@ namespace Eveneum.Tests
             Assert.AreEqual(JToken.FromObject(snapshot), snapshotDocument.Body);
             Assert.False(snapshotDocument.Deleted);
             Assert.IsNotNull(snapshotDocument.ETag);
+        }
+
+        [Then(@"the Snapshot Writer snapshot for version (\d+) is persisted")]
+        public async Task ThenTheSnapshotWriterSnapshotForVersionIsPersisted(ulong version)
+        {
+            var streamId = this.Context.StreamId;
+            var snapshot = new SnapshotWriterSnapshot(typeof(CustomSnapshotWriter).AssemblyQualifiedName);
+
+            var snapshotDocuments = await CosmosSetup.QueryAllDocumentsInStream(this.Context.Client, this.Context.Database, this.Context.Container, this.Context.StreamId, DocumentType.Snapshot);
+
+            Assert.IsNotEmpty(snapshotDocuments);
+
+            var snapshotDocument = snapshotDocuments.Find(x => x.Version == version);
+            Assert.IsNotNull(snapshotDocument);
+
+            Assert.AreEqual(DocumentType.Snapshot, snapshotDocument.DocumentType);
+            Assert.AreEqual(streamId, snapshotDocument.StreamId);
+            Assert.AreEqual(version, snapshotDocument.Version);
+            Assert.AreEqual(version + EveneumDocument.GetOrderingFraction(DocumentType.Snapshot), snapshotDocument.SortOrder);
+
+            Assert.IsNull(snapshotDocument.MetadataType);
+            Assert.IsFalse(snapshotDocument.Metadata.HasValues);
+
+            Assert.AreEqual(PlatformTypeProvider.SnapshotWriterSnapshotTypeIdentifier, snapshotDocument.BodyType);
+            Assert.AreEqual(JToken.FromObject(snapshot), snapshotDocument.Body);
+            Assert.False(snapshotDocument.Deleted);
+            Assert.IsNotNull(snapshotDocument.ETag);
+        }
+
+        [Then(@"the custom snapshot for version (\d+) is persisted")]
+        public void ThenTheCustomSnapshotForVersionIsPersisted(ulong version)
+        {
+            var streamId = this.Context.StreamId;
+            var snapshot = this.Context.Snapshot;
+            var metadata = this.Context.SnapshotMetadata;
+
+            var snapshotWriter = this.Context.EventStoreOptions.SnapshotWriter as CustomSnapshotWriter;
+
+            Assert.AreEqual(streamId, snapshotWriter.StreamId);
+            Assert.AreEqual(version, snapshotWriter.Version);
+            Assert.AreEqual(snapshot, snapshotWriter.Snapshot);
+            Assert.AreEqual(metadata, snapshotWriter.Metadata);
         }
 
         [Then(@"the snapshots older than (\d+) are soft-deleted")]

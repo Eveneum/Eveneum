@@ -2,6 +2,7 @@
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Eveneum.Documents;
+using Eveneum.Snapshots;
 
 namespace Eveneum.Serialization
 {
@@ -88,7 +89,7 @@ namespace Eveneum.Serialization
 
             var type = this.TypeProvider.GetTypeForIdentifier(typeName);
             
-            if (type == null)
+            if (type is null)
             {
                 if (this.IgnoreMissingTypes)
                     return null;
