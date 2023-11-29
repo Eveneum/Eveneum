@@ -99,8 +99,8 @@ namespace Eveneum.Tests
         {
             var stream = this.Context.Stream;
 
-            Assert.IsFalse(stream.HasValue);
-            Assert.IsFalse((this.Context.Response as StreamResponse).SoftDeleted);
+            Assert.That(stream.HasValue, Is.False);
+            Assert.That((this.Context.Response as StreamResponse).SoftDeleted, Is.False);
         }
 
         [Then(@"the non-existing, soft-deleted stream is returned")]
@@ -108,8 +108,8 @@ namespace Eveneum.Tests
         {
             var stream = this.Context.Stream;
 
-            Assert.IsFalse(stream.HasValue);
-            Assert.IsTrue((this.Context.Response as StreamResponse).SoftDeleted);
+            Assert.That(stream.HasValue, Is.False);
+            Assert.That((this.Context.Response as StreamResponse).SoftDeleted);
         }
 
         [Then(@"the stream ([^\s-]) in version (\d+) is returned")]
@@ -117,10 +117,10 @@ namespace Eveneum.Tests
         {
             var stream = this.Context.Stream;
 
-            Assert.IsTrue(stream.HasValue);
-            Assert.AreEqual(streamId, stream.Value.StreamId);
-            Assert.AreEqual(version, stream.Value.Version);
-            Assert.IsNull(stream.Value.Metadata);
+            Assert.That(stream.HasValue);
+            Assert.That(stream.Value.StreamId, Is.EqualTo(streamId));
+            Assert.That(stream.Value.Version, Is.EqualTo(version));
+            Assert.That(stream.Value.Metadata, Is.Null);
         }
 
         [Then(@"the stream ([^\s-]) with metadata in version (\d+) is returned")]
@@ -128,10 +128,10 @@ namespace Eveneum.Tests
         {
             var stream = this.Context.Stream;
 
-            Assert.IsTrue(stream.HasValue);
-            Assert.AreEqual(streamId, stream.Value.StreamId);
-            Assert.AreEqual(version, stream.Value.Version);
-            Assert.AreEqual(JToken.FromObject(this.Context.HeaderMetadata), JToken.FromObject(stream.Value.Metadata));
+            Assert.That(stream.HasValue);
+            Assert.That(stream.Value.StreamId, Is.EqualTo(streamId));
+            Assert.That(stream.Value.Version, Is.EqualTo(version));
+            Assert.That(JToken.FromObject(stream.Value.Metadata), Is.EqualTo(JToken.FromObject(this.Context.HeaderMetadata)));
         }
 
         [Then(@"no snapshot is returned")]
@@ -139,8 +139,8 @@ namespace Eveneum.Tests
         {
             var stream = this.Context.Stream;
 
-            Assert.IsTrue(stream.HasValue);
-            Assert.IsFalse(stream.Value.Snapshot.HasValue);
+            Assert.That(stream.HasValue);
+            Assert.That(stream.Value.Snapshot.HasValue, Is.False);
         }
 
         [Then(@"a snapshot for version (\d+) is returned")]
@@ -148,11 +148,11 @@ namespace Eveneum.Tests
         {
             var stream = this.Context.Stream;
 
-            Assert.IsTrue(stream.HasValue);
-            Assert.IsTrue(stream.Value.Snapshot.HasValue);
-            Assert.AreEqual(version, stream.Value.Snapshot.Value.Version);
-            Assert.AreEqual(JToken.FromObject(this.Context.Snapshot), JToken.FromObject(stream.Value.Snapshot.Value.Data));
-            Assert.IsNull(stream.Value.Snapshot.Value.Metadata);
+            Assert.That(stream.HasValue);
+            Assert.That(stream.Value.Snapshot.HasValue);
+            Assert.That(stream.Value.Snapshot.Value.Version, Is.EqualTo(version));
+            Assert.That(JToken.FromObject(stream.Value.Snapshot.Value.Data), Is.EqualTo(JToken.FromObject(this.Context.Snapshot)));
+            Assert.That(stream.Value.Snapshot.Value.Metadata, Is.Null);
         }
 
         [Then(@"a snapshot with metadata for version (\d+) is returned")]
@@ -160,12 +160,12 @@ namespace Eveneum.Tests
         {
             var stream = this.Context.Stream;
 
-            Assert.IsTrue(stream.HasValue);
-            Assert.IsTrue(stream.Value.Snapshot.HasValue);
-            Assert.AreEqual(version, stream.Value.Snapshot.Value.Version);
-            Assert.AreEqual(JToken.FromObject(this.Context.Snapshot), JToken.FromObject(stream.Value.Snapshot.Value.Data));
-            Assert.IsNotNull(stream.Value.Snapshot.Value.Metadata);
-            Assert.AreEqual(JToken.FromObject(this.Context.SnapshotMetadata), JToken.FromObject(stream.Value.Snapshot.Value.Metadata));
+            Assert.That(stream.HasValue);
+            Assert.That(stream.Value.Snapshot.HasValue);
+            Assert.That(stream.Value.Snapshot.Value.Version, Is.EqualTo(version));
+            Assert.That(JToken.FromObject(stream.Value.Snapshot.Value.Data), Is.EqualTo(JToken.FromObject(this.Context.Snapshot)));
+            Assert.That(stream.Value.Snapshot.Value.Metadata, Is.Not.Null);
+            Assert.That(JToken.FromObject(stream.Value.Snapshot.Value.Metadata), Is.EqualTo(JToken.FromObject(this.Context.SnapshotMetadata)));
         }
 
         [Then(@"no events are returned")]
@@ -173,8 +173,8 @@ namespace Eveneum.Tests
         {
             var stream = this.Context.Stream;
 
-            Assert.IsTrue(stream.HasValue);
-            Assert.IsEmpty(stream.Value.Events);
+            Assert.That(stream.HasValue);
+            Assert.That(stream.Value.Events, Is.Empty);
         }
 
         [Then(@"events from version (\d+) to (\d+) are returned")]
@@ -184,20 +184,20 @@ namespace Eveneum.Tests
             var allDocuments = await CosmosSetup.QueryAllDocumentsInStream(this.Context.Client, this.Context.Database, this.Context.Container, stream.Value.StreamId, Documents.DocumentType.Event);
             var eventDocuments = allDocuments.ToDictionary(x => x.Version);
 
-            Assert.IsTrue(stream.HasValue);
-            Assert.IsNotEmpty(stream.Value.Events);
-            Assert.AreEqual(toVersion - fromVersion + 1, stream.Value.Events.Length);
+            Assert.That(stream.HasValue);
+            Assert.That(stream.Value.Events, Is.Not.Empty);
+            Assert.That(stream.Value.Events.Length, Is.EqualTo(toVersion - fromVersion + 1));
 
             for(ulong version = fromVersion, index = 0; version <= toVersion; ++version, ++index)
             {
                 var @event = stream.Value.Events[index];
 
-                Assert.AreEqual(version, @event.Version);
-                Assert.IsTrue(eventDocuments.ContainsKey(version));
+                Assert.That(@event.Version, Is.EqualTo(version));
+                Assert.That(eventDocuments.ContainsKey(version));
 
                 var eventDocument = eventDocuments[version];
 
-                Assert.AreEqual(eventDocument.Metadata, JToken.FromObject(@event.Metadata));
+                Assert.That(eventDocument.Metadata, Is.EqualTo(JToken.FromObject(@event.Metadata)));
             }
         }
     }

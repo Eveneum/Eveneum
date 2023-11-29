@@ -59,18 +59,18 @@ namespace Eveneum.Tests
         {
             var headerDocuments = await CosmosSetup.QueryAllDocumentsInStream(this.Context.Client, this.Context.Database, this.Context.Container, this.Context.StreamId, DocumentType.Header);
 
-            Assert.AreEqual(1, headerDocuments.Count);
+            Assert.That(headerDocuments.Count, Is.EqualTo(1));
 
             var headerDocument = headerDocuments[0];
 
-            Assert.AreEqual(DocumentType.Header, headerDocument.DocumentType);
-            Assert.AreEqual(this.Context.StreamId, headerDocument.StreamId);
-            Assert.AreEqual(version, headerDocument.Version);
-            Assert.AreEqual(version + EveneumDocument.GetOrderingFraction(DocumentType.Header), headerDocument.SortOrder);
-            Assert.IsNull(headerDocument.MetadataType);
-            Assert.IsFalse(headerDocument.Metadata.HasValues);
-            Assert.NotNull(headerDocument.ETag);
-            Assert.False(headerDocument.Deleted);
+            Assert.That(headerDocument.DocumentType, Is.EqualTo(DocumentType.Header));
+            Assert.That(headerDocument.StreamId, Is.EqualTo(this.Context.StreamId));
+            Assert.That(headerDocument.Version, Is.EqualTo(version));
+            Assert.That(headerDocument.SortOrder, Is.EqualTo(version + EveneumDocument.GetOrderingFraction(DocumentType.Header)));
+            Assert.That(headerDocument.MetadataType, Is.Null);
+            Assert.That(headerDocument.Metadata.HasValues, Is.False);
+            Assert.That(headerDocument.ETag, Is.Not.Null);
+            Assert.That(headerDocument.Deleted, Is.False);
         }
 
         [Then(@"the header version (\d+) with metadata is persisted")]
@@ -80,57 +80,57 @@ namespace Eveneum.Tests
 
             var headerDocuments = await CosmosSetup.QueryAllDocumentsInStream(this.Context.Client, this.Context.Database, this.Context.Container, this.Context.StreamId, DocumentType.Header);
 
-            Assert.AreEqual(1, headerDocuments.Count);
+            Assert.That(headerDocuments.Count, Is.EqualTo(1));
 
             var headerDocument = headerDocuments[0];
 
-            Assert.AreEqual(DocumentType.Header, headerDocument.DocumentType);
-            Assert.AreEqual(this.Context.StreamId, headerDocument.StreamId);
-            Assert.AreEqual(version, headerDocument.Version);
-            Assert.AreEqual(version + EveneumDocument.GetOrderingFraction(DocumentType.Header), headerDocument.SortOrder);
-            Assert.AreEqual(typeProvider.GetIdentifierForType(typeof(SampleMetadata)), headerDocument.MetadataType);
-            Assert.NotNull(headerDocument.Metadata);
-            Assert.AreEqual(JToken.FromObject(this.Context.HeaderMetadata), headerDocument.Metadata);
-            Assert.NotNull(headerDocument.ETag);
-            Assert.False(headerDocument.Deleted);
+            Assert.That(headerDocument.DocumentType, Is.EqualTo(DocumentType.Header));
+            Assert.That(headerDocument.StreamId, Is.EqualTo(this.Context.StreamId));
+            Assert.That(headerDocument.Version, Is.EqualTo(version));
+            Assert.That(headerDocument.SortOrder, Is.EqualTo(version + EveneumDocument.GetOrderingFraction(DocumentType.Header)));
+            Assert.That(headerDocument.MetadataType, Is.EqualTo(typeProvider.GetIdentifierForType(typeof(SampleMetadata))));
+            Assert.That(headerDocument.Metadata, Is.Not.Null);
+            Assert.That(headerDocument.Metadata, Is.EqualTo(JToken.FromObject(this.Context.HeaderMetadata)));
+            Assert.That(headerDocument.ETag, Is.Not.Null);
+            Assert.That(headerDocument.Deleted, Is.False);
         }
 
         [Then(@"the action fails as stream ([^\s-]) already exists")]
         public void ThenTheActionFailsAsStreamAlreadyExists(string streamId)
         {
-            Assert.IsInstanceOf<StreamAlreadyExistsException>(this.ScenarioContext.TestError);
+            Assert.That(this.ScenarioContext.TestError, Is.InstanceOf<StreamAlreadyExistsException>());
 
             var exception = this.ScenarioContext.TestError as StreamAlreadyExistsException;
-            Assert.AreEqual(streamId, exception.StreamId);
+            Assert.That(exception.StreamId, Is.EqualTo(streamId));
         }
 
         [Then(@"the action fails as stream ([^\s-]) doesn't exist")]
         public void ThenTheActionFailsAsStreamDoesntExist(string streamId)
         {
-            Assert.IsInstanceOf<StreamNotFoundException>(this.ScenarioContext.TestError);
+            Assert.That(this.ScenarioContext.TestError, Is.InstanceOf<StreamNotFoundException>());
 
             var exception = this.ScenarioContext.TestError as StreamNotFoundException;
-            Assert.AreEqual(streamId, exception.StreamId);
+            Assert.That(exception.StreamId, Is.EqualTo(streamId));
         }
 
         [Then(@"the action fails as stream ([^\s-]) has been deleted")]
         public void ThenTheActionFailsAsStreamHasBeenDeleted(string streamId)
         {
-            Assert.IsInstanceOf<StreamDeletedException>(this.ScenarioContext.TestError);
+            Assert.That(this.ScenarioContext.TestError, Is.InstanceOf<StreamDeletedException>());
 
             var exception = this.ScenarioContext.TestError as StreamDeletedException;
-            Assert.AreEqual(streamId, exception.StreamId);
+            Assert.That(exception.StreamId, Is.EqualTo(streamId));
         }
 
         [Then(@"the action fails as expected version (\d+) doesn't match the current version (\d+) of stream ([^\s-])")]
         public void ThenTheActionFailsAsExpectedVersionDoesnTMatchTheCurrentVersionOfStream(ulong expectedVersion, ulong currentVersion, string streamId)
         {
-            Assert.IsInstanceOf<OptimisticConcurrencyException>(this.ScenarioContext.TestError);
+            Assert.That(this.ScenarioContext.TestError, Is.InstanceOf<OptimisticConcurrencyException>());
 
             var exception = this.ScenarioContext.TestError as OptimisticConcurrencyException;
-            Assert.AreEqual(streamId, exception.StreamId);
-            Assert.AreEqual(expectedVersion, exception.ExpectedVersion);
-            Assert.AreEqual(currentVersion, exception.ActualVersion);
+            Assert.That(exception.StreamId, Is.EqualTo(streamId));
+            Assert.That(exception.ExpectedVersion, Is.EqualTo(expectedVersion));
+            Assert.That(exception.ActualVersion, Is.EqualTo(currentVersion));
         }
 
         [Then(@"no events are appended")]
@@ -142,7 +142,7 @@ namespace Eveneum.Tests
 
             var newEventDocuments = currentDocuments.Where(x => !existingDocumentIds.Contains(x.Id));
 
-            Assert.IsEmpty(newEventDocuments);
+            Assert.That(newEventDocuments, Is.Empty);
         }
 
         [Then(@"new events are appended")]
@@ -158,31 +158,31 @@ namespace Eveneum.Tests
 
             var newEvents = this.Context.NewEvents;
 
-            Assert.AreEqual(newEventDocuments.Count, newEvents.Length);
+            Assert.That(newEvents.Length, Is.EqualTo(newEventDocuments.Count));
 
             foreach (var newEvent in newEvents)
             {
                 var eventDocument = newEventDocuments.Find(x => x.Id == EveneumDocument.GenerateEventId(streamId, newEvent.Version));
 
-                Assert.IsNotNull(eventDocument);
-                Assert.AreEqual(DocumentType.Event, eventDocument.DocumentType);
-                Assert.AreEqual(streamId, eventDocument.StreamId);
-                Assert.AreEqual(typeProvider.GetIdentifierForType(newEvent.Body.GetType()), eventDocument.BodyType);
-                Assert.NotNull(eventDocument.Body);
-                Assert.AreEqual(JToken.FromObject(newEvent.Body, JsonSerializer.Create(this.Context.JsonSerializerSettings)), eventDocument.Body);
-                Assert.NotNull(eventDocument.ETag);
-                Assert.False(eventDocument.Deleted);
+                Assert.That(eventDocument, Is.Not.Null);
+                Assert.That(eventDocument.DocumentType, Is.EqualTo(DocumentType.Event));
+                Assert.That(eventDocument.StreamId, Is.EqualTo(streamId));
+                Assert.That(eventDocument.BodyType, Is.EqualTo(typeProvider.GetIdentifierForType(newEvent.Body.GetType())));
+                Assert.That(eventDocument.Body, Is.Not.Null);
+                Assert.That(eventDocument.Body, Is.EqualTo(JToken.FromObject(newEvent.Body, JsonSerializer.Create(this.Context.JsonSerializerSettings))));
+                Assert.That(eventDocument.ETag, Is.Not.Null);
+                Assert.That(eventDocument.Deleted, Is.False);
 
                 if (newEvent.Metadata == null)
                 {
-                    Assert.IsNull(eventDocument.MetadataType);
-                    Assert.IsNull(eventDocument.Metadata);
+                    Assert.That(eventDocument.MetadataType, Is.Null);
+                    Assert.That(eventDocument.Metadata, Is.Null);
                 }
                 else
                 {
-                    Assert.AreEqual(typeProvider.GetIdentifierForType(newEvent.Metadata.GetType()), eventDocument.MetadataType);
-                    Assert.NotNull(eventDocument.Metadata);
-                    Assert.AreEqual(JToken.FromObject(newEvent.Metadata, JsonSerializer.Create(this.Context.JsonSerializerSettings)), eventDocument.Metadata);
+                    Assert.That(eventDocument.MetadataType, Is.EqualTo(typeProvider.GetIdentifierForType(newEvent.Metadata.GetType())));
+                    Assert.That(eventDocument.Metadata, Is.Not.Null);
+                    Assert.That(eventDocument.Metadata, Is.EqualTo(JToken.FromObject(newEvent.Metadata, JsonSerializer.Create(this.Context.JsonSerializerSettings))));
                 }
             }
         }

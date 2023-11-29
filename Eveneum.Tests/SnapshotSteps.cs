@@ -142,33 +142,33 @@ namespace Eveneum.Tests
 
             var snapshotDocuments = await CosmosSetup.QueryAllDocumentsInStream(this.Context.Client, this.Context.Database, this.Context.Container, this.Context.StreamId, DocumentType.Snapshot);
 
-            Assert.IsNotEmpty(snapshotDocuments);
+            Assert.That(snapshotDocuments, Is.Not.Empty);
 
             var snapshotDocument = snapshotDocuments.Find(x => x.Version == version);
-            Assert.IsNotNull(snapshotDocument);
+            Assert.That(snapshotDocument, Is.Not.Null);
 
             var snapshotMetadata = this.Context.SnapshotMetadata;
 
-            Assert.AreEqual(DocumentType.Snapshot, snapshotDocument.DocumentType);
-            Assert.AreEqual(streamId, snapshotDocument.StreamId);
-            Assert.AreEqual(version, snapshotDocument.Version);
-            Assert.AreEqual(version + EveneumDocument.GetOrderingFraction(DocumentType.Snapshot), snapshotDocument.SortOrder);
+            Assert.That(snapshotDocument.DocumentType, Is.EqualTo(DocumentType.Snapshot));
+            Assert.That(snapshotDocument.StreamId, Is.EqualTo(streamId));
+            Assert.That(snapshotDocument.Version, Is.EqualTo(version));
+            Assert.That(snapshotDocument.SortOrder, Is.EqualTo(version + EveneumDocument.GetOrderingFraction(DocumentType.Snapshot)));
 
             if (snapshotMetadata == null)
             {
-                Assert.IsNull(snapshotDocument.MetadataType);
-                Assert.IsFalse(snapshotDocument.Metadata.HasValues);
+                Assert.That(snapshotDocument.MetadataType, Is.Null);
+                Assert.That(snapshotDocument.Metadata.HasValues, Is.False);
             }
             else
             {
-                Assert.AreEqual(snapshotMetadata.GetType().AssemblyQualifiedName, snapshotDocument.MetadataType);
-                Assert.AreEqual(JToken.FromObject(snapshotMetadata), snapshotDocument.Metadata);
+                Assert.That(snapshotDocument.MetadataType, Is.EqualTo(snapshotMetadata.GetType().AssemblyQualifiedName));
+                Assert.That(snapshotDocument.Metadata, Is.EqualTo(JToken.FromObject(snapshotMetadata)));
             }
 
-            Assert.AreEqual(snapshot.GetType().AssemblyQualifiedName, snapshotDocument.BodyType);
-            Assert.AreEqual(JToken.FromObject(snapshot), snapshotDocument.Body);
-            Assert.False(snapshotDocument.Deleted);
-            Assert.IsNotNull(snapshotDocument.ETag);
+            Assert.That(snapshotDocument.BodyType, Is.EqualTo(snapshot.GetType().AssemblyQualifiedName));
+            Assert.That(snapshotDocument.Body, Is.EqualTo(JToken.FromObject(snapshot)));
+            Assert.That(snapshotDocument.Deleted, Is.False);
+            Assert.That(snapshotDocument.ETag, Is.Not.Null);
         }
 
         [Then(@"the Snapshot Writer snapshot for version (\d+) is persisted")]
@@ -179,23 +179,23 @@ namespace Eveneum.Tests
 
             var snapshotDocuments = await CosmosSetup.QueryAllDocumentsInStream(this.Context.Client, this.Context.Database, this.Context.Container, this.Context.StreamId, DocumentType.Snapshot);
 
-            Assert.IsNotEmpty(snapshotDocuments);
+            Assert.That(snapshotDocuments, Is.Not.Empty);
 
             var snapshotDocument = snapshotDocuments.Find(x => x.Version == version);
-            Assert.IsNotNull(snapshotDocument);
+            Assert.That(snapshotDocument, Is.Not.Null);
 
-            Assert.AreEqual(DocumentType.Snapshot, snapshotDocument.DocumentType);
-            Assert.AreEqual(streamId, snapshotDocument.StreamId);
-            Assert.AreEqual(version, snapshotDocument.Version);
-            Assert.AreEqual(version + EveneumDocument.GetOrderingFraction(DocumentType.Snapshot), snapshotDocument.SortOrder);
+            Assert.That(snapshotDocument.DocumentType, Is.EqualTo(DocumentType.Snapshot));
+            Assert.That(snapshotDocument.StreamId, Is.EqualTo(streamId));
+            Assert.That(snapshotDocument.Version, Is.EqualTo(version));
+            Assert.That(snapshotDocument.SortOrder, Is.EqualTo(version + EveneumDocument.GetOrderingFraction(DocumentType.Snapshot)));
 
-            Assert.IsNull(snapshotDocument.MetadataType);
-            Assert.IsFalse(snapshotDocument.Metadata.HasValues);
+            Assert.That(snapshotDocument.MetadataType, Is.Null);
+            Assert.That(snapshotDocument.Metadata.HasValues, Is.False);
 
-            Assert.AreEqual(PlatformTypeProvider.SnapshotWriterSnapshotTypeIdentifier, snapshotDocument.BodyType);
-            Assert.AreEqual(JToken.FromObject(snapshot), snapshotDocument.Body);
-            Assert.False(snapshotDocument.Deleted);
-            Assert.IsNotNull(snapshotDocument.ETag);
+            Assert.That(snapshotDocument.BodyType, Is.EqualTo(PlatformTypeProvider.SnapshotWriterSnapshotTypeIdentifier));
+            Assert.That(snapshotDocument.Body, Is.EqualTo(JToken.FromObject(snapshot)));
+            Assert.That(snapshotDocument.Deleted, Is.False);
+            Assert.That(snapshotDocument.ETag, Is.Not.Null);
         }
 
         [Then(@"the custom snapshot for version (\d+) is persisted")]
@@ -207,10 +207,10 @@ namespace Eveneum.Tests
 
             var snapshotWriter = this.Context.EventStoreOptions.SnapshotWriter as CustomSnapshotWriter;
 
-            Assert.AreEqual(streamId, snapshotWriter.StreamId);
-            Assert.AreEqual(version, snapshotWriter.Version);
-            Assert.AreEqual(snapshot, snapshotWriter.Snapshot);
-            Assert.AreEqual(metadata, snapshotWriter.Metadata);
+            Assert.That(snapshotWriter.StreamId, Is.EqualTo(streamId));
+            Assert.That(snapshotWriter.Version, Is.EqualTo(version));
+            Assert.That(snapshotWriter.Snapshot, Is.EqualTo(snapshot));
+            Assert.That(snapshotWriter.Metadata, Is.EqualTo(metadata));
         }
 
         [Then(@"the snapshots older than (\d+) are soft-deleted")]
@@ -220,7 +220,7 @@ namespace Eveneum.Tests
             var olderSnapshotDocuments = snapshotDocuments.Where(x => x.Version < version);
 
             foreach (var olderSnapshotDocument in olderSnapshotDocuments)
-                Assert.IsTrue(olderSnapshotDocument.Deleted);
+                Assert.That(olderSnapshotDocument.Deleted);
         }
 
         [Then(@"the snapshots older than (\d+) are hard-deleted")]
@@ -229,7 +229,7 @@ namespace Eveneum.Tests
             var snapshotDocuments = await CosmosSetup.QueryAllDocumentsInStream(this.Context.Client, this.Context.Database, this.Context.Container, this.Context.StreamId, DocumentType.Snapshot);
             var olderSnapshotDocuments = snapshotDocuments.Where(x => x.Version < version);
 
-            Assert.IsEmpty(olderSnapshotDocuments);
+            Assert.That(olderSnapshotDocuments, Is.Empty);
         }
 
         [Then(@"snapshots (\d+) and newer are not soft-deleted")]
@@ -239,7 +239,7 @@ namespace Eveneum.Tests
             var newerSnapshotDocuments = snapshotDocuments.Where(x => x.Version >= version);
 
             foreach (var newerSnapshotDocument in newerSnapshotDocuments)
-                Assert.IsFalse(newerSnapshotDocument.Deleted);
+                Assert.That(newerSnapshotDocument.Deleted, Is.False);
         }
 
         [Then(@"snapshots (\d+) and newer are not hard-deleted")]
@@ -248,7 +248,7 @@ namespace Eveneum.Tests
             var snapshotDocuments = await CosmosSetup.QueryAllDocumentsInStream(this.Context.Client, this.Context.Database, this.Context.Container, this.Context.StreamId, DocumentType.Snapshot);
             var newerSnapshotDocuments = snapshotDocuments.Where(x => x.Version >= version);
 
-            Assert.IsNotEmpty(newerSnapshotDocuments);
+            Assert.That(newerSnapshotDocuments, Is.Not.Empty);
         }
     }
 }

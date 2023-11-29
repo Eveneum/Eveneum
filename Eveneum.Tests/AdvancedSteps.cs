@@ -1,15 +1,15 @@
-﻿using System.Threading.Tasks;
-using TechTalk.SpecFlow;
-using Eveneum.Tests.Infrastructure;
-using Eveneum.Advanced;
-using System.Collections.Generic;
-using NUnit.Framework;
+﻿using Eveneum.Advanced;
 using Eveneum.Documents;
-using System.Linq;
-using Newtonsoft.Json.Linq;
-using Newtonsoft.Json;
-using Microsoft.Azure.Cosmos;
 using Eveneum.Serialization;
+using Eveneum.Tests.Infrastructure;
+using Microsoft.Azure.Cosmos;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using NUnit.Framework;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using TechTalk.SpecFlow;
 
 namespace Eveneum.Tests
 {
@@ -91,19 +91,19 @@ namespace Eveneum.Tests
         [Then(@"all (\d+) events are loaded")]
         public void ThenAllEventsAreLoaded(ulong events)
         {
-            Assert.AreEqual(events, this.Context.LoadAllEvents.Count);
+            Assert.That(events, Is.EqualTo(this.Context.LoadAllEvents.Count));
         }
 
         [Then(@"the stream header for stream (.*) in version (\d+) is returned")]
         public void ThenTheStreamHeaderForStreamInVersionIsReturned(string streamId, ulong version)
         {
-            Assert.IsTrue(this.Context.LoadAllStreamHeaders.Any(x => x.StreamId == streamId && x.Version == version));
+            Assert.That(this.Context.LoadAllStreamHeaders.Any(x => x.StreamId == streamId && x.Version == version));
         }
 
         [Then(@"the stream header for stream (.*) in version (\d+) is not returned")]
         public void ThenTheStreamHeaderForStreamInVersionIsNotReturned(string streamId, ulong version)
         {
-            Assert.IsFalse(this.Context.LoadAllStreamHeaders.Any(x => x.StreamId == streamId && x.Version == version));
+            Assert.That(this.Context.LoadAllStreamHeaders.Any(x => x.StreamId == streamId && x.Version == version), Is.False);
         }
 
         [Then(@"the event in version (\d+) in stream (.*) is replaced")]
@@ -114,24 +114,24 @@ namespace Eveneum.Tests
             var currentDocuments = await CosmosSetup.QueryAllDocumentsInStream(this.Context.Client, this.Context.Database, this.Context.Container, streamId, DocumentType.Event);
             var eventDocument = currentDocuments.SingleOrDefault(x => x.Id == EveneumDocument.GenerateEventId(streamId, version));
 
-            Assert.AreEqual(DocumentType.Event, eventDocument.DocumentType);
-            Assert.AreEqual(streamId, eventDocument.StreamId);
-            Assert.AreEqual(typeProvider.GetIdentifierForType(this.Context.ReplacedEvent.Body.GetType()), eventDocument.BodyType);
-            Assert.NotNull(eventDocument.Body);
-            Assert.AreEqual(JToken.FromObject(this.Context.ReplacedEvent.Body, JsonSerializer.Create(this.Context.JsonSerializerSettings)), eventDocument.Body);
-            Assert.NotNull(eventDocument.ETag);
-            Assert.False(eventDocument.Deleted);
+            Assert.That(eventDocument.DocumentType, Is.EqualTo(DocumentType.Event));
+            Assert.That(eventDocument.StreamId, Is.EqualTo(streamId));
+            Assert.That(eventDocument.BodyType, Is.EqualTo(typeProvider.GetIdentifierForType(this.Context.ReplacedEvent.Body.GetType())));
+            Assert.That(eventDocument.Body, Is.Not.Null);
+            Assert.That(eventDocument.Body, Is.EqualTo(JToken.FromObject(this.Context.ReplacedEvent.Body, JsonSerializer.Create(this.Context.JsonSerializerSettings))));
+            Assert.That(eventDocument.ETag, Is.Not.Null);
+            Assert.That(eventDocument.Deleted, Is.False);
 
             if (this.Context.ReplacedEvent.Metadata == null)
             {
-                Assert.IsNull(eventDocument.MetadataType);
-                Assert.IsNull(eventDocument.Metadata);
+                Assert.That(eventDocument.MetadataType, Is.Null);
+                Assert.That(eventDocument.Metadata, Is.Null);
             }
             else
             {
-                Assert.AreEqual(typeProvider.GetIdentifierForType(this.Context.ReplacedEvent.Metadata.GetType()), eventDocument.MetadataType);
-                Assert.NotNull(eventDocument.Metadata);
-                Assert.AreEqual(JToken.FromObject(this.Context.ReplacedEvent.Metadata, JsonSerializer.Create(this.Context.JsonSerializerSettings)), eventDocument.Metadata);
+                Assert.That(eventDocument.MetadataType, Is.EqualTo(typeProvider.GetIdentifierForType(this.Context.ReplacedEvent.Metadata.GetType())));
+                Assert.That(eventDocument.Metadata, Is.Not.Null);
+                Assert.That(eventDocument.Metadata, Is.EqualTo(JToken.FromObject(this.Context.ReplacedEvent.Metadata, JsonSerializer.Create(this.Context.JsonSerializerSettings))));
             }
         }
     }

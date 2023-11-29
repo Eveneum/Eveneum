@@ -85,17 +85,17 @@ namespace Eveneum.Tests
 
             Console.WriteLine("Request charge: " + requestCharge);
 
-            Assert.Greater(requestCharge, 0);
+            Assert.That(requestCharge, Is.GreaterThan(0));
         }
 
         [Then(@"(\d+) deleted documents are reported")]
         public void ThenDeletedDocumentsAreReported(ulong deletedDocuments)
         {
-            Assert.IsInstanceOf<DeleteResponse>(this.Context.Response);
+            Assert.That(this.Context.Response, Is.InstanceOf<DeleteResponse>());
 
             var response = this.Context.Response as DeleteResponse;
 
-            Assert.AreEqual(deletedDocuments, response.DeletedDocuments);
+            Assert.That(response.DeletedDocuments, Is.EqualTo(deletedDocuments));
         }
     }
 }

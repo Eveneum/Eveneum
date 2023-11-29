@@ -37,12 +37,12 @@ namespace Eveneum.Tests
         public async Task ThenTheHeaderIsSoft_Deleted(int? ttl)
         {
             var documents = await CosmosSetup.QueryAllDocumentsInStream(this.Context.Client, this.Context.Database, this.Context.Container, this.Context.StreamId, DocumentType.Header);
-            Assert.AreEqual(1, documents.Count);
+            Assert.That(documents.Count, Is.EqualTo(1));
 
             var headerDocument = documents[0];
 
-            Assert.IsTrue(headerDocument.Deleted);
-            Assert.AreEqual(ttl, headerDocument.TimeToLive);
+            Assert.That(headerDocument.Deleted);
+            Assert.That(headerDocument.TimeToLive, Is.EqualTo(ttl));
         }
 
         [Then(@"the header is hard-deleted")]
@@ -50,7 +50,7 @@ namespace Eveneum.Tests
         {
             var documents = await CosmosSetup.QueryAllDocumentsInStream(this.Context.Client, this.Context.Database, this.Context.Container, this.Context.StreamId, DocumentType.Header);
 
-            Assert.IsEmpty(documents);
+            Assert.That(documents, Is.Empty);
         }
 
         [Then(@"all events are soft-deleted")]
@@ -67,11 +67,10 @@ namespace Eveneum.Tests
 
             foreach (var eventDocument in eventDocuments)
             {
-                Assert.IsTrue(eventDocument.Deleted);
-                Assert.AreEqual(ttl,eventDocument.TimeToLive);
+                Assert.That(eventDocument.Deleted);
+                Assert.That(eventDocument.TimeToLive, Is.EqualTo(ttl));
             }
         }
-
 
         [Then(@"all events are hard-deleted")]
         public async Task ThenAllEventsAreHard_Deleted()
@@ -79,7 +78,7 @@ namespace Eveneum.Tests
             var streamId = this.Context.StreamId;
             var eventDocuments = await CosmosSetup.QueryAllDocumentsInStream(this.Context.Client, this.Context.Database, this.Context.Container, streamId, DocumentType.Event);
 
-            Assert.IsEmpty(eventDocuments);
+            Assert.That(eventDocuments, Is.Empty);
         }
 
         [Then(@"all snapshots are soft-deleted")]
@@ -96,8 +95,8 @@ namespace Eveneum.Tests
 
             foreach (var snapshotDocument in snapshotDocuments)
             {
-                Assert.IsTrue(snapshotDocument.Deleted);
-                Assert.AreEqual(ttl, snapshotDocument.TimeToLive);
+                Assert.That(snapshotDocument.Deleted);
+                Assert.That(snapshotDocument.TimeToLive, Is.EqualTo(ttl));
             }
         }
 
@@ -108,7 +107,7 @@ namespace Eveneum.Tests
             var streamId = this.Context.StreamId;
             var snapshotDocuments = await CosmosSetup.QueryAllDocumentsInStream(this.Context.Client, this.Context.Database, this.Context.Container, streamId, DocumentType.Snapshot);
 
-            Assert.IsEmpty(snapshotDocuments);
+            Assert.That(snapshotDocuments, Is.Empty);
         }
 
         [Then(@"stream ([^\s-]) is not soft-deleted")]
@@ -117,7 +116,7 @@ namespace Eveneum.Tests
             var documents = await CosmosSetup.QueryAllDocumentsInStream(this.Context.Client, this.Context.Database, this.Context.Container, streamId);
 
             foreach (var document in documents)
-                Assert.IsFalse(document.Deleted);
+                Assert.That(document.Deleted, Is.False);
         }
 
         [Then(@"stream ([^\s-]) is not hard-deleted")]
@@ -125,7 +124,7 @@ namespace Eveneum.Tests
         {
             var documents = await CosmosSetup.QueryAllDocumentsInStream(this.Context.Client, this.Context.Database, this.Context.Container, streamId);
 
-            Assert.IsNotEmpty(documents);
+            Assert.That(documents, Is.Not.Empty);
         }
     }
 }

@@ -42,25 +42,25 @@ namespace Eveneum.Tests
 
 			var snapshotDocuments = await CosmosSetup.QueryAllDocumentsInStream(this.Context.Client, this.Context.Database, this.Context.Container, this.Context.StreamId, DocumentType.Snapshot);
 
-			Assert.IsNotEmpty(snapshotDocuments);
+			Assert.That(snapshotDocuments, Is.Not.Empty);
 
 			var snapshotDocument = snapshotDocuments.Find(x => x.Version == version);
-			Assert.IsNotNull(snapshotDocument);
+			Assert.That(snapshotDocument, Is.Not.Null);
 
-			Assert.AreEqual(DocumentType.Snapshot, snapshotDocument.DocumentType);
-			Assert.AreEqual(streamId, snapshotDocument.StreamId);
-			Assert.AreEqual(version, snapshotDocument.Version);
-			Assert.AreEqual(version + EveneumDocument.GetOrderingFraction(DocumentType.Snapshot), snapshotDocument.SortOrder);
+			Assert.That(snapshotDocument.DocumentType, Is.EqualTo(DocumentType.Snapshot));
+			Assert.That(snapshotDocument.StreamId, Is.EqualTo(streamId));
+			Assert.That(snapshotDocument.Version, Is.EqualTo(version));
+			Assert.That(snapshotDocument.SortOrder, Is.EqualTo(version + EveneumDocument.GetOrderingFraction(DocumentType.Snapshot)));
 
-			Assert.IsNull(snapshotDocument.MetadataType);
-			Assert.IsFalse(snapshotDocument.Metadata.HasValues);
+			Assert.That(snapshotDocument.MetadataType, Is.Null);
+			Assert.That(snapshotDocument.Metadata.HasValues, Is.False);
 
 			var typeProvider = this.Context.EventStoreOptions.TypeProvider as CustomTypeProvider;
 
-			Assert.AreEqual(typeProvider.GetIdentifierForType(typeof(SnapshotWriterSnapshot)), snapshotDocument.BodyType);
-			Assert.AreEqual(JToken.FromObject(snapshot), snapshotDocument.Body);
-			Assert.False(snapshotDocument.Deleted);
-			Assert.IsNotNull(snapshotDocument.ETag);
+			Assert.That(snapshotDocument.BodyType, Is.EqualTo(typeProvider.GetIdentifierForType(typeof(SnapshotWriterSnapshot))));
+			Assert.That(snapshotDocument.Body, Is.EqualTo(JToken.FromObject(snapshot)));
+			Assert.That(snapshotDocument.Deleted, Is.False);
+			Assert.That(snapshotDocument.ETag, Is.Not.Null);
 		}
 	}
 }
