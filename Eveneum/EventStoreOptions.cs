@@ -18,5 +18,6 @@ namespace Eveneum
         public TimeSpan StreamTimeToLiveAfterDelete { get; set; } = TimeSpan.FromHours(24);
 
         public ISnapshotWriter SnapshotWriter { get; set; }
+        public SnapshotMode SnapshotMode { get; set; } = SnapshotMode.Multiple;
     }
 }

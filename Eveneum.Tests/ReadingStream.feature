@@ -279,3 +279,14 @@ Scenario: Reading stream with metadata, some events and snapshots with metadata 
 	And a snapshot with metadata for version 10 is returned
 	And no events are returned
 	And request charge is reported
+				
+Scenario: Reading stream with metadata, some events and single snapshot
+	Given single snapshot mode
+	And an event store backed by partitioned collection
+	And an existing stream S with metadata and 10 events
+	And an existing snapshot with metadata for version 10
+	When I read stream S
+	Then the stream S with metadata in version 10 is returned
+	And a snapshot with metadata for version 10 is returned
+	And no events are returned
+	And request charge is reported

@@ -2,7 +2,6 @@
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Eveneum.Documents;
-using Eveneum.Snapshots;
 
 namespace Eveneum.Serialization
 {
@@ -11,6 +10,8 @@ namespace Eveneum.Serialization
         public JsonSerializer JsonSerializer { get; }
         public ITypeProvider TypeProvider { get; }
         public bool IgnoreMissingTypes { get; }
+
+        public const char Separator = '~';
 
         public EveneumDocumentSerializer(JsonSerializer jsonSerializer = null, ITypeProvider typeProvider = null, bool ignoreMissingTypes = false)
         {
@@ -46,7 +47,7 @@ namespace Eveneum.Serialization
 
         internal EveneumDocument SerializeEvent(EventData @event, string streamId)
         {
-            var document = new EveneumDocument(DocumentType.Event)
+            var document = new EveneumDocument(GenerateEventId(streamId, @event.Version), DocumentType.Event)
             {
                 StreamId = streamId,
                 Version = @event.Version,
@@ -63,9 +64,9 @@ namespace Eveneum.Serialization
             return document;
         }
 
-        internal EveneumDocument SerializeSnapshot(object snapshot, object metadata, ulong version, string streamId)
+        internal EveneumDocument SerializeSnapshot(object snapshot, object metadata, ulong version, string streamId, SnapshotMode snapshotMode)
         {
-            var document = new EveneumDocument(DocumentType.Snapshot)
+            var document = new EveneumDocument(GenerateSnapshotId(snapshotMode, streamId, version), DocumentType.Snapshot)
             {
                 StreamId = streamId,
                 Version = version,
@@ -106,5 +107,12 @@ namespace Eveneum.Serialization
                 throw new JsonDeserializationException(typeName, data.ToString(), exc);
             }
         }
+
+        internal static string GenerateEventId(string streamId, ulong version) => $"{streamId}{Separator}{version}";
+
+        internal static string GenerateSnapshotId(SnapshotMode snapshotMode, string streamId, ulong version) =>
+            snapshotMode == SnapshotMode.Single
+                ? $"{streamId}{Separator}S"
+                : $"{streamId}{Separator}{version}{Separator}S";
     }
 }
