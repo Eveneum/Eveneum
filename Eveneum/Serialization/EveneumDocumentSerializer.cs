@@ -2,6 +2,7 @@
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Eveneum.Documents;
+using Eveneum.Snapshots;
 
 namespace Eveneum.Serialization
 {
