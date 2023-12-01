@@ -1,22 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
-    <metadata>
-        <id>Eveneum</id>
-		<version>#{GitVersion.NuGetVersion}#</version>
-        <authors>Jakub Konecki</authors>
-        <owners>Jakub Konecki</owners>
-        <requireLicenseAcceptance>false</requireLicenseAcceptance>
-        <description>Developer-friendly Event Store with snapshots, backed by Azure Cosmos DB.</description>
-        <projectUrl>https://github.com/Eveneum/Eveneum</projectUrl>
-        <licenseUrl>https://github.com/Eveneum/Eveneum/blob/master/LICENSE</licenseUrl>
-        <tags>event-sourcing event-store cosmosdb</tags>
-        <dependencies>
-          <dependency id="Microsoft.Azure.Cosmos" version="[3.15.0,4)" />
-          <dependency id="Newtonsoft.Json" version="[12.0.2,14)" />
-        </dependencies>
-    </metadata>
-	<files>
-		<file src="bin\Release\**\Eveneum.dll" target="lib" />
-		<file src="bin\Release\**\Eveneum.pdb" target="lib" />
-	</files>
+  <metadata>
+    <id>Eveneum</id>
+    <version>#{GitVersion.NuGetVersion}#</version>
+    <authors>Jakub Konecki</authors>
+    <owners>Jakub Konecki</owners>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>Developer-friendly Event Store with snapshots, backed by Azure Cosmos DB.</description>
+    <projectUrl>https://github.com/Eveneum/Eveneum</projectUrl>
+    <licenseUrl>https://github.com/Eveneum/Eveneum/blob/master/LICENSE</licenseUrl>
+    <tags>event-sourcing event-store cosmosdb</tags>
+    <dependencies>
+      <dependency id="Microsoft.Azure.Cosmos" version="[3.35.4,4)" />
+      <dependency id="Newtonsoft.Json" version="[12.0.2,14)" />
+    </dependencies>
+  </metadata>
+  <files>
+    <file src="bin\Release\**\Eveneum.dll" target="lib" />
+    <file src="bin\Release\**\Eveneum.pdb" target="lib" />
+  </files>
 </package>
