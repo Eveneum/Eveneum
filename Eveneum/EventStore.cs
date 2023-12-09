@@ -27,6 +27,7 @@ namespace Eveneum
         public int QueryMaxItemCount { get; }
         public EveneumDocumentSerializer Serializer { get; }
         public ISnapshotWriter SnapshotWriter { get; }
+        public SnapshotMode SnapshotMode { get; }
 
         private const string BulkDeleteStoredProc = "Eveneum.BulkDelete";
 
@@ -44,6 +45,7 @@ namespace Eveneum
             this.QueryMaxItemCount = options.QueryMaxItemCount;
             this.Serializer = new EveneumDocumentSerializer(options.JsonSerializer, options.TypeProvider, options.IgnoreMissingTypes);
             this.SnapshotWriter = options.SnapshotWriter;
+            this.SnapshotMode = options.SnapshotMode;
         }
 
         public async Task Initialize(CancellationToken cancellationToken = default)
@@ -185,7 +187,7 @@ namespace Eveneum
             }
             else
             {
-                var header = new EveneumDocument(DocumentType.Header) { StreamId = streamId, Version = (ulong)events.Length };
+                var header = new EveneumDocument(streamId, DocumentType.Header) { StreamId = streamId, Version = (ulong)events.Length };
 
                 this.Serializer.SerializeHeaderMetadata(header, metadata);
 
@@ -283,8 +285,8 @@ namespace Eveneum
                 customSnapshotCreated = await this.SnapshotWriter.CreateSnapshot(streamId, version, snapshot, metadata, cancellationToken);
 
             var document = customSnapshotCreated
-                ? this.Serializer.SerializeSnapshot(new SnapshotWriterSnapshot(this.SnapshotWriter.GetType().AssemblyQualifiedName), null, version, streamId)
-                : this.Serializer.SerializeSnapshot(snapshot, metadata, version, streamId);
+                ? this.Serializer.SerializeSnapshot(new SnapshotWriterSnapshot(this.SnapshotWriter.GetType().AssemblyQualifiedName), null, version, streamId, this.SnapshotMode)
+                : this.Serializer.SerializeSnapshot(snapshot, metadata, version, streamId, this.SnapshotMode);
 
             var response = await this.Container.UpsertItemAsync(document, new PartitionKey(streamId), cancellationToken: cancellationToken);
 
@@ -342,7 +344,7 @@ namespace Eveneum
         {
             try
             {
-                var response = await this.Container.ReplaceItemAsync(this.Serializer.SerializeEvent(newEvent, newEvent.StreamId), EveneumDocument.GenerateEventId(newEvent.StreamId, newEvent.Version), new PartitionKey(newEvent.StreamId), cancellationToken: cancellationToken);
+                var response = await this.Container.ReplaceItemAsync(this.Serializer.SerializeEvent(newEvent, newEvent.StreamId), EveneumDocumentSerializer.GenerateEventId(newEvent.StreamId, newEvent.Version), new PartitionKey(newEvent.StreamId), cancellationToken: cancellationToken);
 
                 return new Response(response.RequestCharge);
             }

@@ -112,7 +112,7 @@ namespace Eveneum.Tests
             var typeProvider = this.Context.EventStoreOptions.TypeProvider ?? new PlatformTypeProvider(this.Context.EventStoreOptions.IgnoreMissingTypes);
 
             var currentDocuments = await CosmosSetup.QueryAllDocumentsInStream(this.Context.Client, this.Context.Database, this.Context.Container, streamId, DocumentType.Event);
-            var eventDocument = currentDocuments.SingleOrDefault(x => x.Id == EveneumDocument.GenerateEventId(streamId, version));
+            var eventDocument = currentDocuments.SingleOrDefault(x => x.Id == EveneumDocumentSerializer.GenerateEventId(streamId, version));
 
             Assert.That(eventDocument.DocumentType, Is.EqualTo(DocumentType.Event));
             Assert.That(eventDocument.StreamId, Is.EqualTo(streamId));

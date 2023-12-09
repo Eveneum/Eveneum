@@ -9,16 +9,14 @@ namespace Eveneum.Documents
 
     public class EveneumDocument
     {
-        public EveneumDocument(DocumentType documentType)
+        public EveneumDocument(string id, DocumentType documentType)
         {
+            this.Id = id;
             this.DocumentType = documentType;
         }
 
-        public const char Separator = '~';
-
-
         [JsonProperty(PropertyName = "id")]
-        public virtual string Id => this.GenerateId();
+        public string Id { get; set; }
 
         [JsonConverter(typeof(StringEnumConverter))]
         public DocumentType DocumentType { get; }
@@ -44,23 +42,6 @@ namespace Eveneum.Documents
 
         [JsonProperty(PropertyName = "ttl", NullValueHandling = NullValueHandling.Ignore)]
         public int? TimeToLive { get; set; }
-
-        internal string GenerateId()
-        {
-            switch(this.DocumentType)
-            {
-                case DocumentType.Header:
-                    return this.StreamId;
-                case DocumentType.Event:
-                    return GenerateEventId(this.StreamId, this.Version);
-                case DocumentType.Snapshot:
-                    return $"{this.StreamId}{Separator}{this.Version}{Separator}S";
-                default:
-                    throw new NotSupportedException($"Document type '{this.DocumentType}' is not supported.");
-            }
-        }
-
-        internal static string GenerateEventId(string streamId, ulong version) => $"{streamId}{Separator}{version}";
 
         internal static decimal GetOrderingFraction(DocumentType documentType)
         {
