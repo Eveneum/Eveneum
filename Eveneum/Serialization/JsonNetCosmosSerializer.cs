@@ -26,13 +26,10 @@ namespace Eveneum.Serialization
                 if (typeof(Stream).IsAssignableFrom(typeof(T)))
                     return (T)(object)stream;
 
-                using (var streamReader = new StreamReader(stream))
-                {
-                    using (var textReader = new JsonTextReader(streamReader))
-                    {
-                        return this.Serializer.Deserialize<T>(textReader);
-                    }
-                }
+                using var streamReader = new StreamReader(stream);
+                using var textReader = new JsonTextReader(streamReader);
+                
+                return this.Serializer.Deserialize<T>(textReader);
             }
         }
 
@@ -40,16 +37,13 @@ namespace Eveneum.Serialization
         {
             var stream = new MemoryStream();
 
-            using (var streamWriter = new StreamWriter(stream, encoding: JsonNetCosmosSerializer.DefaultEncoding, bufferSize: 1024, leaveOpen: true))
-            {
-                using (JsonWriter writer = new JsonTextWriter(streamWriter))
-                {
-                    this.Serializer.Serialize(writer, input);
+            using var streamWriter = new StreamWriter(stream, encoding: JsonNetCosmosSerializer.DefaultEncoding, bufferSize: 1024, leaveOpen: true);
+            using JsonWriter writer = new JsonTextWriter(streamWriter);
 
-                    writer.Flush();
-                    streamWriter.Flush();
-                }
-            }
+            this.Serializer.Serialize(writer, input);
+
+            writer.Flush();
+            streamWriter.Flush();
 
             stream.Position = 0;
 

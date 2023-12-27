@@ -93,7 +93,7 @@ namespace Eveneum
             if (streamId == null)
                 throw new ArgumentNullException(nameof(streamId));
 
-            var iterator = this.Container.GetItemQueryIterator<EveneumDocument>(sql, requestOptions: new QueryRequestOptions { PartitionKey = new PartitionKey(streamId), MaxItemCount = maxItemCount });
+            using var iterator = this.Container.GetItemQueryIterator<EveneumDocument>(sql, requestOptions: new QueryRequestOptions { PartitionKey = new PartitionKey(streamId), MaxItemCount = maxItemCount });
 
             var documents = new List<EveneumDocument>();
             var finishLoading = false;
@@ -363,7 +363,7 @@ namespace Eveneum
 
         private async Task<Response> LoadDocuments(QueryDefinition query, Func<FeedResponse<EveneumDocument>, Task> callback, CancellationToken cancellationToken = default)
         {
-            var iterator = this.Container.GetItemQueryIterator<EveneumDocument>(query, requestOptions: new QueryRequestOptions { MaxItemCount = this.QueryMaxItemCount });
+            using var iterator = this.Container.GetItemQueryIterator<EveneumDocument>(query, requestOptions: new QueryRequestOptions { MaxItemCount = this.QueryMaxItemCount });
 
             double requestCharge = 0;
             var callbackProcessing = Task.CompletedTask;
@@ -401,24 +401,23 @@ namespace Eveneum
 
         private async Task CreateStoredProcedure(string procedureId, string procedureFileName, CancellationToken cancellationToken = default)
         {
-            using (var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(typeof(EventStore), $"StoredProcedures.{procedureFileName}.js"))
-            using (var reader = new StreamReader(stream))
-            {
-                var properties = new StoredProcedureProperties
-                {
-                    Id = procedureId,
-                    Body = await reader.ReadToEndAsync()
-                };
+            using var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(typeof(EventStore), $"StoredProcedures.{procedureFileName}.js");
+            using var reader = new StreamReader(stream);
 
-                try
-                {
-                    await this.Container.Scripts.ReadStoredProcedureAsync(procedureId, cancellationToken: cancellationToken);
-                    await this.Container.Scripts.ReplaceStoredProcedureAsync(properties, cancellationToken: cancellationToken);
-                }
-                catch (CosmosException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
-                {
-                    await this.Container.Scripts.CreateStoredProcedureAsync(properties, cancellationToken: cancellationToken);
-                }
+            var properties = new StoredProcedureProperties
+            {
+                Id = procedureId,
+                Body = await reader.ReadToEndAsync()
+            };
+
+            try
+            {
+                await this.Container.Scripts.ReadStoredProcedureAsync(procedureId, cancellationToken: cancellationToken);
+                await this.Container.Scripts.ReplaceStoredProcedureAsync(properties, cancellationToken: cancellationToken);
+            }
+            catch (CosmosException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                await this.Container.Scripts.CreateStoredProcedureAsync(properties, cancellationToken: cancellationToken);
             }
         }
     }

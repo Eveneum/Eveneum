@@ -42,7 +42,7 @@ namespace Eveneum.Tests.Infrastructure
 
         private static async Task<List<EveneumDocument>> Query(CosmosClient client, string database, string collection, string query, PartitionKey? partitionKey = null, DocumentType? documentType = null)
         {
-            var documentQuery = client.GetDatabase(database).GetContainer(collection).GetItemQueryIterator<EveneumDocument>(query, requestOptions: new QueryRequestOptions { PartitionKey = partitionKey });
+            using var documentQuery = client.GetDatabase(database).GetContainer(collection).GetItemQueryIterator<EveneumDocument>(query, requestOptions: new QueryRequestOptions { PartitionKey = partitionKey });
 
             var documents = new List<EveneumDocument>();
 
