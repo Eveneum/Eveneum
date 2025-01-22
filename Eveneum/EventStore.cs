@@ -164,6 +164,7 @@ namespace Eveneum
         {
             var transaction = this.Container.CreateTransactionalBatch(new PartitionKey(streamId));
             double requestCharge = 0;
+            TransactionalBatch tb = null;
 
             // Existing stream
             if (expectedVersion.HasValue)
@@ -191,7 +192,7 @@ namespace Eveneum
 
                 this.Serializer.SerializeHeaderMetadata(header, metadata);
 
-                transaction.CreateItem(header);
+                tb = transaction.CreateItem(header);
             }
 
             var firstBatch = events.Take(this.BatchSize - 1).Select(@event => this.Serializer.SerializeEvent(@event, streamId));
@@ -202,7 +203,18 @@ namespace Eveneum
             requestCharge += response.RequestCharge;
 
             if (response.StatusCode == System.Net.HttpStatusCode.Conflict)
-                throw new StreamAlreadyExistsException(streamId, requestCharge);
+            {
+                if (response.GetOperationResultAtIndex<EveneumDocument>(0).StatusCode == System.Net.HttpStatusCode.Conflict)
+                    throw new StreamAlreadyExistsException(streamId, requestCharge);
+                else
+                {
+                    foreach (var index in Enumerable.Range(1, events.Length))
+                    {
+                        if (response.GetOperationResultAtIndex<EveneumDocument>(index).StatusCode == System.Net.HttpStatusCode.Conflict)
+                            throw new EventAlreadyExistsException(streamId, events[index - 1].Version, requestCharge);
+                    }
+                }
+            }
             else if (!response.IsSuccessStatusCode)
                 throw new WriteException(streamId, requestCharge, response.ErrorMessage, response.StatusCode);
 
@@ -216,7 +228,15 @@ namespace Eveneum
                 response = await transaction.ExecuteAsync(cancellationToken);
                 requestCharge += response.RequestCharge;
 
-                if (!response.IsSuccessStatusCode)
+                if (response.StatusCode == System.Net.HttpStatusCode.Conflict)
+                {
+                    foreach (var index in Enumerable.Range(0, batch.Count()))
+                    {
+                        if (response.GetOperationResultAtIndex<EveneumDocument>(index).StatusCode == System.Net.HttpStatusCode.Conflict)
+                            throw new EventAlreadyExistsException(streamId, batch.ElementAt(index).Version, requestCharge);
+                    }
+                }
+                else if(!response.IsSuccessStatusCode)
                     throw new WriteException(streamId, requestCharge, response.ErrorMessage, response.StatusCode);
             }
 

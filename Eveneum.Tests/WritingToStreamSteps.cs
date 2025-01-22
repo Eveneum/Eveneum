@@ -7,6 +7,9 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System.Linq;
 using Eveneum.Serialization;
+using System;
+using System.IO;
+using System.Collections.Generic;
 
 namespace Eveneum.Tests
 {
@@ -47,6 +50,43 @@ namespace Eveneum.Tests
         {
             this.Context.StreamId = streamId;
             this.Context.NewEvents = TestSetup.GetEvents(events, expectedVersion + 1);
+            this.Context.ExistingDocuments = await CosmosSetup.QueryAllDocuments(this.Context.Client, this.Context.Database, this.Context.Container);
+
+            var response = await this.Context.EventStore.WriteToStream(this.Context.StreamId, this.Context.NewEvents, expectedVersion, metadata: this.Context.HeaderMetadata);
+
+            this.Context.Response = response;
+        }
+
+        [When(@"I append events with version ([\d, ]+) to stream ([^\s-]) in expected version (\d+)")]
+        public async Task WhenIAppendEventsWithVersionToStreamInExpectedVersion(string versions, string streamId, ushort expectedVersion)
+        {
+            var eventVersions = versions
+                .Split(',', System.StringSplitOptions.TrimEntries | System.StringSplitOptions.RemoveEmptyEntries)
+                .Select(x => Convert.ToUInt16(x));
+
+            var events = eventVersions.SelectMany(x => TestSetup.GetEvents(1, x)).ToArray();
+
+            this.Context.StreamId = streamId;
+            this.Context.NewEvents = events;
+            this.Context.ExistingDocuments = await CosmosSetup.QueryAllDocuments(this.Context.Client, this.Context.Database, this.Context.Container);
+
+            var response = await this.Context.EventStore.WriteToStream(this.Context.StreamId, this.Context.NewEvents, expectedVersion, metadata: this.Context.HeaderMetadata);
+
+            this.Context.Response = response;
+        }
+
+        [When(@"I append (\d+) events and events with version ([\d, ]+) to stream ([^\s-]) in expected version (\d+)")]
+        public async Task WhenIAppendEventsAndEventsWithVersionToStreamInExpectedVersion(int events, string versions, string streamId, ushort expectedVersion)
+        {
+            var eventVersions = versions
+                .Split(',', System.StringSplitOptions.TrimEntries | System.StringSplitOptions.RemoveEmptyEntries)
+                .Select(x => Convert.ToUInt16(x));
+
+            var allEvents = new List<EventData>(TestSetup.GetEvents(events, expectedVersion + 1));
+            allEvents.AddRange(eventVersions.SelectMany(x => TestSetup.GetEvents(1, x)));
+
+            this.Context.StreamId = streamId;
+            this.Context.NewEvents = allEvents.ToArray();
             this.Context.ExistingDocuments = await CosmosSetup.QueryAllDocuments(this.Context.Client, this.Context.Database, this.Context.Container);
 
             var response = await this.Context.EventStore.WriteToStream(this.Context.StreamId, this.Context.NewEvents, expectedVersion, metadata: this.Context.HeaderMetadata);
@@ -123,7 +163,7 @@ namespace Eveneum.Tests
         }
 
         [Then(@"the action fails as expected version (\d+) doesn't match the current version (\d+) of stream ([^\s-])")]
-        public void ThenTheActionFailsAsExpectedVersionDoesnTMatchTheCurrentVersionOfStream(ulong expectedVersion, ulong currentVersion, string streamId)
+        public void ThenTheActionFailsAsExpectedVersionDoesntMatchTheCurrentVersionOfStream(ulong expectedVersion, ulong currentVersion, string streamId)
         {
             Assert.That(this.ScenarioContext.TestError, Is.InstanceOf<OptimisticConcurrencyException>());
 
@@ -148,17 +188,46 @@ namespace Eveneum.Tests
         [Then(@"new events are appended")]
         public async Task ThenNewEventsAreAppended()
         {
-            var typeProvider = this.Context.EventStoreOptions.TypeProvider ?? new PlatformTypeProvider(this.Context.EventStoreOptions.IgnoreMissingTypes);
-
             var streamId = this.Context.StreamId;
             var currentDocuments = await CosmosSetup.QueryAllDocumentsInStream(this.Context.Client, this.Context.Database, this.Context.Container, streamId, DocumentType.Event);
             var existingDocumentIds = this.Context.ExistingDocuments.Select(x => x.Id);
 
             var newEventDocuments = currentDocuments.Where(x => !existingDocumentIds.Contains(x.Id)).ToList();
-
             var newEvents = this.Context.NewEvents;
 
+            VerifyEventDocuments(newEventDocuments, newEvents);
+        }
+
+        [Then(@"first (\d+) events are appended")]
+        public async Task ThenFirstEventsAreAppended(int events)
+        {
+            var typeProvider = this.Context.EventStoreOptions.TypeProvider ?? new PlatformTypeProvider(this.Context.EventStoreOptions.IgnoreMissingTypes);
+
+            var currentDocuments = await CosmosSetup.QueryAllDocumentsInStream(this.Context.Client, this.Context.Database, this.Context.Container, this.Context.StreamId, DocumentType.Event);
+            var existingDocumentIds = this.Context.ExistingDocuments.Select(x => x.Id);
+
+            var newEventDocuments = currentDocuments.Where(x => !existingDocumentIds.Contains(x.Id)).ToList();
+            var newEvents = this.Context.NewEvents.Take(events).ToArray();
+
+            VerifyEventDocuments(newEventDocuments, newEvents);
+        }
+
+        [Then(@"the action fails as event with version (\d+) already exists in stream ([^\s-])")]
+        public void ThenTheActionFailsAsEventWithVersionAlreadyExistsInStream(ulong version, string streamId)
+        {
+            Assert.That(this.ScenarioContext.TestError, Is.InstanceOf<EventAlreadyExistsException>());
+
+            var exception = this.ScenarioContext.TestError as EventAlreadyExistsException;
+            Assert.That(exception.StreamId, Is.EqualTo(streamId));
+            Assert.That(exception.Version, Is.EqualTo(version));
+        }
+
+        private void VerifyEventDocuments(List<EveneumDocument> newEventDocuments, EventData[] newEvents)
+        {
             Assert.That(newEvents.Length, Is.EqualTo(newEventDocuments.Count));
+
+            var streamId = this.Context.StreamId;
+            var typeProvider = this.Context.EventStoreOptions.TypeProvider ?? new PlatformTypeProvider(this.Context.EventStoreOptions.IgnoreMissingTypes);
 
             foreach (var newEvent in newEvents)
             {
