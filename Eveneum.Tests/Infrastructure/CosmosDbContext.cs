@@ -1,12 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
+﻿using Eveneum.Documents;
+using Eveneum.Snapshots;
 using Microsoft.Azure.Cosmos;
-using Eveneum.Documents;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 using NodaTime;
 using NodaTime.Serialization.JsonNet;
-using Eveneum.Snapshots;
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace Eveneum.Tests.Infrastructure
 {
@@ -39,6 +40,14 @@ namespace Eveneum.Tests.Infrastructure
         {
             this.Database = "EveneumDB";
             this.Container = Guid.NewGuid().ToString();
+        }
+
+        internal void AddCamelCasePropertyNamesContractResolver()
+        {
+            var contractResolver = new CamelCasePropertyNamesContractResolver();
+            contractResolver.NamingStrategy.OverrideSpecifiedNames = false;
+
+            this.JsonSerializerSettings.ContractResolver = contractResolver;
         }
 
         internal async Task Initialize(bool initializeEventStore = true)

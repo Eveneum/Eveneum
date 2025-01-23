@@ -18,6 +18,12 @@ namespace Eveneum.Tests
             this.ScenarioContext = scenarioContext;
         }
 
+        [Given(@"Cosmos serializer with camel-case contract resolver")]
+        public void GivenCosmosSerializerWithCamelCaseContractResolver()
+        {
+            this.Context.AddCamelCasePropertyNamesContractResolver();
+        }
+
         [Given(@"an event store backed by partitioned collection")]
         public async Task GivenAnEventStoreBackedByPartitionedCollection()
         {

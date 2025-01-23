@@ -19,19 +19,31 @@ namespace Eveneum.Documents
         public string Id { get; set; }
 
         [JsonConverter(typeof(StringEnumConverter))]
+        [JsonProperty(PropertyName = nameof(DocumentType))]
         public DocumentType DocumentType { get; }
 
+        [JsonProperty(PropertyName = nameof(StreamId))]
         public string StreamId { get; set; }
 
+        [JsonProperty(PropertyName = nameof(Version))]
         public ulong Version { get; set; }
 
+        [JsonProperty(PropertyName = nameof(MetadataType))]
         public string MetadataType { get; set; }
+
+        [JsonProperty(PropertyName = nameof(Metadata))]
         public JToken Metadata { get; set; }
+
+        [JsonProperty(PropertyName = nameof(BodyType))]
         public string BodyType { get; set; }
+
+        [JsonProperty(PropertyName = nameof(Body))]
         public JToken Body { get; set; }
 
+        [JsonProperty(PropertyName = nameof(SortOrder))]
         public decimal SortOrder => this.Version + GetOrderingFraction(this.DocumentType);
 
+        [JsonProperty(PropertyName = nameof(Deleted))]
         public bool Deleted { get; set; }
 
         [JsonProperty(PropertyName = "_etag")]
