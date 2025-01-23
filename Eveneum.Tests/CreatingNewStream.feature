@@ -42,3 +42,11 @@ Scenario: Creating new stream with metadata and many events
 	Then the header version 9990 with metadata is persisted
 	And new events are appended
 	And request charge is reported
+				
+Scenario: Creating new stream with metadata and some events - camel-case contract resolver
+	Given Cosmos serializer with camel-case contract resolver
+	And an event store backed by partitioned collection
+	When I write a new stream S with metadata and 10 events
+	Then the header version 10 with metadata is persisted
+	And new events are appended
+	And request charge is reported
