@@ -164,7 +164,6 @@ namespace Eveneum
         {
             var transaction = this.Container.CreateTransactionalBatch(new PartitionKey(streamId));
             double requestCharge = 0;
-            TransactionalBatch tb = null;
 
             // Existing stream
             if (expectedVersion.HasValue)
@@ -192,7 +191,7 @@ namespace Eveneum
 
                 this.Serializer.SerializeHeaderMetadata(header, metadata);
 
-                tb = transaction.CreateItem(header);
+                transaction.CreateItem(header);
             }
 
             var firstBatch = events.Take(this.BatchSize - 1).Select(@event => this.Serializer.SerializeEvent(@event, streamId));
