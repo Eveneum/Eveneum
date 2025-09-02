@@ -2,8 +2,8 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
     <metadata>
         <id>Eveneum.ApplicationInsights</id>
-		<version>#{GitVersion.NuGetVersion}#</version>
-		<authors>Jakub Konecki</authors>
+		    <version>#{GitVersion.FullSemVer}#</version>
+		    <authors>Jakub Konecki</authors>
         <owners>Jakub Konecki</owners>
         <requireLicenseAcceptance>false</requireLicenseAcceptance>
         <description>Extended ApplicationInsights logging for Eveneum event store.</description>
@@ -11,7 +11,7 @@
         <licenseUrl>https://github.com/Eveneum/Eveneum/blob/master/LICENSE</licenseUrl>
         <tags>event-sourcing event-store cosmosdb</tags>
         <dependencies>
-          <dependency id="Eveneum" version="[#{GitVersion.NuGetVersion}#]" />
+          <dependency id="Eveneum" version="[#{GitVersion.FullSemVer}#]" />
         </dependencies>
     </metadata>
     <files>
