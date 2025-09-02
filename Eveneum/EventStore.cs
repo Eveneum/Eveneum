@@ -136,7 +136,7 @@ namespace Eveneum
                 var events = documents.Where(x => x.DocumentType == DocumentType.Event).Select(this.Serializer.DeserializeEvent).Reverse().ToArray();
                 var metadata = this.Serializer.DeserializeObject(headerDocument.MetadataType, headerDocument.Metadata);
                 
-                var snapshotDocument = documents.Where(x => x.DocumentType == DocumentType.Snapshot).FirstOrDefault();
+                var snapshotDocument = documents.FirstOrDefault(x => x.DocumentType == DocumentType.Snapshot);
 
                 Snapshot? snapshot = null;
 
@@ -198,7 +198,7 @@ namespace Eveneum
             foreach (var document in firstBatch)
                 transaction.CreateItem(document);
 
-            var response = await transaction.ExecuteAsync(cancellationToken);
+            using var response = await transaction.ExecuteAsync(cancellationToken);
             requestCharge += response.RequestCharge;
 
             if (response.StatusCode == System.Net.HttpStatusCode.Conflict)
@@ -224,19 +224,19 @@ namespace Eveneum
                 foreach (var document in batch)
                     transaction.CreateItem(document);
 
-                response = await transaction.ExecuteAsync(cancellationToken);
-                requestCharge += response.RequestCharge;
+                using var batchResponse = await transaction.ExecuteAsync(cancellationToken);
+                requestCharge += batchResponse.RequestCharge;
 
-                if (response.StatusCode == System.Net.HttpStatusCode.Conflict)
+                if (batchResponse.StatusCode == System.Net.HttpStatusCode.Conflict)
                 {
                     foreach (var index in Enumerable.Range(0, batch.Count()))
                     {
-                        if (response.GetOperationResultAtIndex<EveneumDocument>(index).StatusCode == System.Net.HttpStatusCode.Conflict)
+                        if (batchResponse.GetOperationResultAtIndex<EveneumDocument>(index).StatusCode == System.Net.HttpStatusCode.Conflict)
                             throw new EventAlreadyExistsException(streamId, batch.ElementAt(index).Version, requestCharge);
                     }
                 }
-                else if(!response.IsSuccessStatusCode)
-                    throw new WriteException(streamId, requestCharge, response.ErrorMessage, response.StatusCode);
+                else if(!batchResponse.IsSuccessStatusCode)
+                    throw new WriteException(streamId, requestCharge, batchResponse.ErrorMessage, batchResponse.StatusCode);
             }
 
             return new Response(requestCharge);
