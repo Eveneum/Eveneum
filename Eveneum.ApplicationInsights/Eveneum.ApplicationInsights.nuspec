@@ -8,7 +8,7 @@
         <requireLicenseAcceptance>false</requireLicenseAcceptance>
         <description>Extended ApplicationInsights logging for Eveneum event store.</description>
         <projectUrl>https://github.com/Eveneum/Eveneum</projectUrl>
-        <licenseUrl>https://github.com/Eveneum/Eveneum/blob/master/LICENSE</licenseUrl>
+        <license type="expression">MIT</license>
         <tags>event-sourcing event-store cosmosdb</tags>
         <dependencies>
           <dependency id="Eveneum" version="[#{GitVersion.FullSemVer}#]" />

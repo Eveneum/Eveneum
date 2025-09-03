@@ -8,7 +8,8 @@
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>Developer-friendly Event Store with snapshots, backed by Azure Cosmos DB.</description>
     <projectUrl>https://github.com/Eveneum/Eveneum</projectUrl>
-    <licenseUrl>https://github.com/Eveneum/Eveneum/blob/master/LICENSE</licenseUrl>
+    <license type="expression">MIT</license>
+    <readme>docs/README.md</readme>
     <tags>event-sourcing event-store cosmosdb</tags>
     <dependencies>
       <dependency id="Microsoft.Azure.Cosmos" version="[3.35.4,4)" />
@@ -18,5 +19,6 @@
   <files>
     <file src="bin\Release\**\Eveneum.dll" target="lib" />
     <file src="bin\Release\**\Eveneum.pdb" target="lib" />
+    <file src="..\README.md" target="docs\" />
   </files>
 </package>
