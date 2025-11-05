@@ -219,6 +219,9 @@ namespace Eveneum
 
             foreach (var batch in events.Skip(this.BatchSize - 1).Select(@event => this.Serializer.SerializeEvent(@event, streamId)).Batch(this.BatchSize))
             {
+                if(!batch.Any())
+                    continue;
+
                 transaction = this.Container.CreateTransactionalBatch(new PartitionKey(streamId));
 
                 foreach (var document in batch)

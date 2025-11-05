@@ -4,7 +4,7 @@ using System.Collections.Concurrent;
 
 namespace Eveneum.Serialization
 {
-    class PlatformTypeProvider : ITypeProvider
+    public class PlatformTypeProvider : ITypeProvider
     {
 		public const string SnapshotWriterSnapshotTypeIdentifier = "Eveneum.SnapshotWriterSnapshot";
 
@@ -16,8 +16,8 @@ namespace Eveneum.Serialization
             this.IgnoreMissingTypes = ignoreMissingTypes;
         }
 
-        public string GetIdentifierForType(Type type) => type == typeof(SnapshotWriterSnapshot) ? SnapshotWriterSnapshotTypeIdentifier : type.AssemblyQualifiedName;
+        public virtual string GetIdentifierForType(Type type) => type == typeof(SnapshotWriterSnapshot) ? SnapshotWriterSnapshotTypeIdentifier : type.AssemblyQualifiedName;
 
-        public Type GetTypeForIdentifier(string identifier) => identifier == SnapshotWriterSnapshotTypeIdentifier ? typeof(SnapshotWriterSnapshot) : this.Cache.GetOrAdd(identifier, t => Type.GetType(t, throwOnError: !this.IgnoreMissingTypes));
+        public virtual Type GetTypeForIdentifier(string identifier) => identifier == SnapshotWriterSnapshotTypeIdentifier ? typeof(SnapshotWriterSnapshot) : this.Cache.GetOrAdd(identifier, t => Type.GetType(t, throwOnError: !this.IgnoreMissingTypes));
     }
 }
