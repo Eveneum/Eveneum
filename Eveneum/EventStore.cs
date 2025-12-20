@@ -326,25 +326,9 @@ namespace Eveneum
 
         public async Task<DeleteResponse> DeleteSnapshots(string streamId, ulong olderThanVersion, CancellationToken cancellationToken = default)
         {
-            var headerResponse = await this.ReadHeader(streamId, cancellationToken);
-
-            var requestCharge = headerResponse.RequestCharge;
-            ulong deletedSnapshots = 0;
-            StoredProcedureExecuteResponse<BulkDeleteResponse> response;
             var query = $"SELECT * FROM c WHERE c.DocumentType = 'Snapshot' AND c.Version < {olderThanVersion}";
 
-            if (this.DeleteMode == DeleteMode.SoftDelete)
-                query += " and c.Deleted = false";
-
-            do
-            {
-                response = await this.Container.Scripts.ExecuteStoredProcedureAsync<BulkDeleteResponse>(BulkDeleteStoredProc, new PartitionKey(streamId), new object[] { query, this.DeleteMode == DeleteMode.SoftDelete }, cancellationToken: cancellationToken);
-                requestCharge += response.RequestCharge;
-                deletedSnapshots += response.Resource.Deleted;
-            }
-            while (response.Resource.Continuation);
-
-            return new DeleteResponse(deletedSnapshots, requestCharge);
+            return await DeleteDocuments(streamId, query, cancellationToken);
         }
 
         public Task<Response> LoadAllEvents(Func<IReadOnlyCollection<EventData>, Task> callback, CancellationToken cancellationToken = default) =>
@@ -374,6 +358,13 @@ namespace Eveneum
             {
                 throw new WriteException(newEvent.StreamId, ex.RequestCharge, ex.Message, ex.StatusCode, ex);
             }
+        }
+
+        public async Task<DeleteResponse> DeleteEvent(string streamId, ulong version, CancellationToken cancellationToken = default)
+        {
+            var query = $"SELECT * FROM c WHERE c.DocumentType = 'Event' AND c.Version = {version}";
+
+            return await DeleteDocuments(streamId, query, cancellationToken);
         }
 
         public async Task<StreamHeaderResponse> ReadHeader(string streamId, CancellationToken cancellationToken = default)
@@ -419,6 +410,27 @@ namespace Eveneum
             {
                 throw new StreamNotFoundException(streamId, ex.RequestCharge, ex);
             }
+        }
+
+        private async Task<DeleteResponse> DeleteDocuments(string streamId, string query, CancellationToken cancellationToken)
+        {
+            var headerResponse = await this.ReadHeader(streamId, cancellationToken);
+
+            var requestCharge = headerResponse.RequestCharge;
+            ulong deletedSnapshots = 0;
+            StoredProcedureExecuteResponse<BulkDeleteResponse> response;
+            if (this.DeleteMode == DeleteMode.SoftDelete)
+                query += " and c.Deleted = false";
+
+            do
+            {
+                response = await this.Container.Scripts.ExecuteStoredProcedureAsync<BulkDeleteResponse>(BulkDeleteStoredProc, new PartitionKey(streamId), new object[] { query, this.DeleteMode == DeleteMode.SoftDelete }, cancellationToken: cancellationToken);
+                requestCharge += response.RequestCharge;
+                deletedSnapshots += response.Resource.Deleted;
+            }
+            while (response.Resource.Continuation);
+
+            return new DeleteResponse(deletedSnapshots, requestCharge);
         }
 
         private async Task CreateStoredProcedure(string procedureId, string procedureFileName, CancellationToken cancellationToken = default)

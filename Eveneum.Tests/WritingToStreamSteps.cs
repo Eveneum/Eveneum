@@ -8,7 +8,6 @@ using Newtonsoft.Json.Linq;
 using System.Linq;
 using Eveneum.Serialization;
 using System;
-using System.IO;
 using System.Collections.Generic;
 
 namespace Eveneum.Tests

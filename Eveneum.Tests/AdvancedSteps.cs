@@ -87,6 +87,14 @@ namespace Eveneum.Tests
 
             this.Context.Response = response;
         }
+        
+        [When(@"I delete event in version (\d+) in stream (.*)")]
+        public async Task WhenIDeleteEventInVersionInStreamB(ulong version, string streamId)
+        {
+            var response = await(this.Context.EventStore as IAdvancedEventStore).DeleteEvent(streamId, version);
+
+            this.Context.Response = response;
+        }
 
         [Then(@"all (\d+) events are loaded")]
         public void ThenAllEventsAreLoaded(ulong events)
@@ -133,6 +141,22 @@ namespace Eveneum.Tests
                 Assert.That(eventDocument.Metadata, Is.Not.Null);
                 Assert.That(eventDocument.Metadata, Is.EqualTo(JToken.FromObject(this.Context.ReplacedEvent.Metadata, JsonSerializer.Create(this.Context.JsonSerializerSettings))));
             }
+        }
+
+        [Then(@"the event in version (\d+) in stream (.*) is soft-deleted")]
+        public async Task ThenTheEventInVersionInStreamIsSoftDeleted(ulong version, string streamId)
+        {
+            var eventDocuments = await CosmosSetup.QueryAllDocumentsInStream(this.Context.Client, this.Context.Database, this.Context.Container, this.Context.StreamId, DocumentType.Event);
+            
+            Assert.That(eventDocuments.Single(x => x.Version == version).Deleted);
+        }
+
+        [Then(@"the event in version (\d+) in stream (.*) is hard-deleted")]
+        public async Task ThenTheEventInVersionInStreamIsHardDeleted(ulong version, string streamId)
+        {
+            var eventDocuments = await CosmosSetup.QueryAllDocumentsInStream(this.Context.Client, this.Context.Database, this.Context.Container, this.Context.StreamId, DocumentType.Event);
+
+            Assert.That(eventDocuments.SingleOrDefault(x => x.Version == version), Is.Null);
         }
     }
 }

@@ -14,5 +14,6 @@ namespace Eveneum.Advanced
         Task<Response> LoadStreamHeaders(string query, Func<IReadOnlyCollection<StreamHeader>, Task> callback, CancellationToken cancellationToken = default);
         Task<Response> LoadStreamHeaders(QueryDefinition query, Func<IReadOnlyCollection<StreamHeader>, Task> callback, CancellationToken cancellationToken = default);
         Task<Response> ReplaceEvent(EventData newEvent, CancellationToken cancellationToken = default);
+        Task<DeleteResponse> DeleteEvent(string streamId, ulong version, CancellationToken cancellationToken = default);
     }
 }
