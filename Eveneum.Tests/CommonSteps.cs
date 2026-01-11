@@ -1,85 +1,121 @@
 ﻿using Eveneum.Tests.Infrastructure;
+using Newtonsoft.Json.Serialization;
 using NUnit.Framework;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using TechTalk.SpecFlow;
 
 namespace Eveneum.Tests
 {
     [Binding]
-    class CommonSteps
+    public class CommonSteps(NewtonsoftCosmosDbContext newtonsoftContext, SystemTextJsonCosmosDbContext stjContext, ScenarioContext scenarioContext)
     {
-        private readonly CosmosDbContext Context;
-        private readonly ScenarioContext ScenarioContext;
+        private readonly IReadOnlyCollection<CosmosDbContext> Contexts = [newtonsoftContext, stjContext];
 
-        public CommonSteps(CosmosDbContext context, ScenarioContext scenarioContext)
+        [Given(@"Cosmos serializer with camel-case naming policy")]
+        public void GivenCosmosSerializerWithCamelCaseNamingPolicy()
         {
-            this.Context = context;
-            this.ScenarioContext = scenarioContext;
+            foreach (var context in this.Contexts)
+            {
+                switch (context)
+                {
+                    case NewtonsoftCosmosDbContext newtonsoftCosmosDbContext:
+                        var contractResolver = new CamelCasePropertyNamesContractResolver();
+                        contractResolver.NamingStrategy.OverrideSpecifiedNames = false;
+
+                        newtonsoftCosmosDbContext.JsonSerializerSettings.ContractResolver = contractResolver;
+                        break;
+
+                    case SystemTextJsonCosmosDbContext systemTextJsonCosmosDbContext:
+                        systemTextJsonCosmosDbContext.JsonSerializerOptions = new System.Text.Json.JsonSerializerOptions
+                        {
+                            IncludeFields = true,
+                            PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase
+                        };
+                        break;
+                    
+                    default:
+                        break;
+                }
+            }
         }
 
-        [Given(@"Cosmos serializer with camel-case contract resolver")]
-        public void GivenCosmosSerializerWithCamelCaseContractResolver()
+        [Given(@"an event store")]
+        public async Task GivenAnEventStore()
         {
-            this.Context.AddCamelCasePropertyNamesContractResolver();
-        }
-
-        [Given(@"an event store backed by partitioned collection")]
-        public async Task GivenAnEventStoreBackedByPartitionedCollection()
-        {
-            await this.Context.Initialize();
-        }
-
-        [Given(@"an uninitialized event store backed by partitioned collection")]
-        public async Task GivenAnUninitializedEventStoreBackedByPartitionedCollection()
-        {
-            await this.Context.Initialize(false);
+            await Task.WhenAll(this.Contexts.Select(x => x.Initialize()));
         }
 
         [Given(@"hard-delete mode")]
         public void GivenHardDeleteMode()
         {
-            this.Context.EventStoreOptions.DeleteMode = DeleteMode.HardDelete;
+            foreach (var context in this.Contexts)
+            {
+                context.EventStoreOptions.DeleteMode = DeleteMode.HardDelete;
+            }
         }
 
         [Given(@"ttl-delete mode with (\d+) seconds as ttl")]
         public void GivenTTlDeleteMode(int streamTtlAfterDelete)
         {
-            this.Context.EventStoreOptions.DeleteMode = DeleteMode.TtlDelete;
-            this.Context.EventStoreOptions.StreamTimeToLiveAfterDelete = TimeSpan.FromSeconds(streamTtlAfterDelete);
+            foreach (var context in this.Contexts)
+            {
+                context.EventStoreOptions.DeleteMode = DeleteMode.TtlDelete;
+                context.EventStoreOptions.StreamTimeToLiveAfterDelete = TimeSpan.FromSeconds(streamTtlAfterDelete);
+            }
         }
 
         [Given(@"single snapshot mode")]
         public void GivenSingleSnapshotMode()
         {
-            this.Context.EventStoreOptions.SnapshotMode = SnapshotMode.Single;
+            foreach (var context in this.Contexts)
+            {
+                context.EventStoreOptions.SnapshotMode = SnapshotMode.Single;
+            }
         }
 
         [Given(@"an existing stream ([^\s-]) with (\d+) events")]
         public async Task GivenAnExistingStream(string streamId, ushort events)
         {
-            this.Context.StreamId = streamId;
+            var eventData = TestSetup.GetEvents(events);
 
-            await this.Context.EventStore.WriteToStream(streamId, TestSetup.GetEvents(events));
+            await Task.WhenAll(this.Contexts.Select(async x =>
+            {
+                x.StreamId = streamId;
+
+                await x.EventStore.WriteToStream(streamId, eventData);
+            }));
         }
 
         [Given(@"an existing stream ([^\s-]) with metadata and (\d+) events")]
         public async Task GivenAnExistingStreamWithMetadataAndEvents(string streamId, ushort events)
         {
-            this.Context.StreamId = streamId;
-            this.Context.HeaderMetadata = TestSetup.GetMetadata();
+            var metadata = TestSetup.GetMetadata();
+            var eventData = TestSetup.GetEvents(events);
 
-            await this.Context.EventStore.WriteToStream(streamId, TestSetup.GetEvents(events), metadata: this.Context.HeaderMetadata);
+            await Task.WhenAll(this.Contexts.Select(async x =>
+            {
+                x.StreamId = streamId;
+                x.HeaderMetadata = metadata;
+
+                await x.EventStore.WriteToStream(streamId, eventData, metadata: metadata);
+            }));
         }
 
         [Given(@"a deleted stream ([^\s-]) with (\d+) events")]
         public async Task GivenADeletedStream(string streamId, ushort events)
         {
-            this.Context.StreamId = streamId;
             var eventData = TestSetup.GetEvents(events);
 
-            await this.Context.EventStore.WriteToStream(streamId, eventData);
-            await this.Context.EventStore.DeleteStream(streamId, (ulong)eventData.Length);
+            await Task.WhenAll(this.Contexts.Select(async x =>
+            {
+                x.StreamId = streamId;
+
+                await x.EventStore.WriteToStream(streamId, eventData);
+                await x.EventStore.DeleteStream(streamId, (ulong)eventData.Length);
+            }));
         }
 
         [When(@"I wait for (\d+) seconds")]
@@ -91,23 +127,29 @@ namespace Eveneum.Tests
         [Then(@"request charge is reported")]
         public void ThenRequestChargeIsReported()
         {
-            var requestCharge = this.ScenarioContext.TestError is EveneumException
-                ? (this.ScenarioContext.TestError as EveneumException).RequestCharge
-                : this.Context.Response.RequestCharge;
+            foreach (var context in this.Contexts)
+            {
+                var requestCharge = scenarioContext.TestError is EveneumException
+                    ? (scenarioContext.TestError as EveneumException).RequestCharge
+                    : context.Response.RequestCharge;
 
-            Console.WriteLine("Request charge: " + requestCharge);
+                Console.WriteLine($"Request charge ({context.GetType().Name}): {requestCharge}");
 
-            Assert.That(requestCharge, Is.GreaterThan(0));
+                Assert.That(requestCharge, Is.GreaterThan(0));
+            }
         }
 
         [Then(@"(\d+) deleted documents are reported")]
         public void ThenDeletedDocumentsAreReported(ulong deletedDocuments)
         {
-            Assert.That(this.Context.Response, Is.InstanceOf<DeleteResponse>());
+            foreach (var context in this.Contexts)
+            {
+                Assert.That(context.Response, Is.InstanceOf<DeleteResponse>());
 
-            var response = this.Context.Response as DeleteResponse;
+                var response = context.Response as DeleteResponse;
 
-            Assert.That(response.DeletedDocuments, Is.EqualTo(deletedDocuments));
+                Assert.That(response.DeletedDocuments, Is.EqualTo(deletedDocuments));
+            }
         }
     }
 }

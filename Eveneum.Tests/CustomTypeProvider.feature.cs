@@ -94,7 +94,7 @@ this.ScenarioInitialize(scenarioInfo);
  testRunner.Given("a custom Type Provider", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Given ");
 #line hidden
 #line 6
- testRunner.And("an event store backed by partitioned collection", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
+ testRunner.And("an event store", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
 #line hidden
 #line 7
  testRunner.When("I write a new stream S with metadata and 10 events", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
@@ -133,7 +133,7 @@ this.ScenarioInitialize(scenarioInfo);
  testRunner.And("a custom Snapshot Writer", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
 #line hidden
 #line 14
- testRunner.And("an event store backed by partitioned collection", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
+ testRunner.And("an event store", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
 #line hidden
 #line 15
  testRunner.And("an existing stream S with 10 events", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");

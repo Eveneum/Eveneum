@@ -49,12 +49,12 @@ namespace Eveneum
 
     internal class DocumentResponse : Response
     {
-        public DocumentResponse(EveneumDocument document, double requestCharge)
+        public DocumentResponse(IEveneumDocument document, double requestCharge)
             : base(requestCharge)
         {
             this.Document = document;
         }
 
-        public EveneumDocument Document { get; }
+        public IEveneumDocument Document { get; }
     }
 }

@@ -11,7 +11,9 @@
         <license type="expression">MIT</license>
         <tags>event-sourcing event-store cosmosdb</tags>
         <dependencies>
-          <dependency id="Eveneum" version="[#{GitVersion.FullSemVer}#]" />
+          <group targetFramework=".NETStandard2.0">
+            <dependency id="Eveneum" version="[#{GitVersion.FullSemVer}#]" />
+          </group>
         </dependencies>
     </metadata>
     <files>

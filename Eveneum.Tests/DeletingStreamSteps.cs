@@ -1,30 +1,28 @@
-﻿using System.Threading.Tasks;
-using NUnit.Framework;
-using TechTalk.SpecFlow;
+﻿using Eveneum.Documents;
 using Eveneum.Tests.Infrastructure;
-using Eveneum.Documents;
+using NUnit.Framework;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using TechTalk.SpecFlow;
 
 namespace Eveneum.Tests
 {
     [Binding]
-    public class DeletingStreamSteps
+    public class DeletingStreamSteps(NewtonsoftCosmosDbContext newtonsoftContext, SystemTextJsonCosmosDbContext stjContext)
     {
-        private readonly CosmosDbContext Context;
-
-        DeletingStreamSteps(CosmosDbContext context)
-        {
-            this.Context = context;
-        }
+        private readonly IReadOnlyCollection<CosmosDbContext> Contexts = [newtonsoftContext, stjContext];
 
         [When(@"I delete stream ([^\s-]) in expected version (\d+)")]
         public async Task WhenIDeleteStreamInExpectedVersion(string streamId, ulong expectedVersion)
         {
-            this.Context.StreamId = streamId;
-            this.Context.ExistingDocuments = await CosmosSetup.QueryAllDocuments(this.Context.Client, this.Context.Database, this.Context.Container);
-
-            var response = await this.Context.EventStore.DeleteStream(streamId, expectedVersion);
-
-            this.Context.Response = response;
+            await Task.WhenAll(this.Contexts.Select(async x =>
+            {
+                x.StreamId = streamId;
+                var existingDocuments = await CosmosSetup.QueryAllDocuments(x.Client, x.Database, x.Container);
+                x.ExistingDocuments = existingDocuments;
+                x.Response = await x.EventStore.DeleteStream(streamId, expectedVersion);
+            }));
         }
 
         [Then(@"the header is soft-deleted")]
@@ -36,22 +34,18 @@ namespace Eveneum.Tests
         [Then(@"the header is soft-deleted with TTL set to (\d+) seconds")]
         public async Task ThenTheHeaderIsSoft_Deleted(int? ttl)
         {
-            var documents = await CosmosSetup.QueryAllDocumentsInStream(this.Context.Client, this.Context.Database, this.Context.Container, this.Context.StreamId, DocumentType.Header);
-            Assert.That(documents.Count, Is.EqualTo(1));
+            await Task.WhenAll(this.Contexts.Select(async x =>
+            {
+                var documents = await CosmosSetup.QueryAllDocumentsInStream(x.Client, x.Database, x.Container, x.StreamId, DocumentType.Header);
 
-            var headerDocument = documents[0];
-
-            Assert.That(headerDocument.Deleted);
-            Assert.That(headerDocument.TimeToLive, Is.EqualTo(ttl));
+                Assert.That(documents, Has.Count.EqualTo(1));
+                Assert.That(documents[0].Deleted);
+                Assert.That(documents[0].TimeToLive, Is.EqualTo(ttl));
+            }));
         }
 
         [Then(@"the header is hard-deleted")]
-        public async Task ThenTheHeaderIsHard_Deleted()
-        {
-            var documents = await CosmosSetup.QueryAllDocumentsInStream(this.Context.Client, this.Context.Database, this.Context.Container, this.Context.StreamId, DocumentType.Header);
-
-            Assert.That(documents, Is.Empty);
-        }
+        public Task ThenTheHeaderIsHard_Deleted() => AllDocumentsOfTypeAreHardDeleted(DocumentType.Header);
 
         [Then(@"all events are soft-deleted")]
         public async Task ThenAllEventsAreSoft_Deleted()
@@ -62,23 +56,47 @@ namespace Eveneum.Tests
         [Then(@"all events are soft-deleted with TTL set to (\d+) seconds")]
         public async Task ThenAllEventsAreSoft_Deleted(int? ttl)
         {
-            var streamId = this.Context.StreamId;
-            var eventDocuments = await CosmosSetup.QueryAllDocumentsInStream(this.Context.Client, this.Context.Database, this.Context.Container, streamId, DocumentType.Event);
-
-            foreach (var eventDocument in eventDocuments)
+            await Task.WhenAll(this.Contexts.Select(async x =>
             {
-                Assert.That(eventDocument.Deleted);
-                Assert.That(eventDocument.TimeToLive, Is.EqualTo(ttl));
-            }
+                var documents = await CosmosSetup.QueryAllDocumentsInStream(x.Client, x.Database, x.Container, x.StreamId, DocumentType.Event);
+
+                foreach (var eventDocument in documents)
+                {
+                    Assert.That(eventDocument.Deleted);
+                    Assert.That(eventDocument.TimeToLive, Is.EqualTo(ttl));
+                }
+            }));
         }
 
         [Then(@"all events are hard-deleted")]
-        public async Task ThenAllEventsAreHard_Deleted()
-        {
-            var streamId = this.Context.StreamId;
-            var eventDocuments = await CosmosSetup.QueryAllDocumentsInStream(this.Context.Client, this.Context.Database, this.Context.Container, streamId, DocumentType.Event);
+        public Task ThenAllEventsAreHard_Deleted() => AllDocumentsOfTypeAreHardDeleted(DocumentType.Event);
 
-            Assert.That(eventDocuments, Is.Empty);
+        [Then(@"all snapshots are hard-deleted")]
+        public Task ThenAllSnapshotsAreHard_Deleted() => AllDocumentsOfTypeAreHardDeleted(DocumentType.Snapshot);
+
+        [Then(@"stream ([^\s-]) is not soft-deleted")]
+        public async Task ThenStreamIsNotSoft_Deleted(string streamId)
+        {
+            await Task.WhenAll(this.Contexts.Select(async x =>
+            {
+                var documents = await CosmosSetup.QueryAllDocumentsInStream(x.Client, x.Database, x.Container, streamId, DocumentType.Event);
+
+                foreach (var eventDocument in documents)
+                {
+                    Assert.That(eventDocument.Deleted, Is.False);
+                }
+            }));
+        }
+
+        [Then(@"stream ([^\s-]) is not hard-deleted")]
+        public async Task ThenStreamIsNotHard_Deleted(string streamId)
+        {
+            await Task.WhenAll(this.Contexts.Select(async x =>
+            {
+                var documents = await CosmosSetup.QueryAllDocumentsInStream(x.Client, x.Database, x.Container, streamId);
+
+                Assert.That(documents, Is.Not.Empty);
+            }));
         }
 
         [Then(@"all snapshots are soft-deleted")]
@@ -90,41 +108,26 @@ namespace Eveneum.Tests
         [Then(@"all snapshots are soft-deleted with TTL set to (\d+) seconds")]
         public async Task ThenAllSnapshotsAreSoft_Deleted(int? ttl)
         {
-            var streamId = this.Context.StreamId;
-            var snapshotDocuments = await CosmosSetup.QueryAllDocumentsInStream(this.Context.Client, this.Context.Database, this.Context.Container, streamId, DocumentType.Snapshot);
-
-            foreach (var snapshotDocument in snapshotDocuments)
+            await Task.WhenAll(this.Contexts.Select(async x =>
             {
-                Assert.That(snapshotDocument.Deleted);
-                Assert.That(snapshotDocument.TimeToLive, Is.EqualTo(ttl));
-            }
+                var documents = await CosmosSetup.QueryAllDocumentsInStream(x.Client, x.Database, x.Container, x.StreamId, DocumentType.Snapshot);
+
+                foreach (var snapshotDocument in documents)
+                {
+                    Assert.That(snapshotDocument.Deleted);
+                    Assert.That(snapshotDocument.TimeToLive, Is.EqualTo(ttl));
+                }
+            }));
         }
 
-
-        [Then(@"all snapshots are hard-deleted")]
-        public async Task ThenAllSnapshotsAreHard_Deleted()
+        private async Task AllDocumentsOfTypeAreHardDeleted(DocumentType documentType)
         {
-            var streamId = this.Context.StreamId;
-            var snapshotDocuments = await CosmosSetup.QueryAllDocumentsInStream(this.Context.Client, this.Context.Database, this.Context.Container, streamId, DocumentType.Snapshot);
+            await Task.WhenAll(this.Contexts.Select(async x =>
+            {
+                var documents = await CosmosSetup.QueryAllDocumentsInStream(x.Client, x.Database, x.Container, x.StreamId, documentType);
 
-            Assert.That(snapshotDocuments, Is.Empty);
-        }
-
-        [Then(@"stream ([^\s-]) is not soft-deleted")]
-        public async Task ThenStreamIsNotSoft_Deleted(string streamId)
-        {
-            var documents = await CosmosSetup.QueryAllDocumentsInStream(this.Context.Client, this.Context.Database, this.Context.Container, streamId);
-
-            foreach (var document in documents)
-                Assert.That(document.Deleted, Is.False);
-        }
-
-        [Then(@"stream ([^\s-]) is not hard-deleted")]
-        public async Task ThenStreamIsNotHard_Deleted(string streamId)
-        {
-            var documents = await CosmosSetup.QueryAllDocumentsInStream(this.Context.Client, this.Context.Database, this.Context.Container, streamId);
-
-            Assert.That(documents, Is.Not.Empty);
+                Assert.That(documents, Is.Empty);
+            }));
         }
     }
 }

@@ -1,21 +1,21 @@
 ﻿Feature: Creating snapshot
 
 Scenario: Creating snapshot
-	Given an event store backed by partitioned collection
+	Given an event store
 	And an existing stream S with 10 events
 	When I create snapshot for stream S in version 5
 	Then the snapshot for version 5 is persisted
 	And request charge is reported
 
 Scenario: Creating snapshot wth metadata
-	Given an event store backed by partitioned collection
+	Given an event store
 	And an existing stream S with 10 events
 	When I create snapshot with metadata for stream S in version 5
 	Then the snapshot for version 5 is persisted
 	And request charge is reported
 
 Scenario: Creating earlier snapshot 
-	Given an event store backed by partitioned collection
+	Given an event store
 	And an existing stream S with 10 events
 	And an existing snapshot for version 7
 	When I create snapshot for stream S in version 5
@@ -23,7 +23,7 @@ Scenario: Creating earlier snapshot
 	And request charge is reported
 
 Scenario: Creating earlier snapshot with metadata
-	Given an event store backed by partitioned collection
+	Given an event store
 	And an existing stream S with 10 events
 	And an existing snapshot for version 7
 	When I create snapshot with metadata for stream S in version 5
@@ -31,7 +31,7 @@ Scenario: Creating earlier snapshot with metadata
 	And request charge is reported
 
 Scenario: Creating later snapshot 
-	Given an event store backed by partitioned collection
+	Given an event store
 	And an existing stream S with 10 events
 	And an existing snapshot for version 3
 	When I create snapshot for stream S in version 5
@@ -39,7 +39,7 @@ Scenario: Creating later snapshot
 	And request charge is reported
 
 Scenario: Creating later snapshot with metadata
-	Given an event store backed by partitioned collection
+	Given an event store
 	And an existing stream S with 10 events
 	And an existing snapshot for version 3
 	When I create snapshot with metadata for stream S in version 5
@@ -47,7 +47,7 @@ Scenario: Creating later snapshot with metadata
 	And request charge is reported
 
 Scenario: Creating snapshot for same version overrides previous one
-	Given an event store backed by partitioned collection
+	Given an event store
 	And an existing stream S with 10 events
 	And an existing snapshot for version 5
 	When I create snapshot for stream S in version 5
@@ -55,7 +55,7 @@ Scenario: Creating snapshot for same version overrides previous one
 	And request charge is reported
 
 Scenario: Creating snapshot with metadata for same version overrides previous one
-	Given an event store backed by partitioned collection
+	Given an event store
 	And an existing stream S with 10 events
 	And an existing snapshot for version 5
 	When I create snapshot with metadata for stream S in version 5
@@ -64,7 +64,7 @@ Scenario: Creating snapshot with metadata for same version overrides previous on
 
 Scenario: Creating snapshot - single snapshot mode
 	Given single snapshot mode
-	And an event store backed by partitioned collection
+	And an event store
 	And an existing stream S with 10 events
 	When I create snapshot for stream S in version 5
 	Then the snapshot for version 5 is persisted
@@ -72,7 +72,7 @@ Scenario: Creating snapshot - single snapshot mode
 
 Scenario: Creating snapshot wth metadata - single snapshot mode
 	Given single snapshot mode
-	And an event store backed by partitioned collection
+	And an event store
 	And an existing stream S with 10 events
 	When I create snapshot with metadata for stream S in version 5
 	Then the snapshot for version 5 is persisted
@@ -80,7 +80,7 @@ Scenario: Creating snapshot wth metadata - single snapshot mode
 
 Scenario: Creating earlier snapshot - single snapshot mode
 	Given single snapshot mode
-	And an event store backed by partitioned collection
+	And an event store
 	And an existing stream S with 10 events
 	And an existing snapshot for version 7
 	When I create snapshot for stream S in version 5
@@ -89,7 +89,7 @@ Scenario: Creating earlier snapshot - single snapshot mode
 
 Scenario: Creating earlier snapshot with metadata - single snapshot mode
 	Given single snapshot mode
-	And an event store backed by partitioned collection
+	And an event store
 	And an existing stream S with 10 events
 	And an existing snapshot for version 7
 	When I create snapshot with metadata for stream S in version 5
@@ -98,7 +98,7 @@ Scenario: Creating earlier snapshot with metadata - single snapshot mode
 
 Scenario: Creating later snapshot - single snapshot mode
 	Given single snapshot mode
-	And an event store backed by partitioned collection
+	And an event store
 	And an existing stream S with 10 events
 	And an existing snapshot for version 3
 	When I create snapshot for stream S in version 5
@@ -107,7 +107,7 @@ Scenario: Creating later snapshot - single snapshot mode
 
 Scenario: Creating later snapshot with metadata - single snapshot mode
 	Given single snapshot mode
-	And an event store backed by partitioned collection
+	And an event store
 	And an existing stream S with 10 events
 	And an existing snapshot for version 3
 	When I create snapshot with metadata for stream S in version 5
@@ -116,7 +116,7 @@ Scenario: Creating later snapshot with metadata - single snapshot mode
 
 Scenario: Creating snapshot for same version overrides previous one - single snapshot mode
 	Given single snapshot mode
-	And an event store backed by partitioned collection
+	And an event store
 	And an existing stream S with 10 events
 	And an existing snapshot for version 5
 	When I create snapshot for stream S in version 5
@@ -125,7 +125,7 @@ Scenario: Creating snapshot for same version overrides previous one - single sna
 
 Scenario: Creating snapshot with metadata for same version overrides previous one - single snapshot mode
 	Given single snapshot mode
-	And an event store backed by partitioned collection
+	And an event store
 	And an existing stream S with 10 events
 	And an existing snapshot for version 5
 	When I create snapshot with metadata for stream S in version 5

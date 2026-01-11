@@ -3,7 +3,7 @@
 
 @ExpectException
 Scenario: Deleting some snapshots
-	Given an event store backed by partitioned collection
+	Given an event store
 	And an existing stream S with 10 events
 	And an existing snapshot for version 3
 	And an existing snapshot for version 7

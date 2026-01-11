@@ -3,7 +3,7 @@
 
 @ExpectException
 Scenario: Deleting already soft-deleted stream
-	Given an event store backed by partitioned collection
+	Given an event store
 	And a deleted stream S with 10 events
 	When I delete stream S in expected version 10
 	Then the action fails as stream S doesn't exist
@@ -13,7 +13,7 @@ Scenario: Deleting already soft-deleted stream
 @ExpectException
 Scenario: Deleting already hard-deleted stream
 	Given hard-delete mode
-	And an event store backed by partitioned collection
+	And an event store
 	And a deleted stream S with 10 events
 	When I delete stream S in expected version 10
 	Then the action fails as stream S doesn't exist
@@ -22,7 +22,7 @@ Scenario: Deleting already hard-deleted stream
 @ExpectException
 Scenario: Deleting already ttl-deleted streams
 	Given ttl-delete mode with 100 seconds as ttl
-	And an event store backed by partitioned collection
+	And an event store
 	And a deleted stream S with 10 events
 	When I delete stream S in expected version 10
 	Then the action fails as stream S doesn't exist
@@ -32,7 +32,7 @@ Scenario: Deleting already ttl-deleted streams
 @ExpectException
 Scenario: Deleting already ttl-deleted streams after cosmos clean-up
 	Given ttl-delete mode with 1 seconds as ttl
-	And an event store backed by partitioned collection
+	And an event store
 	And a deleted stream S with 10 events
 	When I wait for 2 seconds 
 	And I delete stream S in expected version 10

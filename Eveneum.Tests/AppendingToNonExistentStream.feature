@@ -3,7 +3,7 @@
 
 @ExpectException
 Scenario: Appending to non-existent stream
-	Given an event store backed by partitioned collection
+	Given an event store
 	And an existing stream S with 10 events
 	When I append 5 events to stream X in expected version 10
 	Then the action fails as stream X doesn't exist
@@ -12,7 +12,7 @@ Scenario: Appending to non-existent stream
 	
 @ExpectException
 Scenario: Appending to soft-deleted stream
-	Given an event store backed by partitioned collection
+	Given an event store
 	And a deleted stream S with 10 events
 	When I append 5 events to stream S in expected version 10
 	Then the action fails as stream S doesn't exist
@@ -23,7 +23,7 @@ Scenario: Appending to soft-deleted stream
 @ExpectException
 Scenario: Appending to ttl-deleted stream
 	Given ttl-delete mode with 100 seconds as ttl
-	And an event store backed by partitioned collection
+	And an event store
 	And a deleted stream S with 10 events
 	When I append 5 events to stream S in expected version 10
 	Then the action fails as stream S doesn't exist
@@ -34,7 +34,7 @@ Scenario: Appending to ttl-deleted stream
 @ExpectException
 Scenario: Appending to ttl-deleted stream after cosmos clean up
 	Given ttl-delete mode with 1 seconds as ttl
-	And an event store backed by partitioned collection
+	And an event store
 	And a deleted stream S with 10 events
 	When I wait for 2 seconds
 	And I append 5 events to stream S in expected version 10
@@ -45,7 +45,7 @@ Scenario: Appending to ttl-deleted stream after cosmos clean up
 @ExpectException
 Scenario: Appending to hard-deleted stream
 	Given hard-delete mode
-	And an event store backed by partitioned collection
+	And an event store
 	And a deleted stream S with 10 events
 	When I append 5 events to stream S in expected version 10
 	Then the action fails as stream S doesn't exist

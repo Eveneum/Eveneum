@@ -2,7 +2,7 @@
 	Deleting existing snapshots soft-deletes all relevant documents so the changes are present in Cosmos DB Change Feed
 
 Scenario: Deleting some snapshots
-	Given an event store backed by partitioned collection
+	Given an event store
 	And an existing stream P with 10 events
 	And an existing snapshot for version 5
 	And an existing stream S with 10 events
@@ -18,7 +18,7 @@ Scenario: Deleting some snapshots
 	And 2 deleted documents are reported
 
 Scenario: Deleting all snapshots
-	Given an event store backed by partitioned collection
+	Given an event store
 	And an existing stream P with 10 events
 	And an existing snapshot for version 5
 	And an existing stream S with 10 events
@@ -34,7 +34,7 @@ Scenario: Deleting all snapshots
 
 Scenario: Hard-deleting some snapshots
 	Given hard-delete mode
-	And an event store backed by partitioned collection
+	And an event store
 	And an existing stream P with 10 events
 	And an existing snapshot for version 5
 	And an existing stream S with 10 events
@@ -51,7 +51,7 @@ Scenario: Hard-deleting some snapshots
 
 Scenario: Hard-Deleting all snapshots
 	Given hard-delete mode
-	And an event store backed by partitioned collection
+	And an event store
 	And an existing stream P with 10 events
 	And an existing snapshot for version 5
 	And an existing stream S with 10 events

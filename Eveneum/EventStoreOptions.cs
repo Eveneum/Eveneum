@@ -1,5 +1,4 @@
-﻿using Newtonsoft.Json;
-using Eveneum.Serialization;
+﻿using Eveneum.Serialization;
 using System;
 using Eveneum.Snapshots;
 
@@ -10,7 +9,7 @@ namespace Eveneum
         public DeleteMode DeleteMode { get; set; } = DeleteMode.SoftDelete;
         public byte BatchSize { get; set; } = 100;
         public int QueryMaxItemCount { get; set; } = 1000;
-        public JsonSerializer JsonSerializer { get; set; } = JsonSerializer.CreateDefault();
+        public IJsonSerializer JsonSerializer { get; set; }
         public ITypeProvider TypeProvider { get; set; }
         public bool IgnoreMissingTypes { get; set; } = false;
 

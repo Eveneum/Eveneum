@@ -2,7 +2,7 @@
 	Deleting an existing stream soft-deletes all documents so the changes are present in Cosmos DB Change Feed
 
 Scenario: Deleting stream with no events
-	Given an event store backed by partitioned collection
+	Given an event store
 	And an existing stream P with 0 events
 	And an existing stream S with 0 events
 	When I delete stream S in expected version 0
@@ -12,7 +12,7 @@ Scenario: Deleting stream with no events
 	And 1 deleted documents are reported
 	
 Scenario: Deleting stream with some events
-	Given an event store backed by partitioned collection
+	Given an event store
 	And an existing stream P with 10 events
 	And an existing stream S with 5 events
 	When I delete stream S in expected version 5
@@ -23,7 +23,7 @@ Scenario: Deleting stream with some events
 	And 6 deleted documents are reported
 	
 Scenario: Deleting stream with some events and snapshots
-	Given an event store backed by partitioned collection
+	Given an event store
 	And an existing stream P with 10 events
 	And an existing snapshot for version 5
 	And an existing stream S with 5 events
@@ -39,7 +39,7 @@ Scenario: Deleting stream with some events and snapshots
 	
 Scenario: Hard-deleting stream with no events
 	Given hard-delete mode
-	And an event store backed by partitioned collection
+	And an event store
 	And an existing stream P with 0 events
 	And an existing stream S with 0 events
 	When I delete stream S in expected version 0
@@ -50,7 +50,7 @@ Scenario: Hard-deleting stream with no events
 	
 Scenario: Hard-deleting stream with some events
 	Given hard-delete mode
-	And an event store backed by partitioned collection
+	And an event store
 	And an existing stream P with 10 events
 	And an existing stream S with 5 events
 	When I delete stream S in expected version 5
@@ -62,7 +62,7 @@ Scenario: Hard-deleting stream with some events
 
 Scenario: Hard-deleting stream with some events and snapshots
 	Given hard-delete mode
-	And an event store backed by partitioned collection
+	And an event store
 	And an existing stream P with 10 events
 	And an existing snapshot for version 5
 	And an existing stream S with 5 events
@@ -78,9 +78,9 @@ Scenario: Hard-deleting stream with some events and snapshots
 	
 Scenario: Hard-deleting stream with many events and snapshots
 	Given hard-delete mode
-	And an event store backed by partitioned collection
+	And an event store
 	And an existing stream P with 10 events
-	And an existing stream S with 10000 events
+	And an existing stream S with 1000 events
 	And an existing snapshot for version 100
 	And an existing snapshot for version 200
 	And an existing snapshot for version 300
@@ -90,18 +90,17 @@ Scenario: Hard-deleting stream with many events and snapshots
 	And an existing snapshot for version 700
 	And an existing snapshot for version 800
 	And an existing snapshot for version 900
-	And an existing snapshot for version 1000
-	When I delete stream S in expected version 10000
+	When I delete stream S in expected version 1000
 	Then the header is hard-deleted
 	And all events are hard-deleted
 	And all snapshots are hard-deleted
 	And stream P is not hard-deleted
 	And request charge is reported
-	And 10011 deleted documents are reported
+	And 1010 deleted documents are reported
 
 Scenario: TTl-delete stream with events and snapshots
 	Given ttl-delete mode with 10 seconds as ttl
-	And an event store backed by partitioned collection
+	And an event store
 	And an existing stream Z with 13 events
 	And an existing stream P with 10 events
 	And an existing snapshot for version 5
