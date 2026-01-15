@@ -11,6 +11,9 @@ variables:
   Configuration: 'Release'
 
 steps:
+- checkout: self
+  fetchDepth: 0
+
 - task: gittools.gittools.setup-gitversion-task.gitversion-setup@4
   displayName: 'Setup GitVersion'
   inputs:
