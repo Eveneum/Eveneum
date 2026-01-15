@@ -5,11 +5,7 @@ parameters:
   default: true
 
 pool:
-  name: Azure Pipelines
-  demands:
-  - msbuild
-  - visualstudio
-  - vstest
+  vmImage: 'windows-2025'
 
 variables:
   Configuration: 'Release'
