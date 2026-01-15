@@ -1,18 +1,6 @@
-workflow: TrunkBased/preview1
+workflow: GitHubFlow/v1
 
 branches:
   trunk:
-    mode: ContinuousDeployment
-    label: ''
-    increment: Patch
-    prevent-increment:
-      of-merged-branch: true
-    track-merge-target: false
-    track-merge-message: true
+    mode: ContinuousDelivery
     regex: ^trunk$|^master$
-    source-branches: []
-    is-source-branch-for: []
-    tracks-release-branches: false
-    is-release-branch: false
-    is-main-branch: true
-    pre-release-weight: 55000
