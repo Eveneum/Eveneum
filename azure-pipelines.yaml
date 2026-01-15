@@ -14,16 +14,10 @@ steps:
 - checkout: self
   fetchDepth: 0
 
-- task: gittools.gittools.setup-gitversion-task.gitversion-setup@4
-  displayName: 'Setup GitVersion'
-  inputs:
-    versionSpec: 6.x
-
-- task: gittools.gittools.execute-gitversion-task.gitversion-execute@4
-  displayName: 'Execute GitVersion'
-  inputs:
-    updateAssemblyInfo: true
-    buildNumberFormat: '${GitVersion_FullSemVer}'
+- script: |
+    dotnet tool install --global GitVersion.Tool
+    dotnet-gitversion /output buildserver
+  displayName: Run GitVersion
 
 - task: NuGetToolInstaller@1
   displayName: 'Use NuGet '
