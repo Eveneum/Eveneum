@@ -1,4 +1,5 @@
 mode: ContinuousDeployment
+semantic-version-format: Loose
 branches: {}
 ignore:
   sha: []
