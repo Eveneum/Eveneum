@@ -223,3 +223,22 @@ Scenario: Hard-delete event
 	When I delete event in version 5 in stream B
 	Then the event in version 5 in stream B is hard-deleted
 	And request charge is reported
+
+Scenario: Delete event using transactional batch mode
+	Given transactional batch bulk delete mode
+	And an event store backed by partitioned collection
+	And an existing stream A with 10 events
+	And an existing stream B with 100 events
+	When I delete event in version 5 in stream B
+	Then the event in version 5 in stream B is soft-deleted
+	And request charge is reported
+
+Scenario: Hard-delete event using transactional batch mode
+	Given transactional batch bulk delete mode
+	And hard-delete mode
+	And an event store backed by partitioned collection
+	And an existing stream A with 10 events
+	And an existing stream B with 100 events
+	When I delete event in version 5 in stream B
+	Then the event in version 5 in stream B is hard-deleted
+	And request charge is reported
