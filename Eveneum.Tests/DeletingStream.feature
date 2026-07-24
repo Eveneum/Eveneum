@@ -111,5 +111,53 @@ Scenario: TTl-delete stream with events and snapshots
 	And all snapshots are soft-deleted with TTL set to 10 seconds	
 	And request charge is reported	
 	# 10 events, header and 1 snapshot
-	And 12 deleted documents are reported 
+	And 12 deleted documents are reported
+	And stream Z is not soft-deleted
+
+Scenario: Deleting stream with some events and snapshots using transactional batch mode
+	Given transactional batch bulk delete mode
+	And an uninitialized event store backed by partitioned collection
+	And an existing stream P with 10 events
+	And an existing snapshot for version 5
+	And an existing stream S with 5 events
+	And an existing snapshot for version 1
+	And an existing snapshot for version 3
+	When I delete stream S in expected version 5
+	Then the header is soft-deleted
+	And all events are soft-deleted
+	And all snapshots are soft-deleted
+	And stream P is not soft-deleted
+	And request charge is reported
+	And 8 deleted documents are reported
+
+Scenario: Hard-deleting stream with many events and snapshots using transactional batch mode
+	Given transactional batch bulk delete mode
+	And hard-delete mode
+	And an event store backed by partitioned collection
+	And an existing stream P with 10 events
+	And an existing stream S with 250 events
+	And an existing snapshot for version 100
+	And an existing snapshot for version 200
+	When I delete stream S in expected version 250
+	Then the header is hard-deleted
+	And all events are hard-deleted
+	And all snapshots are hard-deleted
+	And stream P is not hard-deleted
+	And request charge is reported
+	And 253 deleted documents are reported
+
+Scenario: TTl-delete stream with events and snapshots using transactional batch mode
+	Given transactional batch bulk delete mode
+	And ttl-delete mode with 10 seconds as ttl
+	And an event store backed by partitioned collection
+	And an existing stream Z with 13 events
+	And an existing stream P with 10 events
+	And an existing snapshot for version 5
+	When I delete stream P in expected version 10
+	Then the header is soft-deleted with TTL set to 10 seconds
+	And all events are soft-deleted with TTL set to 10 seconds
+	And all snapshots are soft-deleted with TTL set to 10 seconds
+	And request charge is reported
+	# 10 events, header and 1 snapshot
+	And 12 deleted documents are reported
 	And stream Z is not soft-deleted

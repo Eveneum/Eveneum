@@ -49,6 +49,12 @@ namespace Eveneum.Tests
             this.Context.EventStoreOptions.StreamTimeToLiveAfterDelete = TimeSpan.FromSeconds(streamTtlAfterDelete);
         }
 
+        [Given(@"transactional batch bulk delete mode")]
+        public void GivenTransactionalBatchBulkDeleteMode()
+        {
+            this.Context.EventStoreOptions.BulkDeleteMode = BulkDeleteMode.TransactionalBatch;
+        }
+
         [Given(@"single snapshot mode")]
         public void GivenSingleSnapshotMode()
         {
