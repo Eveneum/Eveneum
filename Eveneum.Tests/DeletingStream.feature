@@ -115,7 +115,7 @@ Scenario: TTl-delete stream with events and snapshots
 
 Scenario: Deleting stream with some events and snapshots using transactional batch mode
 	Given transactional batch bulk delete mode
-	And an uninitialized event store backed by partitioned collection
+	And an event store
 	And an existing stream P with 10 events
 	And an existing snapshot for version 5
 	And an existing stream S with 5 events
@@ -132,7 +132,7 @@ Scenario: Deleting stream with some events and snapshots using transactional bat
 Scenario: Hard-deleting stream with many events and snapshots using transactional batch mode
 	Given transactional batch bulk delete mode
 	And hard-delete mode
-	And an event store backed by partitioned collection
+	And an event store
 	And an existing stream P with 10 events
 	And an existing stream S with 250 events
 	And an existing snapshot for version 100
@@ -148,7 +148,7 @@ Scenario: Hard-deleting stream with many events and snapshots using transactiona
 Scenario: TTl-delete stream with events and snapshots using transactional batch mode
 	Given transactional batch bulk delete mode
 	And ttl-delete mode with 10 seconds as ttl
-	And an event store backed by partitioned collection
+	And an event store
 	And an existing stream Z with 13 events
 	And an existing stream P with 10 events
 	And an existing snapshot for version 5

@@ -2,11 +2,11 @@ using Eveneum.Documents;
 using Eveneum.Serialization;
 using Eveneum.Tests.Infrastructure;
 using NUnit.Framework;
+using Reqnroll;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using TechTalk.SpecFlow;
 
 namespace Eveneum.Tests
 {
@@ -15,7 +15,7 @@ namespace Eveneum.Tests
     {
         private readonly IReadOnlyCollection<CosmosDbContext> Contexts = [newtonsoftContext, stjContext];
 
-        [When(@"I write a new stream ([^\s-]) with (\d+) events")]
+        [When("I write a new stream {word} with {int} events")]
         public async Task WhenIWriteNewStreamWithEvents(string streamId, int events)
         {
             var eventsData = TestSetup.GetEvents(events);
@@ -30,7 +30,7 @@ namespace Eveneum.Tests
             }));
         }
 
-        [When(@"I write a new stream ([^\s-]) with metadata and (\d+) events")]
+        [When("I write a new stream {word} with metadata and {int} events")]
         public async Task WhenIWriteNewStreamWithMetadataAndNoEvents(string streamId, int events)
         {
             var metadata = TestSetup.GetMetadata();
@@ -41,7 +41,7 @@ namespace Eveneum.Tests
             await WhenIWriteNewStreamWithEvents(streamId, events);
         }
 
-        [When(@"I append (\d+) events to stream ([^\s-]) in expected version (\d+)")]
+        [When("I append {int} events to stream {word} in expected version {int}")]
         public async Task WhenIAppendEventsToStreamInExpectedVersion(int events, string streamId, ushort expectedVersion)
         {
             var eventsData = TestSetup.GetEvents(events, expectedVersion + 1);
@@ -56,7 +56,7 @@ namespace Eveneum.Tests
             }));
         }
 
-        [When(@"I append events with version ([\d, ]+) to stream ([^\s-]) in expected version (\d+)")]
+        [When("I append events with version {word} to stream {word} in expected version {int}")]
         public async Task WhenIAppendEventsWithVersionToStreamInExpectedVersion(string versions, string streamId, ushort expectedVersion)
         {
             var eventVersions = versions
@@ -75,7 +75,7 @@ namespace Eveneum.Tests
             }));
         }
 
-        [When(@"I append (\d+) events and events with version ([\d, ]+) to stream ([^\s-]) in expected version (\d+)")]
+        [When("I append {int} events and events with version {word} to stream {word} in expected version {int}")]
         public async Task WhenIAppendEventsAndEventsWithVersionToStreamInExpectedVersion(int events, string versions, string streamId, ushort expectedVersion)
         {
             var eventVersions = versions
@@ -97,7 +97,7 @@ namespace Eveneum.Tests
             }));
         }
 
-        [Then(@"the header version (\d+) with no metadata is persisted")]
+        [Then("the header version {int} with no metadata is persisted")]
         public async Task ThenTheHeaderVersionWithNoMetadataIsPersisted(ulong version)
         {
             await Task.WhenAll(this.Contexts.Select(async context =>
@@ -119,7 +119,7 @@ namespace Eveneum.Tests
             }));
         }
 
-        [Then(@"the header version (\d+) with metadata is persisted")]
+        [Then("the header version {int} with metadata is persisted")]
         public async Task ThenTheHeaderVersionWithMetadataIsPersisted(ulong version)
         {
             await Task.WhenAll(this.Contexts.Select(async context =>
@@ -144,7 +144,7 @@ namespace Eveneum.Tests
             }));
         }
 
-        [Then(@"the action fails as stream ([^\s-]) already exists")]
+        [Then("the action fails as stream {word} already exists")]
         public void ThenTheActionFailsAsStreamAlreadyExists(string streamId)
         {
             Assert.That(scenarioContext.TestError, Is.InstanceOf<StreamAlreadyExistsException>());
@@ -153,7 +153,7 @@ namespace Eveneum.Tests
             Assert.That(exception.StreamId, Is.EqualTo(streamId));
         }
 
-        [Then(@"the action fails as stream ([^\s-]) doesn't exist")]
+        [Then("the action fails as stream {word} doesn't exist")]
         public void ThenTheActionFailsAsStreamDoesntExist(string streamId)
         {
             Assert.That(scenarioContext.TestError, Is.InstanceOf<StreamNotFoundException>());
@@ -162,7 +162,7 @@ namespace Eveneum.Tests
             Assert.That(exception.StreamId, Is.EqualTo(streamId));
         }
 
-        [Then(@"the action fails as stream ([^\s-]) has been deleted")]
+        [Then("the action fails as stream {word} has been deleted")]
         public void ThenTheActionFailsAsStreamHasBeenDeleted(string streamId)
         {
             Assert.That(scenarioContext.TestError, Is.InstanceOf<StreamDeletedException>());
@@ -171,7 +171,7 @@ namespace Eveneum.Tests
             Assert.That(exception.StreamId, Is.EqualTo(streamId));
         }
 
-        [Then(@"the action fails as expected version (\d+) doesn't match the current version (\d+) of stream ([^\s-])")]
+        [Then("the action fails as expected version {int} doesn't match the current version {int} of stream {word}")]
         public void ThenTheActionFailsAsExpectedVersionDoesntMatchTheCurrentVersionOfStream(ulong expectedVersion, ulong currentVersion, string streamId)
         {
             Assert.That(scenarioContext.TestError, Is.InstanceOf<OptimisticConcurrencyException>());
@@ -213,7 +213,7 @@ namespace Eveneum.Tests
             }));
         }
 
-        [Then(@"first (\d+) events are appended")]
+        [Then("first {int} events are appended")]
         public async Task ThenFirstEventsAreAppended(int events)
         {
             await Task.WhenAll(this.Contexts.Select(async context =>
@@ -230,7 +230,7 @@ namespace Eveneum.Tests
             }));
         }
 
-        [Then(@"the action fails as event with version (\d+) already exists in stream ([^\s-])")]
+        [Then("the action fails as event with version {int} already exists in stream {word}")]
         public void ThenTheActionFailsAsEventWithVersionAlreadyExistsInStream(ulong version, string streamId)
         {
             Assert.That(scenarioContext.TestError, Is.InstanceOf<EventAlreadyExistsException>());

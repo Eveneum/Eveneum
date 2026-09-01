@@ -18,10 +18,8 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>    
-    <PackageReference Include="RandomGen" />
-    <PackageReference Include="SpecFlow" />
-    <PackageReference Include="SpecFlow.NUnit.Runners" />
-    <PackageReference Include="SpecFlow.Tools.MsBuild.Generation" />
+    <PackageReference Include="RandomGen" />    
+    <PackageReference Include="Reqnroll.NUnit" />
     <ProjectReference Include="..\Eveneum\Eveneum.csproj" />
     <ProjectReference Include="..\Eveneum.NewtonsoftJson\Eveneum.NewtonsoftJson.csproj" />
   </ItemGroup>

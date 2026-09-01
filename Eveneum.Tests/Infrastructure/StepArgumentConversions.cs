@@ -1,6 +1,6 @@
 ﻿using System.Reflection;
-using TechTalk.SpecFlow;
-using TechTalk.SpecFlow.Bindings;
+using Reqnroll;
+using Reqnroll.Bindings;
 
 namespace Eveneum.Tests.Infrastructure
 {

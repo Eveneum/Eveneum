@@ -29,7 +29,7 @@ namespace Eveneum.Tests.Infrastructure
 
             this.EventStoreOptions.JsonSerializer = new SystemTextJsonSerializer(this.JsonSerializerOptions);
             
-            var persistence = new CosmosPersistence<EveneumDocument>(this.Client, this.Database, this.Container);
+            var persistence = new CosmosPersistence<EveneumDocument>(this.Client, this.Database, this.Container, this.EventStoreOptions.BulkDeleteMode);
             this.EventStore = new EventStore(persistence, this.EventStoreOptions);
 
             await this.EventStore.Initialize();

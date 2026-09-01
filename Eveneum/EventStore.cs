@@ -3,9 +3,7 @@ using Eveneum.Documents;
 using Eveneum.Persistence;
 using Eveneum.Serialization;
 using Eveneum.Snapshots;
-using Eveneum.StoredProcedures;
 using Microsoft.Azure.Cosmos;
-using Microsoft.Azure.Cosmos.Scripts;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -27,8 +25,6 @@ namespace Eveneum
         public ISnapshotWriter SnapshotWriter { get; }
         public SnapshotMode SnapshotMode { get; }
 
-        private const string BulkDeleteStoredProc = "Eveneum.BulkDelete";
-
         public EventStore(ICosmosPersistence persistence, EventStoreOptions options = null)
         {
             Persistence = persistence ?? throw new ArgumentNullException(nameof(persistence));
@@ -47,9 +43,6 @@ namespace Eveneum
         public async Task Initialize(CancellationToken cancellationToken = default)
         {
             await Persistence.Initialize(cancellationToken);
-
-            if (this.BulkDeleteMode == BulkDeleteMode.StoredProcedure)
-                await CreateStoredProcedure(BulkDeleteStoredProc, "BulkDelete", cancellationToken);
         }
 
         public Task<StreamResponse> ReadStream(string streamId, ReadStreamOptions options = null, CancellationToken cancellationToken = default)
@@ -264,7 +257,7 @@ namespace Eveneum
 
             var ttl = this.DeleteMode == DeleteMode.TtlDelete ? StreamTimeToLiveAfterDelete.TotalSeconds : -1;
 
-            var deleteResponse = await this.BulkDeleteDocuments(streamId, query, useSoftDeleteMode, ttl, cancellationToken);
+            var deleteResponse = await this.Persistence.DeleteItems(streamId, query, useSoftDeleteMode, ttl, this.BatchSize, this.QueryMaxItemCount, cancellationToken);
 
             return new DeleteResponse(deleteResponse.DeletedDocuments, requestCharge + deleteResponse.RequestCharge);
         }
@@ -410,90 +403,9 @@ namespace Eveneum
             if (useSoftDeleteMode)
                 query += $" AND c.{nameof(EveneumDocument.Deleted)} = false";
 
-            var deleteResponse = await this.BulkDeleteDocuments(streamId, query, useSoftDeleteMode, -1, cancellationToken);
+            var deleteResponse = await this.Persistence.DeleteItems(streamId, query, useSoftDeleteMode, -1, this.BatchSize, this.QueryMaxItemCount, cancellationToken);
 
             return new DeleteResponse(deleteResponse.DeletedDocuments, requestCharge + deleteResponse.RequestCharge);
-        }
-
-        private Task<DeleteResponse> BulkDeleteDocuments(string streamId, string query, bool softDelete, double ttl, CancellationToken cancellationToken) =>
-            this.BulkDeleteMode == BulkDeleteMode.TransactionalBatch
-                ? this.BulkDeleteDocumentsUsingTransactionalBatch(streamId, query, softDelete, ttl, cancellationToken)
-                : this.BulkDeleteDocumentsUsingStoredProcedure(streamId, query, softDelete, ttl, cancellationToken);
-
-        private async Task<DeleteResponse> BulkDeleteDocumentsUsingStoredProcedure(string streamId, string query, bool softDelete, double ttl, CancellationToken cancellationToken)
-        {
-            double requestCharge = 0;
-            ulong deletedDocuments = 0;
-            StoredProcedureExecuteResponse<BulkDeleteResponse> response;
-
-            do
-            {
-                response = await this.Persistence.ExecuteStoredProcedureAsync<BulkDeleteResponse>(BulkDeleteStoredProc, streamId, new object[] { query, softDelete, ttl }, cancellationToken);
-                requestCharge += response.RequestCharge;
-                deletedDocuments += response.Resource.Deleted;
-            }
-            while (response.Resource.Continuation);
-
-            return new DeleteResponse(deletedDocuments, requestCharge);
-        }
-
-        private async Task<DeleteResponse> BulkDeleteDocumentsUsingTransactionalBatch(string streamId, string query, bool softDelete, double ttl, CancellationToken cancellationToken)
-        {
-            var partitionKey = new PartitionKey(streamId);
-
-            double requestCharge = 0;
-            ulong deletedDocuments = 0;
-            List<EveneumDocument> documents;
-
-            do
-            {
-                documents = new List<EveneumDocument>();
-
-                using (var iterator = this.Container.GetItemQueryIterator<EveneumDocument>(query, requestOptions: new QueryRequestOptions { PartitionKey = partitionKey, MaxItemCount = this.QueryMaxItemCount }))
-                {
-                    while (iterator.HasMoreResults && documents.Count == 0)
-                    {
-                        var page = await iterator.ReadNextAsync(cancellationToken);
-
-                        requestCharge += page.RequestCharge;
-                        documents.AddRange(page);
-                    }
-                }
-
-                foreach (var batch in documents.Batch(this.BatchSize))
-                {
-                    if (!batch.Any())
-                        continue;
-
-                    var transaction = this.Container.CreateTransactionalBatch(partitionKey);
-
-                    foreach (var document in batch)
-                    {
-                        if (softDelete)
-                        {
-                            document.Deleted = true;
-
-                            if (ttl > 0)
-                                document.TimeToLive = (int)ttl;
-
-                            transaction.ReplaceItem(document.Id, document, new TransactionalBatchItemRequestOptions { IfMatchEtag = document.ETag });
-                        }
-                        else
-                            transaction.DeleteItem(document.Id, new TransactionalBatchItemRequestOptions { IfMatchEtag = document.ETag });
-                    }
-
-                    using var response = await transaction.ExecuteAsync(cancellationToken);
-                    requestCharge += response.RequestCharge;
-
-                    if (!response.IsSuccessStatusCode)
-                        throw new WriteException(streamId, requestCharge, response.ErrorMessage, response.StatusCode);
-
-                    deletedDocuments += (ulong)batch.Count();
-                }
-            }
-            while (documents.Count > 0);
-
-            return new DeleteResponse(deletedDocuments, requestCharge);
         }
     }
 }

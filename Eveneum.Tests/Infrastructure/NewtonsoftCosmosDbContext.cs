@@ -25,7 +25,7 @@ namespace Eveneum.Tests.Infrastructure
 
             this.EventStoreOptions.JsonSerializer = new NewtonsoftJsonSerializer(this.JsonSerializerSettings);
             
-            var persistence = new CosmosPersistence<NewtonsoftJsonEveneumDocument>(this.Client, this.Database, this.Container);
+            var persistence = new CosmosPersistence<NewtonsoftJsonEveneumDocument>(this.Client, this.Database, this.Container, this.EventStoreOptions.BulkDeleteMode);
             this.EventStore = new EventStore(persistence, this.EventStoreOptions);
 
             await this.EventStore.Initialize();

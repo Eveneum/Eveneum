@@ -226,7 +226,7 @@ Scenario: Hard-delete event
 
 Scenario: Delete event using transactional batch mode
 	Given transactional batch bulk delete mode
-	And an event store backed by partitioned collection
+	And an event store
 	And an existing stream A with 10 events
 	And an existing stream B with 100 events
 	When I delete event in version 5 in stream B
@@ -236,7 +236,7 @@ Scenario: Delete event using transactional batch mode
 Scenario: Hard-delete event using transactional batch mode
 	Given transactional batch bulk delete mode
 	And hard-delete mode
-	And an event store backed by partitioned collection
+	And an event store
 	And an existing stream A with 10 events
 	And an existing stream B with 100 events
 	When I delete event in version 5 in stream B

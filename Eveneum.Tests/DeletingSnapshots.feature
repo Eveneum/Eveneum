@@ -51,7 +51,7 @@ Scenario: Hard-deleting some snapshots
 
 Scenario: Deleting some snapshots using transactional batch mode
 	Given transactional batch bulk delete mode
-	And an event store backed by partitioned collection
+	And an event store
 	And an existing stream P with 10 events
 	And an existing snapshot for version 5
 	And an existing stream S with 10 events
@@ -69,7 +69,7 @@ Scenario: Deleting some snapshots using transactional batch mode
 Scenario: Hard-deleting some snapshots using transactional batch mode
 	Given transactional batch bulk delete mode
 	And hard-delete mode
-	And an event store backed by partitioned collection
+	And an event store
 	And an existing stream P with 10 events
 	And an existing snapshot for version 5
 	And an existing stream S with 10 events
