@@ -1,0 +1,94 @@
+parameters:
+- name: RunTests
+  displayName: 'Run Tests'
+  type: boolean
+  default: true
+
+pool:
+  vmImage: 'windows-2025'
+
+variables:
+  Configuration: 'Release'
+
+steps:
+- checkout: self
+  fetchDepth: 0
+
+- script: |
+    dotnet tool install --global GitVersion.Tool
+    dotnet-gitversion /output buildserver
+  displayName: Run GitVersion
+
+- task: NuGetToolInstaller@1
+  displayName: 'Use NuGet '
+  inputs:
+    checkLatest: true
+
+- task: NuGetCommand@2
+  displayName: 'NuGet restore'
+  inputs:
+    verbosityRestore: Quiet
+
+- task: VSBuild@1
+  displayName: 'Build solution'
+  inputs:
+    configuration: '$(Configuration)'
+    maximumCpuCount: true
+    msbuildArchitecture: x64
+
+- task: qetza.replacetokens.replacetokens-task.replacetokens@6
+  displayName: 'Replace Version in NuSpec'
+  inputs:
+    sources: '**/*.nuspec'
+    addBOM: true
+    logLevel: debug
+    ifNoFilesFound: warn
+
+- task: DotNetCoreCLI@2
+  displayName: 'dotnet pack - Eveneum'
+  inputs:
+    command: pack
+    verbosityRestore: Detailed
+    packagesToPack: Eveneum/Eveneum.nuspec
+    nobuild: true
+    versioningScheme: byBuildNumber
+
+- task: DotNetCoreCLI@2
+  displayName: 'dotnet pack - Eveneum.ApplicationInsights'
+  inputs:
+    command: pack
+    verbosityRestore: Detailed
+    packagesToPack: Eveneum.ApplicationInsights/Eveneum.ApplicationInsights.nuspec
+    nobuild: true
+    versioningScheme: byBuildNumber
+
+- task: DotNetCoreCLI@2
+  displayName: 'dotnet pack - Eveneum.NewtonsoftJson'
+  inputs:
+    command: pack
+    verbosityRestore: Detailed
+    packagesToPack: Eveneum.NewtonsoftJson/Eveneum.NewtonsoftJson.nuspec
+    nobuild: true
+    versioningScheme: byBuildNumber
+
+- task: PublishBuildArtifacts@1
+  displayName: 'Publish Artifact: drop'
+
+- powershell: |
+    Import-Module "C:\Program Files\Azure Cosmos DB Emulator\PSModules\Microsoft.Azure.CosmosDB.Emulator"
+   
+    Start-CosmosDbEmulator -Timeout 600
+  displayName: 'Start CosmosDB emulator'
+  condition: eq(${{ parameters.RunTests }}, true)
+
+- task: VSTest@2
+  displayName: Test
+  condition: eq(${{ parameters.RunTests }}, true)
+  inputs:
+    testAssemblyVer2: |
+     **\*.Tests.dll
+     !**\*TestAdapter.dll
+     !**\obj\**
+    runInParallel: true
+    codeCoverageEnabled: true
+    diagnosticsEnabled: True

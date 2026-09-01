@@ -3,7 +3,7 @@
 
 @ExpectException
 Scenario: Creating snapshot for non-existent event
-	Given an event store backed by partitioned collection
+	Given an event store
 	And an existing stream S with 10 events
 	When I create snapshot for stream S in version 20
 	Then the action fails as expected version 20 doesn't match the current version 10 of stream S

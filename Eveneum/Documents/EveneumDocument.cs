@@ -1,73 +1,92 @@
 ﻿using System;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
-using Newtonsoft.Json.Linq;
+using System.Text.Json.Serialization;
+using Eveneum.Serialization;
 
 namespace Eveneum.Documents
 {
     public enum DocumentType { Header = 1, Event, Snapshot }
 
-    public class EveneumDocument
+    public interface IEveneumDocument
     {
-        public EveneumDocument(string id, DocumentType documentType)
-        {
-            this.Id = id;
-            this.DocumentType = documentType;
-        }
+        string Id { get; set; }
 
-        [JsonProperty(PropertyName = "id")]
-        public string Id { get; set; }
+        DocumentType DocumentType { get; }
 
-        [JsonConverter(typeof(StringEnumConverter))]
-        [JsonProperty(PropertyName = nameof(DocumentType))]
-        public DocumentType DocumentType { get; }
+        string StreamId { get; set; }
 
-        [JsonProperty(PropertyName = nameof(StreamId))]
+        ulong Version { get; set; }
+
+        string MetadataType { get; set; }
+
+        object Metadata { get; set; }
+
+        string BodyType { get; set; }
+
+        object Body { get; set; }
+
+        decimal SortOrder { get; }
+
+        bool Deleted { get; set; }
+
+        string ETag { get; set; }
+
+        string Timestamp { get; set; }
+
+        int? TimeToLive { get; set; }
+    }
+
+    public class EveneumDocument(string id, DocumentType documentType) : IEveneumDocument
+    {
+        [JsonPropertyName("id")]
+        public string Id { get; set;  } = id;
+
+        [JsonConverter(typeof(JsonStringEnumConverter))]
+        [JsonPropertyName("DocumentType")]
+        public DocumentType DocumentType { get; set; } = documentType;
+
+        [JsonPropertyName("StreamId")]
         public string StreamId { get; set; }
 
-        [JsonProperty(PropertyName = nameof(Version))]
+        [JsonPropertyName("Version")]
         public ulong Version { get; set; }
 
-        [JsonProperty(PropertyName = nameof(MetadataType))]
+        [JsonPropertyName("MetadataType")]
         public string MetadataType { get; set; }
 
-        [JsonProperty(PropertyName = nameof(Metadata))]
-        public JToken Metadata { get; set; }
+        [JsonConverter(typeof(JsonNodeObjectConverter))]
+        [JsonPropertyName("Metadata")]
+        public object Metadata { get; set; }
 
-        [JsonProperty(PropertyName = nameof(BodyType))]
+        [JsonPropertyName("BodyType")]
         public string BodyType { get; set; }
 
-        [JsonProperty(PropertyName = nameof(Body))]
-        public JToken Body { get; set; }
+        [JsonConverter(typeof(JsonNodeObjectConverter))]
+        [JsonPropertyName("Body")]
+        public object Body { get; set; }
 
-        [JsonProperty(PropertyName = nameof(SortOrder))]
+        [JsonPropertyName("SortOrder")]
         public decimal SortOrder => this.Version + GetOrderingFraction(this.DocumentType);
 
-        [JsonProperty(PropertyName = nameof(Deleted))]
+        [JsonPropertyName("Deleted")]
         public bool Deleted { get; set; }
 
-        [JsonProperty(PropertyName = "_etag")]
+        [JsonPropertyName("_etag")]
         public string ETag { get; set; }
 
-        [JsonProperty(PropertyName = "_ts")]
+        [JsonConverter(typeof(CosmosTimestampConverter))]
+        [JsonPropertyName("_ts")]
         public string Timestamp { get; set; }
 
-        [JsonProperty(PropertyName = "ttl", NullValueHandling = NullValueHandling.Ignore)]
+        [JsonPropertyName("ttl")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public int? TimeToLive { get; set; }
 
-        internal static decimal GetOrderingFraction(DocumentType documentType)
+        public static decimal GetOrderingFraction(DocumentType documentType) => documentType switch
         {
-            switch(documentType)
-            {
-                case DocumentType.Header:
-                    return 0.3M;
-                case DocumentType.Snapshot:
-                    return 0.2M;
-                case DocumentType.Event:
-                    return 0.1M;
-                default:
-                    throw new NotSupportedException($"Document type '{documentType}' is not supported.");
-            }
-        }
+            DocumentType.Header => 0.3M,
+            DocumentType.Snapshot => 0.2M,
+            DocumentType.Event => 0.1M,
+            _ => throw new NotSupportedException($"Document type '{documentType}' is not supported."),
+        };
     }
 }

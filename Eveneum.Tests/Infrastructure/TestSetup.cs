@@ -1,7 +1,7 @@
-﻿using System;
-using System.Linq;
-using NodaTime;
+﻿using NodaTime;
 using RandomGen;
+using System;
+using System.Linq;
 
 namespace Eveneum.Tests.Infrastructure
 {

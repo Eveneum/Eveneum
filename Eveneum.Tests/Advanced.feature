@@ -2,7 +2,7 @@
 	Advanced usage scenarios of Event Store
 
 Scenario: Loading all events
-	Given an event store backed by partitioned collection
+	Given an event store
 	And a deleted stream A with 10 events
 	And an existing stream B with 100 events
 	And an existing snapshot for version 10
@@ -20,7 +20,7 @@ Scenario: Loading all events
 	And request charge is reported
 		
 Scenario: Querying events
-	Given an event store backed by partitioned collection
+	Given an event store
 	And a deleted stream A with 10 events
 	And an existing stream B with 100 events
 	And an existing snapshot for version 10
@@ -38,7 +38,7 @@ Scenario: Querying events
 	And request charge is reported
 		
 Scenario: Querying events excluding deleted ones
-	Given an event store backed by partitioned collection
+	Given an event store
 	And a deleted stream A with 10 events
 	And an existing stream B with 100 events
 	And an existing snapshot for version 10
@@ -56,7 +56,7 @@ Scenario: Querying events excluding deleted ones
 	And request charge is reported
 	
 Scenario: Querying events using query definition
-	Given an event store backed by partitioned collection
+	Given an event store
 	And a deleted stream A with 10 events
 	And an existing stream B with 100 events
 	And an existing snapshot for version 10
@@ -74,7 +74,7 @@ Scenario: Querying events using query definition
 	And request charge is reported
 		
 Scenario: Querying events excluding deleted ones using query definition
-	Given an event store backed by partitioned collection
+	Given an event store
 	And a deleted stream A with 10 events
 	And an existing stream B with 100 events
 	And an existing snapshot for version 10
@@ -92,7 +92,7 @@ Scenario: Querying events excluding deleted ones using query definition
 	And request charge is reported
 	
 Scenario: Querying stream headers
-	Given an event store backed by partitioned collection
+	Given an event store
 	And an existing stream A with 10 events
 	And an existing stream B with 100 events
 	And an existing snapshot for version 10
@@ -115,7 +115,7 @@ Scenario: Querying stream headers
 	And request charge is reported
 		
 Scenario: Querying stream headers excludes deleted streams
-	Given an event store backed by partitioned collection
+	Given an event store
 	And an existing stream A with 10 events
 	And a deleted stream B with 100 events
 	And an existing stream C with 200 events
@@ -128,7 +128,7 @@ Scenario: Querying stream headers excludes deleted streams
 	And request charge is reported
 		
 Scenario: Querying stream headers including deleted streams
-	Given an event store backed by partitioned collection
+	Given an event store
 	And an existing stream A with 10 events
 	And a deleted stream B with 100 events
 	And an existing stream C with 200 events
@@ -146,7 +146,7 @@ Scenario: Querying stream headers including deleted streams
 	And request charge is reported
 	
 Scenario: Querying stream headers using query definition
-	Given an event store backed by partitioned collection
+	Given an event store
 	And an existing stream A with 10 events
 	And an existing stream B with 100 events
 	And an existing snapshot for version 10
@@ -169,7 +169,7 @@ Scenario: Querying stream headers using query definition
 	And request charge is reported
 	
 Scenario: Querying stream headers using query definition excludes deleted streams
-	Given an event store backed by partitioned collection
+	Given an event store
 	And an existing stream A with 10 events
 	And a deleted stream B with 100 events
 	And an existing stream C with 200 events
@@ -182,7 +182,7 @@ Scenario: Querying stream headers using query definition excludes deleted stream
 	And request charge is reported
 	
 Scenario: Querying stream headers including deleted streams using query definition
-	Given an event store backed by partitioned collection
+	Given an event store
 	And an existing stream A with 10 events
 	And a deleted stream B with 100 events
 	And an existing stream C with 200 events
@@ -200,7 +200,7 @@ Scenario: Querying stream headers including deleted streams using query definiti
 	And request charge is reported
 
 Scenario: Replace event
-	Given an event store backed by partitioned collection
+	Given an event store
 	And an existing stream A with 10 events
 	And an existing stream B with 100 events
 	When I replace event in version 5 in stream B
@@ -208,7 +208,7 @@ Scenario: Replace event
 	And request charge is reported
 
 Scenario: Delete event
-	Given an event store backed by partitioned collection
+	Given an event store
 	And an existing stream A with 10 events
 	And an existing stream B with 100 events
 	When I delete event in version 5 in stream B
@@ -217,7 +217,7 @@ Scenario: Delete event
 	
 Scenario: Hard-delete event
     Given hard-delete mode
-	And an event store backed by partitioned collection
+	And an event store
 	And an existing stream A with 10 events
 	And an existing stream B with 100 events
 	When I delete event in version 5 in stream B

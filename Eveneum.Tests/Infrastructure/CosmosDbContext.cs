@@ -1,25 +1,21 @@
-﻿using Eveneum.Documents;
+using Eveneum.Documents;
 using Eveneum.Snapshots;
 using Microsoft.Azure.Cosmos;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Serialization;
-using NodaTime;
-using NodaTime.Serialization.JsonNet;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Eveneum.Tests.Infrastructure
 {
-    class CosmosDbContext : IDisposable
+    public abstract class CosmosDbContext : IDisposable
     {
-        public string Database { get; private set; }
-        public string Container { get; private set; }
-
-        public CosmosClient Client { get; private set; }
-        public IEventStore EventStore { get; private set; }
+        public string Database { get; } = "EveneumDB";
+        public abstract string Container { get; }
+        public CosmosClient Client { get; protected set; }
+        public IEventStore EventStore { get; protected set; }
         public EventStoreOptions EventStoreOptions { get; } = new EventStoreOptions() { QueryMaxItemCount = 100 };
-
+        
         public string StreamId { get; set; }
         public Stream? Stream { get; set; }
         public SampleMetadata HeaderMetadata { get; set; }
@@ -30,42 +26,61 @@ namespace Eveneum.Tests.Infrastructure
         public List<EventData> LoadAllEvents { get; set; }
         public List<StreamHeader> LoadAllStreamHeaders { get; set; }
         public EventData ReplacedEvent { get; set; }
-        public List<EveneumDocument> ExistingDocuments { get; set; }
-
-        public JsonSerializerSettings JsonSerializerSettings { get; set; } = new JsonSerializerSettings();
-
+        public List<IEveneumDocument> ExistingDocuments { get; set; }
         public Response Response { get; set; }
 
-        public CosmosDbContext()
+        public virtual void Dispose()
         {
-            this.Database = "EveneumDB";
-            this.Container = Guid.NewGuid().ToString();
+            this.Client?.Dispose();
         }
 
-        internal void AddCamelCasePropertyNamesContractResolver()
-        {
-            var contractResolver = new CamelCasePropertyNamesContractResolver();
-            contractResolver.NamingStrategy.OverrideSpecifiedNames = false;
+        public abstract bool AreEqual(object expected, object actual);
 
-            this.JsonSerializerSettings.ContractResolver = contractResolver;
+        public abstract Task Initialize();
+
+        protected async Task DeleteAllDocuments<T>()
+            where T : class, IEveneumDocument
+        {
+            var container = this.Client.GetDatabase(this.Database).GetContainer(this.Container);
+
+            using var query = container.GetItemQueryIterator<T>("SELECT c.id, c.StreamId FROM c");
+
+            var requestOptions = new ItemRequestOptions
+            {
+                ConsistencyLevel = ConsistencyLevel.Session
+            };
+
+            while (query.HasMoreResults)
+            {
+                var response = await query.ReadNextAsync();
+
+                var deleteTasks = response.Select(item => DeleteWithRetryAsync(
+                    container,
+                    item.Id,
+                    new PartitionKey(item.StreamId),
+                    requestOptions));
+
+                await Task.WhenAll(deleteTasks);
+            }
         }
 
-        internal async Task Initialize(bool initializeEventStore = true)
+        private static async Task DeleteWithRetryAsync(Container container, string id, PartitionKey partitionKey, ItemRequestOptions requestOptions, int maxRetries = 3)
         {
-            this.JsonSerializerSettings.ConfigureForNodaTime(DateTimeZoneProviders.Tzdb);
-
-            this.Client = await CosmosSetup.GetClient(this.Database, this.Container, this.JsonSerializerSettings);
-
-            this.EventStoreOptions.JsonSerializer = JsonSerializer.Create(this.JsonSerializerSettings);
-            this.EventStore = new EventStore(this.Client, this.Database, this.Container, this.EventStoreOptions);
-
-            if (initializeEventStore)
-                await this.EventStore.Initialize();
-        }
-
-        public void Dispose()
-        {
-            CosmosSetup.GetClient().GetDatabase(this.Database).GetContainer(this.Container).DeleteContainerAsync().Wait();
+            int retryCount = 0;
+            while (true)
+            {
+                try
+                {
+                    await container.DeleteItemAsync<dynamic>(id, partitionKey, requestOptions);
+                    return;
+                }
+                catch (CosmosException ex) when (ex.StatusCode == System.Net.HttpStatusCode.RequestTimeout && retryCount < maxRetries)
+                {
+                    retryCount++;
+                    var delay = TimeSpan.FromSeconds(Math.Pow(2, retryCount));
+                    await Task.Delay(delay);
+                }
+            }
         }
     }
 }

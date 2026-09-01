@@ -1,4 +1,6 @@
-mode: ContinuousDeployment
-branches: {}
-ignore:
-  sha: []
+workflow: GitHubFlow/v1
+
+branches:
+  trunk:
+    mode: ContinuousDelivery
+    regex: ^trunk$|^master$

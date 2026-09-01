@@ -3,7 +3,7 @@
 
 @ExpectException
 Scenario: Creating snapshot for non-existent stream
-	Given an event store backed by partitioned collection
+	Given an event store
 	And an existing stream S with 10 events
 	When I create snapshot for stream X in version 5
 	Then the action fails as stream X doesn't exist
@@ -11,7 +11,7 @@ Scenario: Creating snapshot for non-existent stream
 
 @ExpectException
 Scenario: Creating snapshot for soft-deleted stream
-	Given an event store backed by partitioned collection
+	Given an event store
 	And a deleted stream S with 10 events
 	When I create snapshot for stream S in version 5
 	Then the action fails as stream S doesn't exist
@@ -21,7 +21,7 @@ Scenario: Creating snapshot for soft-deleted stream
 @ExpectException
 Scenario: Creating snapshot for hard-deleted stream
 	Given hard-delete mode
-	And an event store backed by partitioned collection
+	And an event store
 	And a deleted stream S with 10 events
 	When I create snapshot for stream S in version 5
 	Then the action fails as stream S doesn't exist
@@ -30,7 +30,7 @@ Scenario: Creating snapshot for hard-deleted stream
 @ExpectException
 Scenario: Creating snapshot for ttl-deleted stream
 	Given ttl-delete mode with 100 seconds as ttl 
-	And an event store backed by partitioned collection
+	And an event store
 	And a deleted stream S with 10 events
 	When I create snapshot for stream S in version 5
 	Then the action fails as stream S doesn't exist
