@@ -47,13 +47,15 @@ namespace Eveneum.Tests.Infrastructure
         {
             var endpoint = Environment.GetEnvironmentVariable("CosmosDbEmulator.Endpoint", EnvironmentVariableTarget.User) ?? "https://localhost:8081";
             var key = Environment.GetEnvironmentVariable("CosmosDbEmulator.Key", EnvironmentVariableTarget.User) ?? "C2y6yDjf5/R+ob0N8A7Cgv30VRDJIWEHLM+4QDU5DE2nQ9nDuVTqobD4b8mGGyPMbIZnqyMsEcaGQy67XIw/Jw==";
+            var connectionMode = Environment.GetEnvironmentVariable("CosmosDbEmulator.ConnectionMode", EnvironmentVariableTarget.User) ?? "Direct";
 
             return new CosmosClient(endpoint, key, new CosmosClientOptions
             {
                 Serializer = serializer,
                 RequestTimeout = TimeSpan.FromMinutes(1),
                 MaxRetryAttemptsOnRateLimitedRequests = 3,
-                MaxRetryWaitTimeOnRateLimitedRequests = TimeSpan.FromMinutes(1)
+                MaxRetryWaitTimeOnRateLimitedRequests = TimeSpan.FromMinutes(1),
+                ConnectionMode = Enum.Parse<ConnectionMode>(connectionMode, true)
             });
         }
 

@@ -3,9 +3,7 @@ using Eveneum.Documents;
 using Eveneum.Persistence;
 using Eveneum.Serialization;
 using Eveneum.Snapshots;
-using Eveneum.StoredProcedures;
 using Microsoft.Azure.Cosmos;
-using Microsoft.Azure.Cosmos.Scripts;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -25,8 +23,6 @@ namespace Eveneum
         public EveneumDocumentSerializer Serializer { get; }
         public ISnapshotWriter SnapshotWriter { get; }
         public SnapshotMode SnapshotMode { get; }
-
-        private const string BulkDeleteStoredProc = "Eveneum.BulkDelete";
 
         public EventStore(ICosmosPersistence persistence, EventStoreOptions options = null)
         {
@@ -192,13 +188,13 @@ namespace Eveneum
 
             if (response.StatusCode == System.Net.HttpStatusCode.Conflict)
             {
-                if (response.GetOperationResultAtIndex<EveneumDocument>(0).StatusCode == System.Net.HttpStatusCode.Conflict)
+                if (response.GetOperationResultAtIndex<IEveneumDocument>(0).StatusCode == System.Net.HttpStatusCode.Conflict)
                     throw new StreamAlreadyExistsException(streamId, requestCharge);
                 else
                 {
                     foreach (var index in Enumerable.Range(1, events.Length))
                     {
-                        if (response.GetOperationResultAtIndex<EveneumDocument>(index).StatusCode == System.Net.HttpStatusCode.Conflict)
+                        if (response.GetOperationResultAtIndex<IEveneumDocument>(index).StatusCode == System.Net.HttpStatusCode.Conflict)
                             throw new EventAlreadyExistsException(streamId, events[index - 1].Version, requestCharge);
                     }
                 }
@@ -223,7 +219,7 @@ namespace Eveneum
                 {
                     foreach (var index in Enumerable.Range(0, batch.Count()))
                     {
-                        if (batchResponse.GetOperationResultAtIndex<EveneumDocument>(index).StatusCode == System.Net.HttpStatusCode.Conflict)
+                        if (batchResponse.GetOperationResultAtIndex<IEveneumDocument>(index).StatusCode == System.Net.HttpStatusCode.Conflict)
                             throw new EventAlreadyExistsException(streamId, batch.ElementAt(index).Version, requestCharge);
                     }
                 }
@@ -250,9 +246,6 @@ namespace Eveneum
             if (existingHeader.Version != expectedVersion)
                 throw new OptimisticConcurrencyException(streamId, requestCharge, expectedVersion, existingHeader.Version);
 
-            ulong deletedDocuments = 0;
-
-            StoredProcedureExecuteResponse<BulkDeleteResponse> response;
             var query = $"SELECT * FROM c";
 
             var useSoftDeleteMode = (this.DeleteMode == DeleteMode.SoftDelete) || (this.DeleteMode == DeleteMode.TtlDelete);
@@ -260,17 +253,11 @@ namespace Eveneum
             if (useSoftDeleteMode)
                 query += $" WHERE c.{nameof(EveneumDocument.Deleted)} = false";
 
-            do
-            {
-                var ttl = this.DeleteMode == DeleteMode.TtlDelete ? StreamTimeToLiveAfterDelete.TotalSeconds  : -1;                
-                response = await Persistence.ExecuteStoredProcedureAsync<BulkDeleteResponse>(BulkDeleteStoredProc, streamId, new object[] { query, useSoftDeleteMode, ttl }, cancellationToken);
+            var ttl = this.DeleteMode == DeleteMode.TtlDelete ? StreamTimeToLiveAfterDelete.TotalSeconds : -1;
 
-                requestCharge += response.RequestCharge;
-                deletedDocuments += response.Resource.Deleted;
-            }
-            while (response.Resource.Continuation);
+            var deleteResponse = await this.Persistence.DeleteItems(streamId, query, useSoftDeleteMode, ttl, this.BatchSize, this.QueryMaxItemCount, cancellationToken);
 
-            return new DeleteResponse(deletedDocuments, requestCharge);
+            return new DeleteResponse(deleteResponse.DeletedDocuments, requestCharge + deleteResponse.RequestCharge);
         }
 
         public async Task<Response> CreateSnapshot(string streamId, ulong version, object snapshot, object metadata = null, bool deleteOlderSnapshots = false, CancellationToken cancellationToken = default)
@@ -409,20 +396,14 @@ namespace Eveneum
             var headerResponse = await this.ReadHeader(streamId, cancellationToken);
 
             var requestCharge = headerResponse.RequestCharge;
-            ulong deletedSnapshots = 0;
-            StoredProcedureExecuteResponse<BulkDeleteResponse> response;
-            if (this.DeleteMode == DeleteMode.SoftDelete)
+            var useSoftDeleteMode = this.DeleteMode == DeleteMode.SoftDelete;
+
+            if (useSoftDeleteMode)
                 query += $" AND c.{nameof(EveneumDocument.Deleted)} = false";
 
-            do
-            {
-                response = await this.Persistence.ExecuteStoredProcedureAsync<BulkDeleteResponse>(BulkDeleteStoredProc, streamId, new object[] { query, this.DeleteMode == DeleteMode.SoftDelete }, cancellationToken);
-                requestCharge += response.RequestCharge;
-                deletedSnapshots += response.Resource.Deleted;
-            }
-            while (response.Resource.Continuation);
+            var deleteResponse = await this.Persistence.DeleteItems(streamId, query, useSoftDeleteMode, -1, this.BatchSize, this.QueryMaxItemCount, cancellationToken);
 
-            return new DeleteResponse(deletedSnapshots, requestCharge);
+            return new DeleteResponse(deleteResponse.DeletedDocuments, requestCharge + deleteResponse.RequestCharge);
         }
     }
 }

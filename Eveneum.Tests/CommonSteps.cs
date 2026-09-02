@@ -5,14 +5,14 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using TechTalk.SpecFlow;
+using Reqnroll;
 
 namespace Eveneum.Tests
 {
     [Binding]
-    public class CommonSteps(NewtonsoftCosmosDbContext newtonsoftContext, SystemTextJsonCosmosDbContext stjContext, ScenarioContext scenarioContext)
+    public class CommonSteps(ScenarioContext scenarioContext, NewtonsoftCosmosDbContext newtonsoftContext, SystemTextJsonCosmosDbContext stjContext, NewtonsoftLinuxCosmosDbContext newtonsoftLinuxContext, SystemTextJsonLinuxCosmosDbContext stjLinuxContext)
     {
-        private readonly IReadOnlyCollection<CosmosDbContext> Contexts = [newtonsoftContext, stjContext];
+        private readonly IReadOnlyCollection<CosmosDbContext> Contexts = [newtonsoftContext, stjContext, newtonsoftLinuxContext, stjLinuxContext];
 
         [Given(@"Cosmos serializer with camel-case naming policy")]
         public void GivenCosmosSerializerWithCamelCaseNamingPolicy()
@@ -42,13 +42,13 @@ namespace Eveneum.Tests
             }
         }
 
-        [Given(@"an event store")]
+        [Given("an event store")]
         public async Task GivenAnEventStore()
         {
             await Task.WhenAll(this.Contexts.Select(x => x.Initialize()));
         }
 
-        [Given(@"hard-delete mode")]
+        [Given("hard-delete mode")]
         public void GivenHardDeleteMode()
         {
             foreach (var context in this.Contexts)
@@ -57,7 +57,7 @@ namespace Eveneum.Tests
             }
         }
 
-        [Given(@"ttl-delete mode with (\d+) seconds as ttl")]
+        [Given("ttl-delete mode with {int} seconds as ttl")]
         public void GivenTTlDeleteMode(int streamTtlAfterDelete)
         {
             foreach (var context in this.Contexts)
@@ -67,7 +67,7 @@ namespace Eveneum.Tests
             }
         }
 
-        [Given(@"single snapshot mode")]
+        [Given("single snapshot mode")]
         public void GivenSingleSnapshotMode()
         {
             foreach (var context in this.Contexts)
@@ -76,7 +76,7 @@ namespace Eveneum.Tests
             }
         }
 
-        [Given(@"an existing stream ([^\s-]) with (\d+) events")]
+        [Given("an existing stream {word} with {int} events")]
         public async Task GivenAnExistingStream(string streamId, ushort events)
         {
             var eventData = TestSetup.GetEvents(events);
@@ -89,7 +89,7 @@ namespace Eveneum.Tests
             }));
         }
 
-        [Given(@"an existing stream ([^\s-]) with metadata and (\d+) events")]
+        [Given("an existing stream {word} with metadata and {int} events")]
         public async Task GivenAnExistingStreamWithMetadataAndEvents(string streamId, ushort events)
         {
             var metadata = TestSetup.GetMetadata();
@@ -104,7 +104,7 @@ namespace Eveneum.Tests
             }));
         }
 
-        [Given(@"a deleted stream ([^\s-]) with (\d+) events")]
+        [Given("a deleted stream {word} with {int} events")]
         public async Task GivenADeletedStream(string streamId, ushort events)
         {
             var eventData = TestSetup.GetEvents(events);
@@ -118,13 +118,13 @@ namespace Eveneum.Tests
             }));
         }
 
-        [When(@"I wait for (\d+) seconds")]
+        [When("I wait for {int} seconds")]
         public async Task Wait(int waitForSeconds)
         {
             await Task.Delay(TimeSpan.FromSeconds(waitForSeconds));
         }
 
-        [Then(@"request charge is reported")]
+        [Then("request charge is reported")]
         public void ThenRequestChargeIsReported()
         {
             foreach (var context in this.Contexts)
@@ -139,7 +139,7 @@ namespace Eveneum.Tests
             }
         }
 
-        [Then(@"(\d+) deleted documents are reported")]
+        [Then("{int} deleted documents are reported")]
         public void ThenDeletedDocumentsAreReported(ulong deletedDocuments)
         {
             foreach (var context in this.Contexts)

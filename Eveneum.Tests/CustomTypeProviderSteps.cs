@@ -7,7 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using TechTalk.SpecFlow;
+using Reqnroll;
 
 namespace Eveneum.Tests
 {
@@ -20,9 +20,9 @@ namespace Eveneum.Tests
 
 	[Binding]
 	[Scope(Feature = "Custom Type provider")]
-	public class CustomTypeProviderSteps(NewtonsoftCosmosDbContext newtonsoftContext, SystemTextJsonCosmosDbContext stjContext)
+	public class CustomTypeProviderSteps(NewtonsoftCosmosDbContext newtonsoftContext, SystemTextJsonCosmosDbContext stjContext, NewtonsoftLinuxCosmosDbContext newtonsoftLinuxContext, SystemTextJsonLinuxCosmosDbContext stjLinuxContext)
     {
-        private readonly IReadOnlyCollection<CosmosDbContext> Contexts = [newtonsoftContext, stjContext];
+        private readonly IReadOnlyCollection<CosmosDbContext> Contexts = [newtonsoftContext, stjContext, newtonsoftLinuxContext, stjLinuxContext];
 
         [Given(@"a custom Type Provider")]
 		public void GivenACustomTypeProvider()

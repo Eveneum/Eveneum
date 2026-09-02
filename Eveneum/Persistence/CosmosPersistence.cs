@@ -1,8 +1,11 @@
 using Eveneum.Documents;
+using Eveneum.StoredProcedures;
 using Microsoft.Azure.Cosmos;
 using Microsoft.Azure.Cosmos.Scripts;
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
@@ -13,8 +16,11 @@ namespace Eveneum.Persistence
         where TDocument : class, IEveneumDocument
     {
         protected readonly Container Container;
+        protected readonly BulkDeleteMode BulkDeleteMode;
 
-        public CosmosPersistence(CosmosClient cosmosClient, string databaseName, string containerName)
+        private const string BulkDeleteStoredProc = "Eveneum.BulkDelete";
+
+        public CosmosPersistence(CosmosClient cosmosClient, string databaseName, string containerName, BulkDeleteMode bulkDeleteMode = BulkDeleteMode.StoredProcedure)
         {
             if (cosmosClient == null)
                 throw new ArgumentNullException(nameof(cosmosClient));
@@ -27,11 +33,14 @@ namespace Eveneum.Persistence
 
             var database = cosmosClient.GetDatabase(databaseName);
             this.Container = database.GetContainer(containerName);
+
+            this.BulkDeleteMode = bulkDeleteMode;
         }
 
         public virtual async Task Initialize(CancellationToken cancellationToken = default)
         {
-            await CreateOrUpdateStoredProcedureAsync("Eveneum.BulkDelete", "BulkDelete", cancellationToken);
+            if (this.BulkDeleteMode == BulkDeleteMode.StoredProcedure)
+                await CreateOrUpdateStoredProcedureAsync(BulkDeleteStoredProc, "BulkDelete", cancellationToken);
         }
 
         public async Task CreateOrUpdateStoredProcedureAsync(
@@ -140,6 +149,90 @@ namespace Eveneum.Persistence
                 cancellationToken: cancellationToken);
 
             return new CosmosItemResponse<IEveneumDocument>(result.Resource, result.RequestCharge);
+        }
+
+        public Task<DeleteResponse> DeleteItems(string streamId, string query, bool softDelete, double ttl, byte batchSize, int? maxItemCount = null, CancellationToken cancellationToken = default) =>
+            this.BulkDeleteMode == BulkDeleteMode.TransactionalBatch
+                ? this.BulkDeleteDocumentsUsingTransactionalBatch(streamId, query, softDelete, ttl, batchSize, maxItemCount, cancellationToken)
+                : this.BulkDeleteDocumentsUsingStoredProcedure(streamId, query, softDelete, ttl, cancellationToken);
+
+        private async Task<DeleteResponse> BulkDeleteDocumentsUsingStoredProcedure(string streamId, string query, bool softDelete, double ttl, CancellationToken cancellationToken = default)
+        {
+            double requestCharge = 0;
+            ulong deletedDocuments = 0;
+            StoredProcedureExecuteResponse<BulkDeleteResponse> response;
+
+            do
+            {
+                response = await this.ExecuteStoredProcedureAsync<BulkDeleteResponse>(
+                    BulkDeleteStoredProc,
+                    streamId,
+                    [query, softDelete, ttl],
+                    cancellationToken);
+
+                requestCharge += response.RequestCharge;
+                deletedDocuments += response.Resource.Deleted;
+            }
+            while (response.Resource.Continuation);
+
+            return new DeleteResponse(deletedDocuments, requestCharge);
+        }
+
+        private async Task<DeleteResponse> BulkDeleteDocumentsUsingTransactionalBatch(string streamId, string query, bool softDelete, double ttl, byte batchSize, int? maxItemCount = null, CancellationToken cancellationToken = default)
+        {
+            double requestCharge = 0;
+            ulong deletedDocuments = 0;
+            List<IEveneumDocument> documents;
+
+            do
+            {
+                documents = [];
+
+                using (var iterator = this.GetItemQueryIterator(query, streamId, maxItemCount))
+                {
+                    while (iterator.HasMoreResults && documents.Count == 0)
+                    {
+                        var page = await iterator.ReadNextAsync(cancellationToken);
+
+                        requestCharge += page.RequestCharge;
+                        documents.AddRange(page);
+                    }
+                }
+
+                foreach (var batch in documents.Batch(batchSize))
+                {
+                    if (!batch.Any())
+                        continue;
+
+                    var transaction = this.CreateTransactionalBatch(streamId);
+
+                    foreach (var document in batch)
+                    {
+                        if (softDelete)
+                        {
+                            document.Deleted = true;
+
+                            if (ttl > 0)
+                                document.TimeToLive = (int)ttl;
+
+                            transaction.ReplaceItem(document.Id, document, new TransactionalBatchItemRequestOptions { IfMatchEtag = document.ETag });
+                        }
+                        else
+                            transaction.DeleteItem(document.Id, new TransactionalBatchItemRequestOptions { IfMatchEtag = document.ETag });
+                    }
+
+                    using var response = await transaction.ExecuteAsync(cancellationToken);
+                    requestCharge += response.RequestCharge;
+
+                    if (!response.IsSuccessStatusCode)
+                        throw new WriteException(streamId, requestCharge, response.ErrorMessage, response.StatusCode);
+
+                    deletedDocuments += (ulong)batch.Count();
+                }
+            }
+            while (documents.Count > 0);
+
+            return new DeleteResponse(deletedDocuments, requestCharge);
         }
     }
 }

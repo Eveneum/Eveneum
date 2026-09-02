@@ -25,7 +25,7 @@ namespace Eveneum.Tests.Infrastructure
 
             this.EventStoreOptions.JsonSerializer = new NewtonsoftJsonSerializer(this.JsonSerializerSettings);
             
-            var persistence = new CosmosPersistence<NewtonsoftJsonEveneumDocument>(this.Client, this.Database, this.Container);
+            var persistence = new CosmosPersistence<NewtonsoftJsonEveneumDocument>(this.Client, this.Database, this.Container, this.EventStoreOptions.BulkDeleteMode);
             this.EventStore = new EventStore(persistence, this.EventStoreOptions);
 
             await this.EventStore.Initialize();
@@ -43,6 +43,16 @@ namespace Eveneum.Tests.Infrastructure
             var secondToken = second is JToken secondJToken ? secondJToken : (JToken)this.EventStoreOptions.JsonSerializer.Serialize(second);
 
             return JToken.DeepEquals(firstToken, secondToken);
+        }
+    }
+
+    public class NewtonsoftLinuxCosmosDbContext : NewtonsoftCosmosDbContext
+    {
+        public override string Container => base.Container + "Linux";
+
+        public NewtonsoftLinuxCosmosDbContext()
+        {
+            this.EventStoreOptions.BulkDeleteMode = BulkDeleteMode.TransactionalBatch;
         }
     }
 }

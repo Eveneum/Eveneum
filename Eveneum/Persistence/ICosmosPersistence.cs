@@ -58,6 +58,21 @@ namespace Eveneum.Persistence
             CancellationToken cancellationToken = default);
 
         /// <summary>
+        /// Deletes documents in a stream that match a query, in batches, with optional soft-delete behavior.
+        /// </summary>
+        /// <remarks>
+        /// When soft deletion is disabled, the TTL value may be ignored by the implementation.
+        /// </remarks>
+        Task<DeleteResponse> DeleteItems(
+            string streamId, 
+            string query, 
+            bool softDelete, 
+            double ttl, 
+            byte batchSize, 
+            int? maxItemCount = null, 
+            CancellationToken cancellationToken = default);
+
+        /// <summary>
         /// Execute a stored procedure.
         /// </summary>
         Task<StoredProcedureExecuteResponse<T>> ExecuteStoredProcedureAsync<T>(

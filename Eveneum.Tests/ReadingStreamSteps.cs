@@ -3,34 +3,34 @@ using NUnit.Framework;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using TechTalk.SpecFlow;
+using Reqnroll;
 
 namespace Eveneum.Tests
 {
     [Binding]
-    public class ReadingStreamSteps(NewtonsoftCosmosDbContext newtonsoftContext, SystemTextJsonCosmosDbContext stjContext)
+    public class ReadingStreamSteps(NewtonsoftCosmosDbContext newtonsoftContext, SystemTextJsonCosmosDbContext stjContext, NewtonsoftLinuxCosmosDbContext newtonsoftLinuxContext, SystemTextJsonLinuxCosmosDbContext stjLinuxContext)
     {
-        private readonly IReadOnlyCollection<CosmosDbContext> Contexts = [newtonsoftContext, stjContext];
+        private readonly IReadOnlyCollection<CosmosDbContext> Contexts = [newtonsoftContext, stjContext, newtonsoftLinuxContext, stjLinuxContext];
 
-        [When(@"I read stream ([^\s-])")]
+        [When("I read stream {word}")]
         public Task WhenIReadStream(string streamId) => this.WhenIReadStream(streamId, null);
 
-        [When(@"I read stream ([^\s-]) as of version (\d+)")]
+        [When("I read stream {word} as of version {int}")]
         public Task WhenIReadStreamAsOfVersion(string streamId, ulong version) => this.WhenIReadStream(streamId, new ReadStreamOptions { ToVersion = version });
 
-        [When(@"I read stream ([^\s-]) from version (\d+)")]
+        [When("I read stream {word} from version {int}")]
         public Task WhenIReadStreamFromVersion(string streamId, ulong version) => this.WhenIReadStream(streamId, new ReadStreamOptions { FromVersion = version });
 
-        [When(@"I read stream ([^\s-]) from version (\d+) ignoring snapshots")]
+        [When("I read stream {word} from version {int} ignoring snapshots")]
         public Task WhenIReadStreamFromVersionIgnoringSnapshots(string streamId, ulong version) => this.WhenIReadStream(streamId, new ReadStreamOptions { FromVersion = version, IgnoreSnapshots = true });
 
-        [When(@"I read stream ([^\s-]) from version (\d+) to version (\d+)")]
+        [When("I read stream {word} from version {int} to version {int}")]
         public Task WhenIReadStreamFromVersionToVersion(string streamId, ulong fromVersion, ulong toVersion) => this.WhenIReadStream(streamId, new ReadStreamOptions { FromVersion = fromVersion, ToVersion = toVersion });
 
-        [When(@"I read stream ([^\s-]) from version (\d+) to version (\d+) ignoring snapshots")]
+        [When("I read stream {word} from version {int} to version {int} ignoring snapshots")]
         public Task WhenIReadStreamFromVersionToVersionIgnoringSnapshots(string streamId, ulong fromVersion, ulong toVersion) => this.WhenIReadStream(streamId, new ReadStreamOptions { FromVersion = fromVersion, ToVersion = toVersion, IgnoreSnapshots = true });
 
-        [When(@"I read stream ([^\s-]) ignoring snapshots")]
+        [When("I read stream {word} ignoring snapshots")]
         public Task WhenIReadStreamIgnoringSnapshots(string streamId) => this.WhenIReadStream(streamId, new ReadStreamOptions { IgnoreSnapshots = true });
 
         [Then(@"the non-existing stream is returned")]
@@ -53,7 +53,7 @@ namespace Eveneum.Tests
             }
         }
 
-        [Then(@"the stream ([^\s-]) in version (\d+) is returned")]
+        [Then("the stream {word} in version {int} is returned")]
         public void ThenTheStreamInVersionIsReturned(string streamId, ulong version)
         {
             foreach (var context in this.Contexts)
@@ -65,7 +65,7 @@ namespace Eveneum.Tests
             }
         }
 
-        [Then(@"the stream ([^\s-]) with metadata in version (\d+) is returned")]
+        [Then("the stream {word} with metadata in version {int} is returned")]
         public void ThenTheStreamWithMetadataInVersionIsReturned(string streamId, ulong version)
         {
             foreach (var context in this.Contexts)
@@ -87,7 +87,7 @@ namespace Eveneum.Tests
             }
         }
 
-        [Then(@"a snapshot for version (\d+) is returned")]
+        [Then("a snapshot for version {int} is returned")]
         public void ThenASnapshotForVersionIsReturned(ulong version)
         {
             foreach (var context in this.Contexts)
@@ -100,7 +100,7 @@ namespace Eveneum.Tests
             }
         }
 
-        [Then(@"a snapshot with metadata for version (\d+) is returned")]
+        [Then("a snapshot with metadata for version {int} is returned")]
         public void ThenASnapshotWithMetadataForVersionIsReturned(ulong version)
         {
             foreach (var context in this.Contexts)
@@ -124,7 +124,7 @@ namespace Eveneum.Tests
             }
         }
 
-        [Then(@"events from version (\d+) to (\d+) are returned")]
+        [Then("events from version {int} to {int} are returned")]
         public async Task ThenEventsFromVersionToAreReturned(ulong fromVersion, ulong toVersion)
         {
             await Task.WhenAll(this.Contexts.Select(async context =>

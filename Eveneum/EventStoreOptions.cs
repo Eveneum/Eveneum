@@ -7,6 +7,7 @@ namespace Eveneum
     public class EventStoreOptions
     {
         public DeleteMode DeleteMode { get; set; } = DeleteMode.SoftDelete;
+        public BulkDeleteMode BulkDeleteMode { get; set; } = BulkDeleteMode.StoredProcedure;
         public byte BatchSize { get; set; } = 100;
         public int QueryMaxItemCount { get; set; } = 1000;
         public IJsonSerializer JsonSerializer { get; set; }
