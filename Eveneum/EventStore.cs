@@ -17,7 +17,6 @@ namespace Eveneum
         private readonly ICosmosPersistence Persistence;
 
         public DeleteMode DeleteMode { get; }
-        public BulkDeleteMode BulkDeleteMode { get; }
         public TimeSpan StreamTimeToLiveAfterDelete { get; }
         public byte BatchSize { get; }
         public int QueryMaxItemCount { get; }
@@ -31,7 +30,6 @@ namespace Eveneum
             options = options ?? new EventStoreOptions();
 
             this.DeleteMode = options.DeleteMode;
-            this.BulkDeleteMode = options.BulkDeleteMode;
             this.StreamTimeToLiveAfterDelete = options.StreamTimeToLiveAfterDelete;
             this.BatchSize = Math.Min(options.BatchSize, (byte)100); // Maximum batch size supported by CosmosDB
             this.QueryMaxItemCount = options.QueryMaxItemCount;
