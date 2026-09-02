@@ -20,7 +20,7 @@ namespace Eveneum.Persistence
 
         private const string BulkDeleteStoredProc = "Eveneum.BulkDelete";
 
-        public CosmosPersistence(CosmosClient cosmosClient, string databaseName, string containerName, BulkDeleteMode bulkDeleteMode)
+        public CosmosPersistence(CosmosClient cosmosClient, string databaseName, string containerName, BulkDeleteMode bulkDeleteMode = BulkDeleteMode.StoredProcedure)
         {
             if (cosmosClient == null)
                 throw new ArgumentNullException(nameof(cosmosClient));
