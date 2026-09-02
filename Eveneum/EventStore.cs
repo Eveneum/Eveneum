@@ -190,13 +190,13 @@ namespace Eveneum
 
             if (response.StatusCode == System.Net.HttpStatusCode.Conflict)
             {
-                if (response.GetOperationResultAtIndex<EveneumDocument>(0).StatusCode == System.Net.HttpStatusCode.Conflict)
+                if (response.GetOperationResultAtIndex<IEveneumDocument>(0).StatusCode == System.Net.HttpStatusCode.Conflict)
                     throw new StreamAlreadyExistsException(streamId, requestCharge);
                 else
                 {
                     foreach (var index in Enumerable.Range(1, events.Length))
                     {
-                        if (response.GetOperationResultAtIndex<EveneumDocument>(index).StatusCode == System.Net.HttpStatusCode.Conflict)
+                        if (response.GetOperationResultAtIndex<IEveneumDocument>(index).StatusCode == System.Net.HttpStatusCode.Conflict)
                             throw new EventAlreadyExistsException(streamId, events[index - 1].Version, requestCharge);
                     }
                 }
@@ -221,7 +221,7 @@ namespace Eveneum
                 {
                     foreach (var index in Enumerable.Range(0, batch.Count()))
                     {
-                        if (batchResponse.GetOperationResultAtIndex<EveneumDocument>(index).StatusCode == System.Net.HttpStatusCode.Conflict)
+                        if (batchResponse.GetOperationResultAtIndex<IEveneumDocument>(index).StatusCode == System.Net.HttpStatusCode.Conflict)
                             throw new EventAlreadyExistsException(streamId, batch.ElementAt(index).Version, requestCharge);
                     }
                 }

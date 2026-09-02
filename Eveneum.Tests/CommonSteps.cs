@@ -10,9 +10,9 @@ using Reqnroll;
 namespace Eveneum.Tests
 {
     [Binding]
-    public class CommonSteps(NewtonsoftCosmosDbContext newtonsoftContext, SystemTextJsonCosmosDbContext stjContext, ScenarioContext scenarioContext)
+    public class CommonSteps(ScenarioContext scenarioContext, NewtonsoftCosmosDbContext newtonsoftContext, SystemTextJsonCosmosDbContext stjContext, NewtonsoftLinuxCosmosDbContext newtonsoftLinuxContext, SystemTextJsonLinuxCosmosDbContext stjLinuxContext)
     {
-        private readonly IReadOnlyCollection<CosmosDbContext> Contexts = [newtonsoftContext, stjContext];
+        private readonly IReadOnlyCollection<CosmosDbContext> Contexts = [newtonsoftContext, stjContext, newtonsoftLinuxContext, stjLinuxContext];
 
         [Given(@"Cosmos serializer with camel-case naming policy")]
         public void GivenCosmosSerializerWithCamelCaseNamingPolicy()
@@ -64,15 +64,6 @@ namespace Eveneum.Tests
             {
                 context.EventStoreOptions.DeleteMode = DeleteMode.TtlDelete;
                 context.EventStoreOptions.StreamTimeToLiveAfterDelete = TimeSpan.FromSeconds(streamTtlAfterDelete);
-            }
-        }
-
-        [Given("transactional batch bulk delete mode")]
-        public void GivenTransactionalBatchBulkDeleteMode()
-        {
-            foreach (var context in this.Contexts)
-            {
-                context.EventStoreOptions.BulkDeleteMode = BulkDeleteMode.TransactionalBatch;
             }
         }
 

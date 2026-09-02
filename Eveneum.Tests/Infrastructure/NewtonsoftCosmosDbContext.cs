@@ -45,4 +45,14 @@ namespace Eveneum.Tests.Infrastructure
             return JToken.DeepEquals(firstToken, secondToken);
         }
     }
+
+    public class NewtonsoftLinuxCosmosDbContext : NewtonsoftCosmosDbContext
+    {
+        public override string Container => base.Container + "Linux";
+
+        public NewtonsoftLinuxCosmosDbContext()
+        {
+            this.EventStoreOptions.BulkDeleteMode = BulkDeleteMode.TransactionalBatch;
+        }
+    }
 }

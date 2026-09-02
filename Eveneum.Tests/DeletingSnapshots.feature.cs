@@ -106,7 +106,7 @@ namespace Eveneum.Tests
         
         private static global::Reqnroll.Formatters.RuntimeSupport.FeatureLevelCucumberMessages InitializeCucumberMessages()
         {
-            return new global::Reqnroll.Formatters.RuntimeSupport.FeatureLevelCucumberMessages("DeletingSnapshots.feature.ndjson", 8);
+            return new global::Reqnroll.Formatters.RuntimeSupport.FeatureLevelCucumberMessages("DeletingSnapshots.feature.ndjson", 6);
         }
         
         [global::NUnit.Framework.TestAttribute()]
@@ -308,13 +308,13 @@ this.ScenarioInitialize(scenarioInfo, ruleInfo);
         }
         
         [global::NUnit.Framework.TestAttribute()]
-        [global::NUnit.Framework.DescriptionAttribute("Deleting some snapshots using transactional batch mode")]
-        public async global::System.Threading.Tasks.Task DeletingSomeSnapshotsUsingTransactionalBatchMode()
+        [global::NUnit.Framework.DescriptionAttribute("Hard-Deleting all snapshots")]
+        public async global::System.Threading.Tasks.Task Hard_DeletingAllSnapshots()
         {
             string[] tagsOfScenario = ((string[])(null));
             global::System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new global::System.Collections.Specialized.OrderedDictionary();
             string pickleIndex = "3";
-            global::Reqnroll.ScenarioInfo scenarioInfo = new global::Reqnroll.ScenarioInfo("Deleting some snapshots using transactional batch mode", null, tagsOfScenario, argumentsOfScenario, featureTags, pickleIndex);
+            global::Reqnroll.ScenarioInfo scenarioInfo = new global::Reqnroll.ScenarioInfo("Hard-Deleting all snapshots", null, tagsOfScenario, argumentsOfScenario, featureTags, pickleIndex);
             string[] tagsOfRule = ((string[])(null));
             global::Reqnroll.RuleInfo ruleInfo = null;
 #line 52
@@ -328,7 +328,7 @@ this.ScenarioInitialize(scenarioInfo, ruleInfo);
             {
                 await this.ScenarioStartAsync();
 #line 53
- await testRunner.GivenAsync("transactional batch bulk delete mode", ((string)(null)), ((global::Reqnroll.Table)(null)), "Given ");
+ await testRunner.GivenAsync("hard-delete mode", ((string)(null)), ((global::Reqnroll.Table)(null)), "Given ");
 #line hidden
 #line 54
  await testRunner.AndAsync("an event store", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
@@ -355,159 +355,18 @@ this.ScenarioInitialize(scenarioInfo, ruleInfo);
  await testRunner.AndAsync("an existing snapshot for version 7", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
 #line hidden
 #line 62
- await testRunner.WhenAsync("I delete snapshots older than version 5 from stream S", ((string)(null)), ((global::Reqnroll.Table)(null)), "When ");
-#line hidden
-#line 63
- await testRunner.ThenAsync("the snapshots older than 5 are soft-deleted", ((string)(null)), ((global::Reqnroll.Table)(null)), "Then ");
-#line hidden
-#line 64
- await testRunner.AndAsync("snapshots 5 and newer are not soft-deleted", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
-#line hidden
-#line 65
- await testRunner.AndAsync("stream P is not soft-deleted", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
-#line hidden
-#line 66
- await testRunner.AndAsync("request charge is reported", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
-#line hidden
-#line 67
- await testRunner.AndAsync("2 deleted documents are reported", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
-#line hidden
-            }
-            await this.ScenarioCleanupAsync();
-        }
-        
-        [global::NUnit.Framework.TestAttribute()]
-        [global::NUnit.Framework.DescriptionAttribute("Hard-deleting some snapshots using transactional batch mode")]
-        public async global::System.Threading.Tasks.Task Hard_DeletingSomeSnapshotsUsingTransactionalBatchMode()
-        {
-            string[] tagsOfScenario = ((string[])(null));
-            global::System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new global::System.Collections.Specialized.OrderedDictionary();
-            string pickleIndex = "4";
-            global::Reqnroll.ScenarioInfo scenarioInfo = new global::Reqnroll.ScenarioInfo("Hard-deleting some snapshots using transactional batch mode", null, tagsOfScenario, argumentsOfScenario, featureTags, pickleIndex);
-            string[] tagsOfRule = ((string[])(null));
-            global::Reqnroll.RuleInfo ruleInfo = null;
-#line 69
-this.ScenarioInitialize(scenarioInfo, ruleInfo);
-#line hidden
-            if ((global::Reqnroll.TagHelper.ContainsIgnoreTag(scenarioInfo.CombinedTags) || global::Reqnroll.TagHelper.ContainsIgnoreTag(featureTags)))
-            {
-                await testRunner.SkipScenarioAsync();
-            }
-            else
-            {
-                await this.ScenarioStartAsync();
-#line 70
- await testRunner.GivenAsync("transactional batch bulk delete mode", ((string)(null)), ((global::Reqnroll.Table)(null)), "Given ");
-#line hidden
-#line 71
- await testRunner.AndAsync("hard-delete mode", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
-#line hidden
-#line 72
- await testRunner.AndAsync("an event store", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
-#line hidden
-#line 73
- await testRunner.AndAsync("an existing stream P with 10 events", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
-#line hidden
-#line 74
- await testRunner.AndAsync("an existing snapshot for version 5", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
-#line hidden
-#line 75
- await testRunner.AndAsync("an existing stream S with 10 events", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
-#line hidden
-#line 76
- await testRunner.AndAsync("an existing snapshot for version 1", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
-#line hidden
-#line 77
- await testRunner.AndAsync("an existing snapshot for version 3", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
-#line hidden
-#line 78
- await testRunner.AndAsync("an existing snapshot for version 5", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
-#line hidden
-#line 79
- await testRunner.AndAsync("an existing snapshot for version 7", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
-#line hidden
-#line 80
- await testRunner.WhenAsync("I delete snapshots older than version 5 from stream S", ((string)(null)), ((global::Reqnroll.Table)(null)), "When ");
-#line hidden
-#line 81
- await testRunner.ThenAsync("the snapshots older than 5 are hard-deleted", ((string)(null)), ((global::Reqnroll.Table)(null)), "Then ");
-#line hidden
-#line 82
- await testRunner.AndAsync("snapshots 5 and newer are not hard-deleted", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
-#line hidden
-#line 83
- await testRunner.AndAsync("stream P is not hard-deleted", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
-#line hidden
-#line 84
- await testRunner.AndAsync("request charge is reported", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
-#line hidden
-#line 85
- await testRunner.AndAsync("2 deleted documents are reported", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
-#line hidden
-            }
-            await this.ScenarioCleanupAsync();
-        }
-        
-        [global::NUnit.Framework.TestAttribute()]
-        [global::NUnit.Framework.DescriptionAttribute("Hard-Deleting all snapshots")]
-        public async global::System.Threading.Tasks.Task Hard_DeletingAllSnapshots()
-        {
-            string[] tagsOfScenario = ((string[])(null));
-            global::System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new global::System.Collections.Specialized.OrderedDictionary();
-            string pickleIndex = "5";
-            global::Reqnroll.ScenarioInfo scenarioInfo = new global::Reqnroll.ScenarioInfo("Hard-Deleting all snapshots", null, tagsOfScenario, argumentsOfScenario, featureTags, pickleIndex);
-            string[] tagsOfRule = ((string[])(null));
-            global::Reqnroll.RuleInfo ruleInfo = null;
-#line 87
-this.ScenarioInitialize(scenarioInfo, ruleInfo);
-#line hidden
-            if ((global::Reqnroll.TagHelper.ContainsIgnoreTag(scenarioInfo.CombinedTags) || global::Reqnroll.TagHelper.ContainsIgnoreTag(featureTags)))
-            {
-                await testRunner.SkipScenarioAsync();
-            }
-            else
-            {
-                await this.ScenarioStartAsync();
-#line 88
- await testRunner.GivenAsync("hard-delete mode", ((string)(null)), ((global::Reqnroll.Table)(null)), "Given ");
-#line hidden
-#line 89
- await testRunner.AndAsync("an event store", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
-#line hidden
-#line 90
- await testRunner.AndAsync("an existing stream P with 10 events", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
-#line hidden
-#line 91
- await testRunner.AndAsync("an existing snapshot for version 5", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
-#line hidden
-#line 92
- await testRunner.AndAsync("an existing stream S with 10 events", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
-#line hidden
-#line 93
- await testRunner.AndAsync("an existing snapshot for version 1", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
-#line hidden
-#line 94
- await testRunner.AndAsync("an existing snapshot for version 3", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
-#line hidden
-#line 95
- await testRunner.AndAsync("an existing snapshot for version 5", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
-#line hidden
-#line 96
- await testRunner.AndAsync("an existing snapshot for version 7", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
-#line hidden
-#line 97
  await testRunner.WhenAsync("I delete snapshots older than version 999999 from stream S", ((string)(null)), ((global::Reqnroll.Table)(null)), "When ");
 #line hidden
-#line 98
+#line 63
  await testRunner.ThenAsync("the snapshots older than 10 are hard-deleted", ((string)(null)), ((global::Reqnroll.Table)(null)), "Then ");
 #line hidden
-#line 99
+#line 64
  await testRunner.AndAsync("stream P is not hard-deleted", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
 #line hidden
-#line 100
+#line 65
  await testRunner.AndAsync("request charge is reported", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
 #line hidden
-#line 101
+#line 66
  await testRunner.AndAsync("4 deleted documents are reported", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
 #line hidden
             }

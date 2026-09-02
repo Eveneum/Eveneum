@@ -180,8 +180,6 @@ namespace Eveneum.Persistence
 
         private async Task<DeleteResponse> BulkDeleteDocumentsUsingTransactionalBatch(string streamId, string query, bool softDelete, double ttl, byte batchSize, int? maxItemCount = null, CancellationToken cancellationToken = default)
         {
-            var partitionKey = new PartitionKey(streamId);
-
             double requestCharge = 0;
             ulong deletedDocuments = 0;
             List<IEveneumDocument> documents;

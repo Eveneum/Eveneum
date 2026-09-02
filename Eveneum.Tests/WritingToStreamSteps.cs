@@ -11,9 +11,9 @@ using System.Threading.Tasks;
 namespace Eveneum.Tests
 {
     [Binding]
-    public class WritingToStreamSteps(NewtonsoftCosmosDbContext newtonsoftContext, SystemTextJsonCosmosDbContext stjContext, ScenarioContext scenarioContext)
+    public class WritingToStreamSteps(ScenarioContext scenarioContext, NewtonsoftCosmosDbContext newtonsoftContext, SystemTextJsonCosmosDbContext stjContext, NewtonsoftLinuxCosmosDbContext newtonsoftLinuxContext, SystemTextJsonLinuxCosmosDbContext stjLinuxContext)
     {
-        private readonly IReadOnlyCollection<CosmosDbContext> Contexts = [newtonsoftContext, stjContext];
+        private readonly IReadOnlyCollection<CosmosDbContext> Contexts = [newtonsoftContext, stjContext, newtonsoftLinuxContext, stjLinuxContext];
 
         [When("I write a new stream {word} with {int} events")]
         public async Task WhenIWriteNewStreamWithEvents(string streamId, int events)

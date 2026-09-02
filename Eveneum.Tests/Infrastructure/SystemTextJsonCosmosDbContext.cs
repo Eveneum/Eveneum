@@ -49,4 +49,14 @@ namespace Eveneum.Tests.Infrastructure
             return JsonNode.DeepEquals(firstToken, secondToken);
         }
     }
+
+    public class SystemTextJsonLinuxCosmosDbContext : SystemTextJsonCosmosDbContext
+    {
+        public override string Container => base.Container + "Linux";
+
+        public SystemTextJsonLinuxCosmosDbContext()
+        {
+            this.EventStoreOptions.BulkDeleteMode = BulkDeleteMode.TransactionalBatch;
+        }
+    }
 }

@@ -105,7 +105,7 @@ namespace Eveneum.Tests
         
         private static global::Reqnroll.Formatters.RuntimeSupport.FeatureLevelCucumberMessages InitializeCucumberMessages()
         {
-            return new global::Reqnroll.Formatters.RuntimeSupport.FeatureLevelCucumberMessages("Advanced.feature.ndjson", 18);
+            return new global::Reqnroll.Formatters.RuntimeSupport.FeatureLevelCucumberMessages("Advanced.feature.ndjson", 16);
         }
         
         [global::NUnit.Framework.TestAttribute()]
@@ -1033,99 +1033,6 @@ this.ScenarioInitialize(scenarioInfo, ruleInfo);
  await testRunner.ThenAsync("the event in version 5 in stream B is hard-deleted", ((string)(null)), ((global::Reqnroll.Table)(null)), "Then ");
 #line hidden
 #line 225
- await testRunner.AndAsync("request charge is reported", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
-#line hidden
-            }
-            await this.ScenarioCleanupAsync();
-        }
-        
-        [global::NUnit.Framework.TestAttribute()]
-        [global::NUnit.Framework.DescriptionAttribute("Delete event using transactional batch mode")]
-        public async global::System.Threading.Tasks.Task DeleteEventUsingTransactionalBatchMode()
-        {
-            string[] tagsOfScenario = ((string[])(null));
-            global::System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new global::System.Collections.Specialized.OrderedDictionary();
-            string pickleIndex = "14";
-            global::Reqnroll.ScenarioInfo scenarioInfo = new global::Reqnroll.ScenarioInfo("Delete event using transactional batch mode", null, tagsOfScenario, argumentsOfScenario, featureTags, pickleIndex);
-            string[] tagsOfRule = ((string[])(null));
-            global::Reqnroll.RuleInfo ruleInfo = null;
-#line 227
-this.ScenarioInitialize(scenarioInfo, ruleInfo);
-#line hidden
-            if ((global::Reqnroll.TagHelper.ContainsIgnoreTag(scenarioInfo.CombinedTags) || global::Reqnroll.TagHelper.ContainsIgnoreTag(featureTags)))
-            {
-                await testRunner.SkipScenarioAsync();
-            }
-            else
-            {
-                await this.ScenarioStartAsync();
-#line 228
- await testRunner.GivenAsync("transactional batch bulk delete mode", ((string)(null)), ((global::Reqnroll.Table)(null)), "Given ");
-#line hidden
-#line 229
- await testRunner.AndAsync("an event store", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
-#line hidden
-#line 230
- await testRunner.AndAsync("an existing stream A with 10 events", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
-#line hidden
-#line 231
- await testRunner.AndAsync("an existing stream B with 100 events", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
-#line hidden
-#line 232
- await testRunner.WhenAsync("I delete event in version 5 in stream B", ((string)(null)), ((global::Reqnroll.Table)(null)), "When ");
-#line hidden
-#line 233
- await testRunner.ThenAsync("the event in version 5 in stream B is soft-deleted", ((string)(null)), ((global::Reqnroll.Table)(null)), "Then ");
-#line hidden
-#line 234
- await testRunner.AndAsync("request charge is reported", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
-#line hidden
-            }
-            await this.ScenarioCleanupAsync();
-        }
-        
-        [global::NUnit.Framework.TestAttribute()]
-        [global::NUnit.Framework.DescriptionAttribute("Hard-delete event using transactional batch mode")]
-        public async global::System.Threading.Tasks.Task Hard_DeleteEventUsingTransactionalBatchMode()
-        {
-            string[] tagsOfScenario = ((string[])(null));
-            global::System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new global::System.Collections.Specialized.OrderedDictionary();
-            string pickleIndex = "15";
-            global::Reqnroll.ScenarioInfo scenarioInfo = new global::Reqnroll.ScenarioInfo("Hard-delete event using transactional batch mode", null, tagsOfScenario, argumentsOfScenario, featureTags, pickleIndex);
-            string[] tagsOfRule = ((string[])(null));
-            global::Reqnroll.RuleInfo ruleInfo = null;
-#line 236
-this.ScenarioInitialize(scenarioInfo, ruleInfo);
-#line hidden
-            if ((global::Reqnroll.TagHelper.ContainsIgnoreTag(scenarioInfo.CombinedTags) || global::Reqnroll.TagHelper.ContainsIgnoreTag(featureTags)))
-            {
-                await testRunner.SkipScenarioAsync();
-            }
-            else
-            {
-                await this.ScenarioStartAsync();
-#line 237
- await testRunner.GivenAsync("transactional batch bulk delete mode", ((string)(null)), ((global::Reqnroll.Table)(null)), "Given ");
-#line hidden
-#line 238
- await testRunner.AndAsync("hard-delete mode", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
-#line hidden
-#line 239
- await testRunner.AndAsync("an event store", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
-#line hidden
-#line 240
- await testRunner.AndAsync("an existing stream A with 10 events", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
-#line hidden
-#line 241
- await testRunner.AndAsync("an existing stream B with 100 events", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
-#line hidden
-#line 242
- await testRunner.WhenAsync("I delete event in version 5 in stream B", ((string)(null)), ((global::Reqnroll.Table)(null)), "When ");
-#line hidden
-#line 243
- await testRunner.ThenAsync("the event in version 5 in stream B is hard-deleted", ((string)(null)), ((global::Reqnroll.Table)(null)), "Then ");
-#line hidden
-#line 244
  await testRunner.AndAsync("request charge is reported", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
 #line hidden
             }
