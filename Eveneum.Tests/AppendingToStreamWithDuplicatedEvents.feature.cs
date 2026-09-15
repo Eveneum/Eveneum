@@ -235,6 +235,9 @@ this.ScenarioInitialize(scenarioInfo, ruleInfo);
  await testRunner.AndAsync("first 99 events are appended", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
 #line hidden
 #line 30
+ await testRunner.AndAsync("the header version 109 with no metadata is persisted", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
+#line hidden
+#line 31
  await testRunner.AndAsync("request charge is reported", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
 #line hidden
             }

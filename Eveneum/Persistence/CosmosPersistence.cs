@@ -151,12 +151,12 @@ namespace Eveneum.Persistence
             return new CosmosItemResponse<IEveneumDocument>(result.Resource, result.RequestCharge);
         }
 
-        public Task<DeleteResponse> DeleteItems(string streamId, string query, bool softDelete, double ttl, byte batchSize, int? maxItemCount = null, CancellationToken cancellationToken = default) =>
+        public Task<DeleteResponse> DeleteItems(string streamId, string query, bool softDelete, int? ttl, byte batchSize, int? maxItemCount = null, CancellationToken cancellationToken = default) =>
             this.BulkDeleteMode == BulkDeleteMode.TransactionalBatch
                 ? this.BulkDeleteDocumentsUsingTransactionalBatch(streamId, query, softDelete, ttl, batchSize, maxItemCount, cancellationToken)
                 : this.BulkDeleteDocumentsUsingStoredProcedure(streamId, query, softDelete, ttl, cancellationToken);
 
-        private async Task<DeleteResponse> BulkDeleteDocumentsUsingStoredProcedure(string streamId, string query, bool softDelete, double ttl, CancellationToken cancellationToken = default)
+        private async Task<DeleteResponse> BulkDeleteDocumentsUsingStoredProcedure(string streamId, string query, bool softDelete, int? ttl, CancellationToken cancellationToken = default)
         {
             double requestCharge = 0;
             ulong deletedDocuments = 0;
@@ -178,7 +178,7 @@ namespace Eveneum.Persistence
             return new DeleteResponse(deletedDocuments, requestCharge);
         }
 
-        private async Task<DeleteResponse> BulkDeleteDocumentsUsingTransactionalBatch(string streamId, string query, bool softDelete, double ttl, byte batchSize, int? maxItemCount = null, CancellationToken cancellationToken = default)
+        private async Task<DeleteResponse> BulkDeleteDocumentsUsingTransactionalBatch(string streamId, string query, bool softDelete, int? ttl, byte batchSize, int? maxItemCount = null, CancellationToken cancellationToken = default)
         {
             double requestCharge = 0;
             ulong deletedDocuments = 0;
@@ -201,9 +201,6 @@ namespace Eveneum.Persistence
 
                 foreach (var batch in documents.Batch(batchSize))
                 {
-                    if (!batch.Any())
-                        continue;
-
                     var transaction = this.CreateTransactionalBatch(streamId);
 
                     foreach (var document in batch)
@@ -213,7 +210,7 @@ namespace Eveneum.Persistence
                             document.Deleted = true;
 
                             if (ttl > 0)
-                                document.TimeToLive = (int)ttl;
+                                document.TimeToLive = ttl;
 
                             transaction.ReplaceItem(document.Id, document, new TransactionalBatchItemRequestOptions { IfMatchEtag = document.ETag });
                         }
@@ -227,7 +224,15 @@ namespace Eveneum.Persistence
                     if (!response.IsSuccessStatusCode)
                         throw new WriteException(streamId, requestCharge, response.ErrorMessage, response.StatusCode);
 
-                    deletedDocuments += (ulong)batch.Count();
+                    for (var i = 0; i < batch.Count(); i++)
+                    {
+                        var operationResult = response.GetOperationResultAtIndex<TDocument>(i);
+
+                        if (operationResult.IsSuccessStatusCode)
+                            deletedDocuments++;
+                        else
+                            throw new WriteException(streamId, requestCharge, $"deletion of document {batch.ElementAt(i).Id} failed", operationResult.StatusCode);
+                    }
                 }
             }
             while (documents.Count > 0);

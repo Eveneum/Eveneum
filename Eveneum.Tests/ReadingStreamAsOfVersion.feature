@@ -35,7 +35,7 @@ Scenario: Reading ttl-deleted stream when cosmos disposed the deleted stream
 	Given ttl-delete mode with 1 seconds as ttl
 	And an event store
 	And a deleted stream S with 10 events
-	# we need to wait a bit extra, to make sure cosmos cleanup happens.
+	# we need to wait a bit extra, to make sure cosmos cleanup happens after 5 minutes.
 	When I wait for 2 seconds
 	And I read stream S as of version 10
 	Then the non-existing stream is returned

@@ -27,4 +27,5 @@ Scenario: Appending to stream with duplicated event in consecurive batch fails
 	When I append 175 events and events with version 7 to stream S in expected version 10
 	Then the action fails as event with version 7 already exists in stream S
 	And first 99 events are appended
+	And the header version 109 with no metadata is persisted
 	And request charge is reported

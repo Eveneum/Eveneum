@@ -223,3 +223,12 @@ Scenario: Hard-delete event
 	When I delete event in version 5 in stream B
 	Then the event in version 5 in stream B is hard-deleted
 	And request charge is reported
+
+Scenario: Ttl-delete event
+	Given ttl-delete mode with 10 seconds as ttl
+	And an event store
+	And an existing stream A with 10 events
+	And an existing stream B with 100 events
+	When I delete event in version 5 in stream B
+	Then the event in version 5 in stream B is soft-deleted
+	And request charge is reported

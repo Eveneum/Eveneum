@@ -5,22 +5,15 @@ using Reqnroll.Bindings;
 namespace Eveneum.Tests.Infrastructure
 {
     [Binding]
-    public class StepArgumentConversions
+    public class StepArgumentConversions(ScenarioContext ScenarioContext)
     {
-        private readonly ScenarioContext ScenarioContext;
-
-        StepArgumentConversions(ScenarioContext scenarioContext)
-        {
-            this.ScenarioContext = scenarioContext;
-        }
-
         [AfterStep("ExpectException")]
         public void ExpectException()
         {
-            if (this.ScenarioContext.StepContext.StepInfo.StepDefinitionType == StepDefinitionType.When)
+            if (ScenarioContext.StepContext.StepInfo.StepDefinitionType == StepDefinitionType.When)
             {
-                PropertyInfo testStatusProperty = typeof(ScenarioContext).GetProperty(nameof(this.ScenarioContext.ScenarioExecutionStatus), BindingFlags.Public | BindingFlags.Instance);
-                testStatusProperty.SetValue(this.ScenarioContext, ScenarioExecutionStatus.OK);
+                PropertyInfo testStatusProperty = typeof(ScenarioContext).GetProperty(nameof(ScenarioContext.ScenarioExecutionStatus), BindingFlags.Public | BindingFlags.Instance);
+                testStatusProperty.SetValue(ScenarioContext, ScenarioExecutionStatus.OK);
             }
         }
     }

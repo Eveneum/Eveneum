@@ -112,7 +112,10 @@ namespace Eveneum
             if (documents.Count == 0)
                 return new StreamResponse(null, false, requestCharge);
 
-            var headerDocument = documents.First(x => x.DocumentType == DocumentType.Header);
+            var headerDocument = documents.FirstOrDefault(x => x.DocumentType == DocumentType.Header);
+
+            if (headerDocument is null)
+                throw new StreamNotFoundException(streamId, requestCharge);
 
             try
             {
@@ -145,87 +148,90 @@ namespace Eveneum
 
         public async Task<Response> WriteToStream(string streamId, EventData[] events, ulong? expectedVersion = null, object metadata = null, CancellationToken cancellationToken = default)
         {
-            var transaction = Persistence.CreateTransactionalBatch(streamId);
             double requestCharge = 0;
 
-            // Existing stream
-            if (expectedVersion.HasValue)
+            var isNewStream = !expectedVersion.HasValue;
+
+            IEveneumDocument header;
+            string headerETag = null;
+
+            if (isNewStream)
+            {
+                header = this.Serializer.JsonSerializer.CreateDocument(streamId, DocumentType.Header);
+                header.StreamId = streamId;
+            }
+            else
             {
                 var headerResponse = await this.ReadHeaderDocument(streamId, cancellationToken);
 
-                var header = headerResponse.Document;
+                header = headerResponse.Document;
                 requestCharge += headerResponse.RequestCharge;
+                headerETag = header.ETag;
 
                 if (header.Deleted)
                     throw new StreamDeletedException(streamId, requestCharge);
 
                 if (header.Version != expectedVersion)
                     throw new OptimisticConcurrencyException(streamId, requestCharge, expectedVersion.Value, header.Version);
-
-                header.Version += (ulong)events.Length;
-
-                this.Serializer.SerializeHeaderMetadata(header, metadata);
-
-                transaction.ReplaceItem(header.Id, header, new TransactionalBatchItemRequestOptions { IfMatchEtag = header.ETag });
-            }
-            else
-            {
-                var header = this.Serializer.JsonSerializer.CreateDocument(streamId, DocumentType.Header);
-                header.StreamId = streamId;
-                header.Version = (ulong)events.Length;
-
-                this.Serializer.SerializeHeaderMetadata(header, metadata);
-
-                transaction.CreateItem(header);
             }
 
-            var firstBatch = events.Take(this.BatchSize - 1).Select(@event => this.Serializer.SerializeEvent(@event, streamId));
-            foreach (var document in firstBatch)
-                transaction.CreateItem(document);
+            this.Serializer.SerializeHeaderMetadata(header, metadata);
 
-            using var response = await transaction.ExecuteAsync(cancellationToken);
-            requestCharge += response.RequestCharge;
+            var baseVersion = header.Version;
+            var batchSize = Math.Max(1, this.BatchSize - 1);
+            var offset = 0;
+            var writtenEvents = 0;
+            var firstBatch = true;
 
-            if (response.StatusCode == System.Net.HttpStatusCode.Conflict)
+            do
             {
-                if (response.GetOperationResultAtIndex<IEveneumDocument>(0).StatusCode == System.Net.HttpStatusCode.Conflict)
-                    throw new StreamAlreadyExistsException(streamId, requestCharge);
+                var batch = events.Skip(offset).Take(batchSize).ToArray();
+                offset += batch.Length;
+                writtenEvents += batch.Length;
+
+                header.Version = baseVersion + (ulong)writtenEvents;
+
+                var transaction = Persistence.CreateTransactionalBatch(streamId);
+
+                if (isNewStream && firstBatch)
+                    transaction.CreateItem(header);
                 else
+                    transaction.ReplaceItem(header.Id, header, new TransactionalBatchItemRequestOptions { IfMatchEtag = headerETag });
+
+                foreach (var @event in batch)
+                    transaction.CreateItem(this.Serializer.SerializeEvent(@event, streamId));
+
+                using var response = await transaction.ExecuteAsync(cancellationToken);
+                requestCharge += response.RequestCharge;
+
+                if (response.StatusCode == System.Net.HttpStatusCode.Conflict)
                 {
-                    foreach (var index in Enumerable.Range(1, events.Length))
+                    if (response.GetOperationResultAtIndex<IEveneumDocument>(0).StatusCode == System.Net.HttpStatusCode.Conflict)
                     {
-                        if (response.GetOperationResultAtIndex<IEveneumDocument>(index).StatusCode == System.Net.HttpStatusCode.Conflict)
-                            throw new EventAlreadyExistsException(streamId, events[index - 1].Version, requestCharge);
+                        if (isNewStream && firstBatch)
+                            throw new StreamAlreadyExistsException(streamId, requestCharge);
+
+                        var currentHeaderResponse = await this.ReadHeaderDocument(streamId, cancellationToken);
+                        requestCharge += currentHeaderResponse.RequestCharge;
+
+                        throw new OptimisticConcurrencyException(streamId, requestCharge, baseVersion + (ulong)(writtenEvents - batch.Length), currentHeaderResponse.Document.Version);
+                    }
+                    else
+                    {
+                        for (var i = 0; i < batch.Length; i++)
+                        {
+                            if (response.GetOperationResultAtIndex<IEveneumDocument>(i + 1).StatusCode == System.Net.HttpStatusCode.Conflict)
+                                throw new EventAlreadyExistsException(streamId, batch[i].Version, requestCharge);
+                        }
                     }
                 }
+                else if (!response.IsSuccessStatusCode)
+                    throw new WriteException(streamId, requestCharge, response.ErrorMessage, response.StatusCode);
+
+                headerETag = response.GetOperationResultAtIndex<IEveneumDocument>(0).ETag;
+                firstBatch = false;
             }
-            else if (!response.IsSuccessStatusCode)
-                throw new WriteException(streamId, requestCharge, response.ErrorMessage, response.StatusCode);
-
-            foreach (var batch in events.Skip(this.BatchSize - 1).Select(@event => this.Serializer.SerializeEvent(@event, streamId)).Batch(this.BatchSize))
-            {
-                if(!batch.Any())
-                    continue;
-
-                transaction = Persistence.CreateTransactionalBatch(streamId);
-
-                foreach (var document in batch)
-                    transaction.CreateItem(document);
-
-                using var batchResponse = await transaction.ExecuteAsync(cancellationToken);
-                requestCharge += batchResponse.RequestCharge;
-
-                if (batchResponse.StatusCode == System.Net.HttpStatusCode.Conflict)
-                {
-                    foreach (var index in Enumerable.Range(0, batch.Count()))
-                    {
-                        if (batchResponse.GetOperationResultAtIndex<IEveneumDocument>(index).StatusCode == System.Net.HttpStatusCode.Conflict)
-                            throw new EventAlreadyExistsException(streamId, batch.ElementAt(index).Version, requestCharge);
-                    }
-                }
-                else if(!batchResponse.IsSuccessStatusCode)
-                    throw new WriteException(streamId, requestCharge, batchResponse.ErrorMessage, batchResponse.StatusCode);
-            }
+            while (offset < events.Length);
 
             return new Response(requestCharge);
         }
@@ -253,7 +259,7 @@ namespace Eveneum
             if (useSoftDeleteMode)
                 query += $" WHERE c.{nameof(EveneumDocument.Deleted)} = false";
 
-            var ttl = this.DeleteMode == DeleteMode.TtlDelete ? StreamTimeToLiveAfterDelete.TotalSeconds : -1;
+            int? ttl = this.DeleteMode == DeleteMode.TtlDelete ? (int)StreamTimeToLiveAfterDelete.TotalSeconds : null;
 
             var deleteResponse = await this.Persistence.DeleteItems(streamId, query, useSoftDeleteMode, ttl, this.BatchSize, this.QueryMaxItemCount, cancellationToken);
 
@@ -396,12 +402,14 @@ namespace Eveneum
             var headerResponse = await this.ReadHeader(streamId, cancellationToken);
 
             var requestCharge = headerResponse.RequestCharge;
-            var useSoftDeleteMode = this.DeleteMode == DeleteMode.SoftDelete;
+            var useSoftDeleteMode = (this.DeleteMode == DeleteMode.SoftDelete) || (this.DeleteMode == DeleteMode.TtlDelete);
 
             if (useSoftDeleteMode)
                 query += $" AND c.{nameof(EveneumDocument.Deleted)} = false";
 
-            var deleteResponse = await this.Persistence.DeleteItems(streamId, query, useSoftDeleteMode, -1, this.BatchSize, this.QueryMaxItemCount, cancellationToken);
+            int? ttl = this.DeleteMode == DeleteMode.TtlDelete ? (int)StreamTimeToLiveAfterDelete.TotalSeconds : null;
+
+            var deleteResponse = await this.Persistence.DeleteItems(streamId, query, useSoftDeleteMode, ttl, this.BatchSize, this.QueryMaxItemCount, cancellationToken);
 
             return new DeleteResponse(deleteResponse.DeletedDocuments, requestCharge + deleteResponse.RequestCharge);
         }

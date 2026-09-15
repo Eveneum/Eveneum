@@ -29,7 +29,7 @@ namespace Eveneum.Tests.Infrastructure
 
             this.EventStoreOptions.JsonSerializer = new SystemTextJsonSerializer(this.JsonSerializerOptions);
             
-            var persistence = new CosmosPersistence<EveneumDocument>(this.Client, this.Database, this.Container, this.EventStoreOptions.BulkDeleteMode);
+            var persistence = new CosmosPersistence<EveneumDocument>(this.Client, this.Database, this.Container, this.BulkDeleteMode);
             this.EventStore = new EventStore(persistence, this.EventStoreOptions);
 
             await this.EventStore.Initialize();
@@ -53,10 +53,6 @@ namespace Eveneum.Tests.Infrastructure
     public class SystemTextJsonLinuxCosmosDbContext : SystemTextJsonCosmosDbContext
     {
         public override string Container => base.Container + "Linux";
-
-        public SystemTextJsonLinuxCosmosDbContext()
-        {
-            this.EventStoreOptions.BulkDeleteMode = BulkDeleteMode.TransactionalBatch;
-        }
+        public override BulkDeleteMode BulkDeleteMode => Eveneum.BulkDeleteMode.TransactionalBatch;
     }
 }

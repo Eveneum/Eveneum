@@ -50,16 +50,14 @@ namespace Eveneum.Tests
     }
 
     [Binding]
-    public class SnapshotSteps(NewtonsoftCosmosDbContext newtonsoftContext, SystemTextJsonCosmosDbContext stjContext, NewtonsoftLinuxCosmosDbContext newtonsoftLinuxContext, SystemTextJsonLinuxCosmosDbContext stjLinuxContext)
+    public class SnapshotSteps(IEnumerable<CosmosDbContext> Contexts)
     {
-        private readonly IReadOnlyCollection<CosmosDbContext> Contexts = [newtonsoftContext, stjContext, newtonsoftLinuxContext, stjLinuxContext];
-
         [Given(@"an existing snapshot for version (\d+)")]
         public async Task GivenAnExistingSnapshotForVersion(ulong version)
         {
             var snapshot = TestSetup.GetSnapshot();
 
-            await Task.WhenAll(this.Contexts.Select(async x =>
+            await Task.WhenAll(Contexts.Select(async x =>
             {
                 x.Snapshot = snapshot;
 
@@ -72,7 +70,7 @@ namespace Eveneum.Tests
         {
             var snapshotMetadata = TestSetup.GetMetadata();
 
-            foreach (var context in this.Contexts) 
+            foreach (var context in Contexts) 
                 context.SnapshotMetadata = snapshotMetadata;
 
             await this.GivenAnExistingSnapshotForVersion(version);
@@ -83,7 +81,7 @@ namespace Eveneum.Tests
         {
             var snapshot = TestSetup.GetSnapshot();
 
-            await Task.WhenAll(this.Contexts.Select(async x =>
+            await Task.WhenAll(Contexts.Select(async x =>
             {
                 x.Snapshot = snapshot;
                 x.SnapshotWriterSnapshot = new SnapshotWriterSnapshot(typeof(CustomSnapshotWriter).AssemblyQualifiedName);
@@ -97,7 +95,7 @@ namespace Eveneum.Tests
         {
             var snapshotMetadata = TestSetup.GetMetadata();
 
-            foreach (var context in this.Contexts) 
+            foreach (var context in Contexts) 
                 context.SnapshotMetadata = snapshotMetadata;
 
             await this.GivenAnExistingCustomSnapshotForVersion(version);
@@ -106,7 +104,7 @@ namespace Eveneum.Tests
         [Given(@"a custom Snapshot Writer")]
         public void GivenACustomSnapshotWriter()
         {
-            foreach (var context in this.Contexts)
+            foreach (var context in Contexts)
                 context.EventStoreOptions.SnapshotWriter = new CustomSnapshotWriter();
         }
 
@@ -115,7 +113,7 @@ namespace Eveneum.Tests
         {
             var snapshot = TestSetup.GetSnapshot();
 
-            await Task.WhenAll(this.Contexts.Select(async x =>
+            await Task.WhenAll(Contexts.Select(async x =>
             {
                 x.Snapshot = snapshot;
 
@@ -128,7 +126,7 @@ namespace Eveneum.Tests
         {
             var metadata = TestSetup.GetMetadata();
 
-            foreach (var context in this.Contexts)
+            foreach (var context in Contexts)
                 context.SnapshotMetadata = metadata;
 
             await WhenICreateSnapshotForStreamInVersion(streamId, version);
@@ -139,7 +137,7 @@ namespace Eveneum.Tests
         {
             var snapshot = TestSetup.GetSnapshot();
 
-            await Task.WhenAll(this.Contexts.Select(async x =>
+            await Task.WhenAll(Contexts.Select(async x =>
             {
                 x.Snapshot = snapshot;
 
@@ -150,7 +148,7 @@ namespace Eveneum.Tests
         [When(@"I delete snapshots older than version (\d+) from stream ([^\s-])")]
         public async Task WhenIDeleteSnapshotsOlderThanVersionFromStream(ulong version, string streamId)
         {
-            await Task.WhenAll(this.Contexts.Select(async x =>
+            await Task.WhenAll(Contexts.Select(async x =>
             {
                 x.Response = await x.EventStore.DeleteSnapshots(streamId, version);
             }));
@@ -159,7 +157,7 @@ namespace Eveneum.Tests
         [Then(@"the snapshot for version (\d+) is persisted")]
         public async Task ThenTheSnapshotForVersionIsPersisted(ulong version)
         {
-            await Task.WhenAll(this.Contexts.Select(async context =>
+            await Task.WhenAll(Contexts.Select(async context =>
             {
                 var streamId = context.StreamId;
                 var snapshot = context.Snapshot;
@@ -200,7 +198,7 @@ namespace Eveneum.Tests
         [Then(@"the Snapshot Writer snapshot for version (\d+) is persisted")]
         public async Task ThenTheSnapshotWriterSnapshotForVersionIsPersisted(ulong version)
         {
-            await Task.WhenAll(this.Contexts.Select(async context =>
+            await Task.WhenAll(Contexts.Select(async context =>
             {
                 var streamId = context.StreamId;
                 var snapshot = new SnapshotWriterSnapshot(typeof(CustomSnapshotWriter).AssemblyQualifiedName);
@@ -230,7 +228,7 @@ namespace Eveneum.Tests
         [Then(@"the custom snapshot for version (\d+) is persisted")]
         public void ThenTheCustomSnapshotForVersionIsPersisted(ulong version)
         {
-            foreach(var context in this.Contexts)
+            foreach(var context in Contexts)
             {
                 var streamId = context.StreamId;
                 var snapshot = context.Snapshot;
@@ -248,7 +246,7 @@ namespace Eveneum.Tests
         [Then(@"the snapshots older than (\d+) are soft-deleted")]
         public async Task ThenTheSnapshotsOlderThanAreSoft_Deleted(ulong version)
         {
-            await Task.WhenAll(this.Contexts.Select(async context =>
+            await Task.WhenAll(Contexts.Select(async context =>
             {
                 var snapshotDocuments = await CosmosSetup.QueryAllDocumentsInStream(context.Client, context.Database, context.Container, context.StreamId, DocumentType.Snapshot);
                 var olderSnapshotDocuments = snapshotDocuments.Where(x => x.Version < version);
@@ -261,7 +259,7 @@ namespace Eveneum.Tests
         [Then(@"the snapshots older than (\d+) are hard-deleted")]
         public async Task ThenTheSnapshotsOlderThanAreHard_Deleted(ulong version)
         {
-            await Task.WhenAll(this.Contexts.Select(async context =>
+            await Task.WhenAll(Contexts.Select(async context =>
             {
                 var snapshotDocuments = await CosmosSetup.QueryAllDocumentsInStream(context.Client, context.Database, context.Container, context.StreamId, DocumentType.Snapshot);
                 var olderSnapshotDocuments = snapshotDocuments.Where(x => x.Version < version);
@@ -273,7 +271,7 @@ namespace Eveneum.Tests
         [Then(@"snapshots (\d+) and newer are not soft-deleted")]
         public async Task ThenSnapshotsAndNewerAreNotSoft_Deleted(ulong version)
         {
-            foreach (var context in this.Contexts)
+            foreach (var context in Contexts)
             {
                 var snapshotDocuments = await CosmosSetup.QueryAllDocumentsInStream(context.Client, context.Database, context.Container, context.StreamId, DocumentType.Snapshot);
                 var newerSnapshotDocuments = snapshotDocuments.Where(x => x.Version >= version);
@@ -286,7 +284,7 @@ namespace Eveneum.Tests
         [Then(@"snapshots (\d+) and newer are not hard-deleted")]
         public async Task ThenSnapshotsAndNewerAreNotHard_Deleted(ulong version)
         {
-            await Task.WhenAll(this.Contexts.Select(async context =>
+            await Task.WhenAll(Contexts.Select(async context =>
             {
                 var snapshotDocuments = await CosmosSetup.QueryAllDocumentsInStream(context.Client, context.Database, context.Container, context.StreamId, DocumentType.Snapshot);
                 var newerSnapshotDocuments = snapshotDocuments.Where(x => x.Version >= version);

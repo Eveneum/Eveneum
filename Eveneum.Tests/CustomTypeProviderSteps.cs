@@ -20,14 +20,12 @@ namespace Eveneum.Tests
 
 	[Binding]
 	[Scope(Feature = "Custom Type provider")]
-	public class CustomTypeProviderSteps(NewtonsoftCosmosDbContext newtonsoftContext, SystemTextJsonCosmosDbContext stjContext, NewtonsoftLinuxCosmosDbContext newtonsoftLinuxContext, SystemTextJsonLinuxCosmosDbContext stjLinuxContext)
+	public class CustomTypeProviderSteps(IEnumerable<CosmosDbContext> Contexts)
     {
-        private readonly IReadOnlyCollection<CosmosDbContext> Contexts = [newtonsoftContext, stjContext, newtonsoftLinuxContext, stjLinuxContext];
-
         [Given(@"a custom Type Provider")]
 		public void GivenACustomTypeProvider()
 		{
-			foreach (var context in this.Contexts)
+			foreach (var context in Contexts)
 			{
 				context.EventStoreOptions.TypeProvider = new CustomTypeProvider();
 			}
@@ -38,7 +36,7 @@ namespace Eveneum.Tests
 		{
 			var snapshot = new SnapshotWriterSnapshot(typeof(CustomSnapshotWriter).AssemblyQualifiedName);
 
-            await Task.WhenAll(this.Contexts.Select(async context =>
+            await Task.WhenAll(Contexts.Select(async context =>
             {
                 var snapshotDocuments = await CosmosSetup.QueryAllDocumentsInStream(context.Client, context.Database, context.Container, context.StreamId, DocumentType.Snapshot);
                 Assert.That(snapshotDocuments, Is.Not.Empty);

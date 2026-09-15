@@ -25,7 +25,7 @@ namespace Eveneum.Tests.Infrastructure
 
             this.EventStoreOptions.JsonSerializer = new NewtonsoftJsonSerializer(this.JsonSerializerSettings);
             
-            var persistence = new CosmosPersistence<NewtonsoftJsonEveneumDocument>(this.Client, this.Database, this.Container, this.EventStoreOptions.BulkDeleteMode);
+            var persistence = new CosmosPersistence<NewtonsoftJsonEveneumDocument>(this.Client, this.Database, this.Container, this.BulkDeleteMode);
             this.EventStore = new EventStore(persistence, this.EventStoreOptions);
 
             await this.EventStore.Initialize();
@@ -49,10 +49,6 @@ namespace Eveneum.Tests.Infrastructure
     public class NewtonsoftLinuxCosmosDbContext : NewtonsoftCosmosDbContext
     {
         public override string Container => base.Container + "Linux";
-
-        public NewtonsoftLinuxCosmosDbContext()
-        {
-            this.EventStoreOptions.BulkDeleteMode = BulkDeleteMode.TransactionalBatch;
-        }
+        public override BulkDeleteMode BulkDeleteMode => Eveneum.BulkDeleteMode.TransactionalBatch;
     }
 }

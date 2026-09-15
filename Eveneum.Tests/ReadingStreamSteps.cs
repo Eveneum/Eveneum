@@ -8,10 +8,8 @@ using Reqnroll;
 namespace Eveneum.Tests
 {
     [Binding]
-    public class ReadingStreamSteps(NewtonsoftCosmosDbContext newtonsoftContext, SystemTextJsonCosmosDbContext stjContext, NewtonsoftLinuxCosmosDbContext newtonsoftLinuxContext, SystemTextJsonLinuxCosmosDbContext stjLinuxContext)
+    public class ReadingStreamSteps(IEnumerable<CosmosDbContext> Contexts)
     {
-        private readonly IReadOnlyCollection<CosmosDbContext> Contexts = [newtonsoftContext, stjContext, newtonsoftLinuxContext, stjLinuxContext];
-
         [When("I read stream {word}")]
         public Task WhenIReadStream(string streamId) => this.WhenIReadStream(streamId, null);
 
@@ -36,7 +34,7 @@ namespace Eveneum.Tests
         [Then(@"the non-existing stream is returned")]
         public void ThenTheNon_ExistingStreamIsReturned()
         {
-            foreach (var context in this.Contexts)
+            foreach (var context in Contexts)
             {
                 Assert.That(context.Stream.HasValue, Is.False);
                 Assert.That((context.Response as StreamResponse).SoftDeleted, Is.False);
@@ -46,7 +44,7 @@ namespace Eveneum.Tests
         [Then(@"the non-existing, soft-deleted stream is returned")]
         public void ThenTheNon_ExistingSoft_DeletedStreamIsReturned()
         {
-            foreach (var context in this.Contexts)
+            foreach (var context in Contexts)
             {
                 Assert.That(context.Stream.HasValue, Is.False);
                 Assert.That((context.Response as StreamResponse).SoftDeleted);
@@ -56,7 +54,7 @@ namespace Eveneum.Tests
         [Then("the stream {word} in version {int} is returned")]
         public void ThenTheStreamInVersionIsReturned(string streamId, ulong version)
         {
-            foreach (var context in this.Contexts)
+            foreach (var context in Contexts)
             {
                 Assert.That(context.Stream.HasValue);
                 Assert.That(context.Stream.Value.StreamId, Is.EqualTo(streamId));
@@ -68,7 +66,7 @@ namespace Eveneum.Tests
         [Then("the stream {word} with metadata in version {int} is returned")]
         public void ThenTheStreamWithMetadataInVersionIsReturned(string streamId, ulong version)
         {
-            foreach (var context in this.Contexts)
+            foreach (var context in Contexts)
             {
                 Assert.That(context.Stream.HasValue);
                 Assert.That(context.Stream.Value.StreamId, Is.EqualTo(streamId));
@@ -80,7 +78,7 @@ namespace Eveneum.Tests
         [Then(@"no snapshot is returned")]
         public void ThenNoSnapshotIsReturned()
         {
-            foreach (var context in this.Contexts)
+            foreach (var context in Contexts)
             {
                 Assert.That(context.Stream.HasValue);
                 Assert.That(context.Stream.Value.Snapshot.HasValue, Is.False);
@@ -90,7 +88,7 @@ namespace Eveneum.Tests
         [Then("a snapshot for version {int} is returned")]
         public void ThenASnapshotForVersionIsReturned(ulong version)
         {
-            foreach (var context in this.Contexts)
+            foreach (var context in Contexts)
             {
                 Assert.That(context.Stream.HasValue);
                 Assert.That(context.Stream.Value.Snapshot.HasValue);
@@ -103,7 +101,7 @@ namespace Eveneum.Tests
         [Then("a snapshot with metadata for version {int} is returned")]
         public void ThenASnapshotWithMetadataForVersionIsReturned(ulong version)
         {
-            foreach (var context in this.Contexts)
+            foreach (var context in Contexts)
             {
                 Assert.That(context.Stream.HasValue);
                 Assert.That(context.Stream.Value.Snapshot.HasValue);
@@ -117,7 +115,7 @@ namespace Eveneum.Tests
         [Then(@"no events are returned")]
         public void ThenNoEventsAreReturned()
         {
-            foreach (var context in this.Contexts)
+            foreach (var context in Contexts)
             {
                 Assert.That(context.Stream.HasValue, Is.True);
                 Assert.That(context.Stream.Value.Events, Is.Empty);
@@ -127,7 +125,7 @@ namespace Eveneum.Tests
         [Then("events from version {int} to {int} are returned")]
         public async Task ThenEventsFromVersionToAreReturned(ulong fromVersion, ulong toVersion)
         {
-            await Task.WhenAll(this.Contexts.Select(async context =>
+            await Task.WhenAll(Contexts.Select(async context =>
             {
                 var stream = context.Stream;
                 var documents = await CosmosSetup.QueryAllDocumentsInStream(context.Client, context.Database, context.Container, stream.Value.StreamId, Documents.DocumentType.Event);
@@ -151,7 +149,7 @@ namespace Eveneum.Tests
 
         private async Task WhenIReadStream(string streamId, ReadStreamOptions options)
         {
-            await Task.WhenAll(this.Contexts.Select(async x =>
+            await Task.WhenAll(Contexts.Select(async x =>
             {
                 x.StreamId = streamId;
                 var response = await x.EventStore.ReadStream(streamId, options);

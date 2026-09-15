@@ -105,7 +105,7 @@ namespace Eveneum.Tests
         
         private static global::Reqnroll.Formatters.RuntimeSupport.FeatureLevelCucumberMessages InitializeCucumberMessages()
         {
-            return new global::Reqnroll.Formatters.RuntimeSupport.FeatureLevelCucumberMessages("Advanced.feature.ndjson", 16);
+            return new global::Reqnroll.Formatters.RuntimeSupport.FeatureLevelCucumberMessages("Advanced.feature.ndjson", 17);
         }
         
         [global::NUnit.Framework.TestAttribute()]
@@ -1033,6 +1033,51 @@ this.ScenarioInitialize(scenarioInfo, ruleInfo);
  await testRunner.ThenAsync("the event in version 5 in stream B is hard-deleted", ((string)(null)), ((global::Reqnroll.Table)(null)), "Then ");
 #line hidden
 #line 225
+ await testRunner.AndAsync("request charge is reported", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
+#line hidden
+            }
+            await this.ScenarioCleanupAsync();
+        }
+        
+        [global::NUnit.Framework.TestAttribute()]
+        [global::NUnit.Framework.DescriptionAttribute("Ttl-delete event")]
+        public async global::System.Threading.Tasks.Task Ttl_DeleteEvent()
+        {
+            string[] tagsOfScenario = ((string[])(null));
+            global::System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new global::System.Collections.Specialized.OrderedDictionary();
+            string pickleIndex = "14";
+            global::Reqnroll.ScenarioInfo scenarioInfo = new global::Reqnroll.ScenarioInfo("Ttl-delete event", null, tagsOfScenario, argumentsOfScenario, featureTags, pickleIndex);
+            string[] tagsOfRule = ((string[])(null));
+            global::Reqnroll.RuleInfo ruleInfo = null;
+#line 227
+this.ScenarioInitialize(scenarioInfo, ruleInfo);
+#line hidden
+            if ((global::Reqnroll.TagHelper.ContainsIgnoreTag(scenarioInfo.CombinedTags) || global::Reqnroll.TagHelper.ContainsIgnoreTag(featureTags)))
+            {
+                await testRunner.SkipScenarioAsync();
+            }
+            else
+            {
+                await this.ScenarioStartAsync();
+#line 228
+ await testRunner.GivenAsync("ttl-delete mode with 10 seconds as ttl", ((string)(null)), ((global::Reqnroll.Table)(null)), "Given ");
+#line hidden
+#line 229
+ await testRunner.AndAsync("an event store", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
+#line hidden
+#line 230
+ await testRunner.AndAsync("an existing stream A with 10 events", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
+#line hidden
+#line 231
+ await testRunner.AndAsync("an existing stream B with 100 events", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
+#line hidden
+#line 232
+ await testRunner.WhenAsync("I delete event in version 5 in stream B", ((string)(null)), ((global::Reqnroll.Table)(null)), "When ");
+#line hidden
+#line 233
+ await testRunner.ThenAsync("the event in version 5 in stream B is soft-deleted", ((string)(null)), ((global::Reqnroll.Table)(null)), "Then ");
+#line hidden
+#line 234
  await testRunner.AndAsync("request charge is reported", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
 #line hidden
             }

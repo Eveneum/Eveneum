@@ -11,16 +11,14 @@ using System.Threading.Tasks;
 namespace Eveneum.Tests
 {
     [Binding]
-    public class WritingToStreamSteps(ScenarioContext scenarioContext, NewtonsoftCosmosDbContext newtonsoftContext, SystemTextJsonCosmosDbContext stjContext, NewtonsoftLinuxCosmosDbContext newtonsoftLinuxContext, SystemTextJsonLinuxCosmosDbContext stjLinuxContext)
+    public class WritingToStreamSteps(ScenarioContext scenarioContext, IEnumerable<CosmosDbContext> Contexts)
     {
-        private readonly IReadOnlyCollection<CosmosDbContext> Contexts = [newtonsoftContext, stjContext, newtonsoftLinuxContext, stjLinuxContext];
-
         [When("I write a new stream {word} with {int} events")]
         public async Task WhenIWriteNewStreamWithEvents(string streamId, int events)
         {
             var eventsData = TestSetup.GetEvents(events);
 
-            await Task.WhenAll(this.Contexts.Select(async x =>
+            await Task.WhenAll(Contexts.Select(async x =>
             {
                 x.StreamId = streamId;
                 x.NewEvents = eventsData;
@@ -35,7 +33,7 @@ namespace Eveneum.Tests
         {
             var metadata = TestSetup.GetMetadata();
 
-            foreach (var context in this.Contexts)
+            foreach (var context in Contexts)
                 context.HeaderMetadata = metadata;
 
             await WhenIWriteNewStreamWithEvents(streamId, events);
@@ -46,7 +44,7 @@ namespace Eveneum.Tests
         {
             var eventsData = TestSetup.GetEvents(events, expectedVersion + 1);
 
-            await Task.WhenAll(this.Contexts.Select(async x =>
+            await Task.WhenAll(Contexts.Select(async x =>
             {
                 x.StreamId = streamId;
                 x.NewEvents = eventsData;
@@ -65,7 +63,7 @@ namespace Eveneum.Tests
 
             var eventsData = eventVersions.SelectMany(x => TestSetup.GetEvents(1, x)).ToArray();
 
-            await Task.WhenAll(this.Contexts.Select(async x =>
+            await Task.WhenAll(Contexts.Select(async x =>
             {
                 x.StreamId = streamId;
                 x.NewEvents = eventsData;
@@ -87,7 +85,7 @@ namespace Eveneum.Tests
 
             var eventsData = allEvents.ToArray();
 
-            await Task.WhenAll(this.Contexts.Select(async x =>
+            await Task.WhenAll(Contexts.Select(async x =>
             {
                 x.StreamId = streamId;
                 x.NewEvents = eventsData;
@@ -100,7 +98,7 @@ namespace Eveneum.Tests
         [Then("the header version {int} with no metadata is persisted")]
         public async Task ThenTheHeaderVersionWithNoMetadataIsPersisted(ulong version)
         {
-            await Task.WhenAll(this.Contexts.Select(async context =>
+            await Task.WhenAll(Contexts.Select(async context =>
             {
                 var headerDocuments = await CosmosSetup.QueryAllDocumentsInStream(context.Client, context.Database, context.Container, context.StreamId, DocumentType.Header);
 
@@ -122,7 +120,7 @@ namespace Eveneum.Tests
         [Then("the header version {int} with metadata is persisted")]
         public async Task ThenTheHeaderVersionWithMetadataIsPersisted(ulong version)
         {
-            await Task.WhenAll(this.Contexts.Select(async context =>
+            await Task.WhenAll(Contexts.Select(async context =>
             {
                 var typeProvider = context.EventStoreOptions.TypeProvider ?? new PlatformTypeProvider(context.EventStoreOptions.IgnoreMissingTypes);
 
@@ -185,7 +183,7 @@ namespace Eveneum.Tests
         [Then(@"no events are appended")]
         public async Task ThenNoEventsAreAppended()
         {
-            await Task.WhenAll(this.Contexts.Select(async context =>
+            await Task.WhenAll(Contexts.Select(async context =>
             {
                 var streamId = context.StreamId;
                 var currentDocuments = await CosmosSetup.QueryAllDocumentsInStream(context.Client, context.Database, context.Container, streamId, DocumentType.Event);
@@ -200,7 +198,7 @@ namespace Eveneum.Tests
         [Then(@"new events are appended")]
         public async Task ThenNewEventsAreAppended()
         {
-            await Task.WhenAll(this.Contexts.Select(async context =>
+            await Task.WhenAll(Contexts.Select(async context =>
             {
                 var streamId = context.StreamId;
                 var currentDocuments = await CosmosSetup.QueryAllDocumentsInStream(context.Client, context.Database, context.Container, streamId, DocumentType.Event);
@@ -216,7 +214,7 @@ namespace Eveneum.Tests
         [Then("first {int} events are appended")]
         public async Task ThenFirstEventsAreAppended(int events)
         {
-            await Task.WhenAll(this.Contexts.Select(async context =>
+            await Task.WhenAll(Contexts.Select(async context =>
             {
                 var typeProvider = context.EventStoreOptions.TypeProvider ?? new PlatformTypeProvider(context.EventStoreOptions.IgnoreMissingTypes);
 

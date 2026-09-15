@@ -67,7 +67,7 @@ namespace Eveneum.Persistence
             string streamId, 
             string query, 
             bool softDelete, 
-            double ttl, 
+            int? ttl, 
             byte batchSize, 
             int? maxItemCount = null, 
             CancellationToken cancellationToken = default);
@@ -82,11 +82,14 @@ namespace Eveneum.Persistence
             CancellationToken cancellationToken = default);
 
         /// <summary>
-        /// Create or update a stored procedure.
+        /// Create or update a stored procedure from an embedded JavaScript resource.
         /// </summary>
+        /// <param name="procedureFileName">
+        /// The file name (without the .js extension) of the embedded resource under StoredProcedures.
+        /// </param>
         Task CreateOrUpdateStoredProcedureAsync(
             string procedureId,
-            string procedureBody,
+            string procedureFileName,
             CancellationToken cancellationToken = default);
     }
 }

@@ -15,6 +15,7 @@ namespace Eveneum.Tests.Infrastructure
         public CosmosClient Client { get; protected set; }
         public IEventStore EventStore { get; protected set; }
         public EventStoreOptions EventStoreOptions { get; } = new EventStoreOptions() { QueryMaxItemCount = 100 };
+        public virtual BulkDeleteMode BulkDeleteMode { get; } = Eveneum.BulkDeleteMode.StoredProcedure;
         
         public string StreamId { get; set; }
         public Stream? Stream { get; set; }
@@ -72,6 +73,11 @@ namespace Eveneum.Tests.Infrastructure
                 try
                 {
                     await container.DeleteItemAsync<dynamic>(id, partitionKey, requestOptions);
+                    return;
+                }
+                catch (CosmosException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
+                {
+                    // Already deleted, no action needed
                     return;
                 }
                 catch (CosmosException ex) when (ex.StatusCode == System.Net.HttpStatusCode.RequestTimeout && retryCount < maxRetries)

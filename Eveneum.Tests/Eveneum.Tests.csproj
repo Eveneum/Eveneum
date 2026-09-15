@@ -19,6 +19,7 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>    
     <PackageReference Include="RandomGen" />    
+    <PackageReference Include="Reqnroll.Microsoft.Extensions.DependencyInjection" />    
     <PackageReference Include="Reqnroll.NUnit" />
     <ProjectReference Include="..\Eveneum\Eveneum.csproj" />
     <ProjectReference Include="..\Eveneum.NewtonsoftJson\Eveneum.NewtonsoftJson.csproj" />

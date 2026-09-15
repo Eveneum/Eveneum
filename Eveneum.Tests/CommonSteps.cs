@@ -10,14 +10,12 @@ using Reqnroll;
 namespace Eveneum.Tests
 {
     [Binding]
-    public class CommonSteps(ScenarioContext scenarioContext, NewtonsoftCosmosDbContext newtonsoftContext, SystemTextJsonCosmosDbContext stjContext, NewtonsoftLinuxCosmosDbContext newtonsoftLinuxContext, SystemTextJsonLinuxCosmosDbContext stjLinuxContext)
+    public class CommonSteps(ScenarioContext scenarioContext, IEnumerable<CosmosDbContext> Contexts)
     {
-        private readonly IReadOnlyCollection<CosmosDbContext> Contexts = [newtonsoftContext, stjContext, newtonsoftLinuxContext, stjLinuxContext];
-
         [Given(@"Cosmos serializer with camel-case naming policy")]
         public void GivenCosmosSerializerWithCamelCaseNamingPolicy()
         {
-            foreach (var context in this.Contexts)
+            foreach (var context in Contexts)
             {
                 switch (context)
                 {
@@ -45,13 +43,13 @@ namespace Eveneum.Tests
         [Given("an event store")]
         public async Task GivenAnEventStore()
         {
-            await Task.WhenAll(this.Contexts.Select(x => x.Initialize()));
+            await Task.WhenAll(Contexts.Select(x => x.Initialize()));
         }
 
         [Given("hard-delete mode")]
         public void GivenHardDeleteMode()
         {
-            foreach (var context in this.Contexts)
+            foreach (var context in Contexts)
             {
                 context.EventStoreOptions.DeleteMode = DeleteMode.HardDelete;
             }
@@ -60,7 +58,7 @@ namespace Eveneum.Tests
         [Given("ttl-delete mode with {int} seconds as ttl")]
         public void GivenTTlDeleteMode(int streamTtlAfterDelete)
         {
-            foreach (var context in this.Contexts)
+            foreach (var context in Contexts)
             {
                 context.EventStoreOptions.DeleteMode = DeleteMode.TtlDelete;
                 context.EventStoreOptions.StreamTimeToLiveAfterDelete = TimeSpan.FromSeconds(streamTtlAfterDelete);
@@ -70,7 +68,7 @@ namespace Eveneum.Tests
         [Given("single snapshot mode")]
         public void GivenSingleSnapshotMode()
         {
-            foreach (var context in this.Contexts)
+            foreach (var context in Contexts)
             {
                 context.EventStoreOptions.SnapshotMode = SnapshotMode.Single;
             }
@@ -81,7 +79,7 @@ namespace Eveneum.Tests
         {
             var eventData = TestSetup.GetEvents(events);
 
-            await Task.WhenAll(this.Contexts.Select(async x =>
+            await Task.WhenAll(Contexts.Select(async x =>
             {
                 x.StreamId = streamId;
 
@@ -95,7 +93,7 @@ namespace Eveneum.Tests
             var metadata = TestSetup.GetMetadata();
             var eventData = TestSetup.GetEvents(events);
 
-            await Task.WhenAll(this.Contexts.Select(async x =>
+            await Task.WhenAll(Contexts.Select(async x =>
             {
                 x.StreamId = streamId;
                 x.HeaderMetadata = metadata;
@@ -109,7 +107,7 @@ namespace Eveneum.Tests
         {
             var eventData = TestSetup.GetEvents(events);
 
-            await Task.WhenAll(this.Contexts.Select(async x =>
+            await Task.WhenAll(Contexts.Select(async x =>
             {
                 x.StreamId = streamId;
 
@@ -127,7 +125,7 @@ namespace Eveneum.Tests
         [Then("request charge is reported")]
         public void ThenRequestChargeIsReported()
         {
-            foreach (var context in this.Contexts)
+            foreach (var context in Contexts)
             {
                 var requestCharge = scenarioContext.TestError is EveneumException
                     ? (scenarioContext.TestError as EveneumException).RequestCharge
@@ -142,7 +140,7 @@ namespace Eveneum.Tests
         [Then("{int} deleted documents are reported")]
         public void ThenDeletedDocumentsAreReported(ulong deletedDocuments)
         {
-            foreach (var context in this.Contexts)
+            foreach (var context in Contexts)
             {
                 Assert.That(context.Response, Is.InstanceOf<DeleteResponse>());
 

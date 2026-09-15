@@ -64,3 +64,20 @@ Scenario: Hard-Deleting all snapshots
 	And stream P is not hard-deleted
 	And request charge is reported
 	And 4 deleted documents are reported
+
+Scenario: Ttl-deleting some snapshots
+	Given ttl-delete mode with 10 seconds as ttl
+	And an event store
+	And an existing stream P with 10 events
+	And an existing snapshot for version 5
+	And an existing stream S with 10 events
+	And an existing snapshot for version 1
+	And an existing snapshot for version 3
+	And an existing snapshot for version 5
+	And an existing snapshot for version 7
+	When I delete snapshots older than version 5 from stream S
+	Then the snapshots older than 5 are soft-deleted
+	And snapshots 5 and newer are not soft-deleted
+	And stream P is not soft-deleted
+	And request charge is reported
+	And 2 deleted documents are reported
