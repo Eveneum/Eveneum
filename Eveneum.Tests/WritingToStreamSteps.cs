@@ -122,7 +122,7 @@ namespace Eveneum.Tests
         {
             await Task.WhenAll(Contexts.Select(async context =>
             {
-                var typeProvider = context.EventStoreOptions.TypeProvider ?? new PlatformTypeProvider(context.EventStoreOptions.IgnoreMissingTypes);
+                var typeProvider = context.EventStoreOptions.TypeProvider ?? new PlatformTypeProvider();
 
                 var headerDocuments = await CosmosSetup.QueryAllDocumentsInStream(context.Client, context.Database, context.Container, context.StreamId, DocumentType.Header);
 
@@ -216,7 +216,7 @@ namespace Eveneum.Tests
         {
             await Task.WhenAll(Contexts.Select(async context =>
             {
-                var typeProvider = context.EventStoreOptions.TypeProvider ?? new PlatformTypeProvider(context.EventStoreOptions.IgnoreMissingTypes);
+                var typeProvider = context.EventStoreOptions.TypeProvider ?? new PlatformTypeProvider();
 
                 var currentDocuments = await CosmosSetup.QueryAllDocumentsInStream(context.Client, context.Database, context.Container, context.StreamId, DocumentType.Event);
                 var existingDocumentIds = context.ExistingDocuments.Select(x => x.Id);
@@ -243,7 +243,7 @@ namespace Eveneum.Tests
             Assert.That(newEvents.Length, Is.EqualTo(newEventDocuments.Count));
 
             var streamId = context.StreamId;
-            var typeProvider = context.EventStoreOptions.TypeProvider ?? new PlatformTypeProvider(context.EventStoreOptions.IgnoreMissingTypes);
+            var typeProvider = context.EventStoreOptions.TypeProvider ?? new PlatformTypeProvider();
 
             foreach (var newEvent in newEvents)
             {

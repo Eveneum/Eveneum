@@ -6,7 +6,7 @@ namespace Eveneum.Serialization
     public class EveneumDocumentSerializer(IJsonSerializer jsonSerializer = null, ITypeProvider typeProvider = null, bool ignoreMissingTypes = false)
     {
         public IJsonSerializer JsonSerializer { get; } = jsonSerializer ?? new SystemTextJsonSerializer();
-        public ITypeProvider TypeProvider { get; } = typeProvider ?? new PlatformTypeProvider(ignoreMissingTypes);
+        public ITypeProvider TypeProvider { get; } = typeProvider ?? new PlatformTypeProvider();
 
         public const char Separator = '~';
 

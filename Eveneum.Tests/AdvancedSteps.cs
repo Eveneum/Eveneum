@@ -128,7 +128,7 @@ namespace Eveneum.Tests
         {
             await Task.WhenAll(Contexts.Select(async context =>
             {
-                var typeProvider = context.EventStoreOptions.TypeProvider ?? new PlatformTypeProvider(context.EventStoreOptions.IgnoreMissingTypes);
+                var typeProvider = context.EventStoreOptions.TypeProvider ?? new PlatformTypeProvider();
                 var documents = await CosmosSetup.QueryAllDocumentsInStream(context.Client, context.Database, context.Container, streamId, DocumentType.Event);
                 var eventDocument = documents.SingleOrDefault(x => x.Id == EveneumDocumentSerializer.GenerateEventId(streamId, version));
 
