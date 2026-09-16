@@ -21,7 +21,12 @@ namespace Eveneum.Serialization
             using (stream)
             {
                 if (typeof(System.IO.Stream).IsAssignableFrom(typeof(T)))
-                    return (T)(object)stream;
+                {
+                    var copy = new MemoryStream();
+                    stream.CopyTo(copy);
+                    copy.Position = 0;
+                    return (T)(object)copy;
+                }
 
                 return JsonSerializer.Deserialize<T>(stream, Options);
             }

@@ -62,7 +62,12 @@ namespace Eveneum.NewtonsoftJson.Serialization
             using (stream)
             {
                 if (typeof(System.IO.Stream).IsAssignableFrom(typeof(T)))
-                    return (T)(object)stream;
+                {
+                    var copy = new MemoryStream();
+                    stream.CopyTo(copy);
+                    copy.Position = 0;
+                    return (T)(object)copy;
+                }
 
                 using var streamReader = new StreamReader(stream);
                 using var textReader = new JsonTextReader(streamReader);
