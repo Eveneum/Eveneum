@@ -61,7 +61,7 @@ namespace Eveneum.NewtonsoftJson.Serialization
         {
             using (stream)
             {
-                if (typeof(Stream).IsAssignableFrom(typeof(T)))
+                if (typeof(System.IO.Stream).IsAssignableFrom(typeof(T)))
                     return (T)(object)stream;
 
                 using var streamReader = new StreamReader(stream);
