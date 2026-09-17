@@ -9,12 +9,18 @@ namespace Eveneum.ApplicationInsights
     {
         public void Initialize(ITelemetry telemetry)
         {
-            if(telemetry is ExceptionTelemetry)
+            if (telemetry is ExceptionTelemetry)
             {
                 var exceptionTelemetry = telemetry as ExceptionTelemetry;
 
-                switch(exceptionTelemetry.Exception)
+                switch (exceptionTelemetry.Exception)
                 {
+                    case EventAlreadyExistsException ex:
+                        exceptionTelemetry.Properties[nameof(ex.StreamId)] = ex.StreamId;
+                        exceptionTelemetry.Properties[nameof(ex.RequestCharge)] = ex.RequestCharge.ToString("N", CultureInfo.InvariantCulture);
+                        exceptionTelemetry.Properties[nameof(ex.Version)] = ex.Version.ToString();
+                        break;
+
                     case JsonDeserializationException ex:
                         exceptionTelemetry.Properties[nameof(ex.Type)] = ex.Type;
                         exceptionTelemetry.Properties[nameof(ex.Json)] = ex.Json;
