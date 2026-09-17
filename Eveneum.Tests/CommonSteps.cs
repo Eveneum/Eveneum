@@ -74,6 +74,15 @@ namespace Eveneum.Tests
             }
         }
 
+        [Given("a batch size of {int}")]
+        public void GivenABatchSize(int batchSize)
+        {
+            foreach (var context in Contexts)
+            {
+                context.EventStoreOptions.BatchSize = (byte)batchSize;
+            }
+        }
+
         [Given("an existing stream {word} with {int} events")]
         public async Task GivenAnExistingStream(string streamId, ushort events)
         {

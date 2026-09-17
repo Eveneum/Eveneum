@@ -32,3 +32,12 @@ Scenario: Appending to stream with metadata and some events
 	Then the header version 30 with metadata is persisted
 	And new events are appended
 	And request charge is reported
+
+Scenario: Appending to stream with some events with a small batch size
+	Given a batch size of 2
+	And an event store
+	And an existing stream S with 5 events
+	When I append 10 events to stream S in expected version 5
+	Then the header version 15 with no metadata is persisted
+	And new events are appended
+	And request charge is reported

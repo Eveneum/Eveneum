@@ -50,3 +50,11 @@ Scenario: Creating new stream with metadata and some events - camel-case naming 
 	Then the header version 10 with metadata is persisted
 	And new events are appended
 	And request charge is reported
+
+Scenario: Creating new stream with some events with a small batch size
+	Given a batch size of 2
+	And an event store
+	When I write a new stream S with 10 events
+	Then the header version 10 with no metadata is persisted
+	And new events are appended
+	And request charge is reported
