@@ -204,9 +204,9 @@ namespace Eveneum
                 using var response = await transaction.ExecuteAsync(cancellationToken);
                 requestCharge += response.RequestCharge;
 
-                if (response.StatusCode == System.Net.HttpStatusCode.Conflict)
+                if (response.StatusCode == System.Net.HttpStatusCode.Conflict || response.StatusCode == System.Net.HttpStatusCode.PreconditionFailed)
                 {
-                    if (response.GetOperationResultAtIndex<IEveneumDocument>(0).StatusCode == System.Net.HttpStatusCode.Conflict)
+                    if (response.GetOperationResultAtIndex<IEveneumDocument>(0).StatusCode == System.Net.HttpStatusCode.Conflict || response.GetOperationResultAtIndex<IEveneumDocument>(0).StatusCode == System.Net.HttpStatusCode.PreconditionFailed)
                     {
                         if (isNewStream && firstBatch)
                             throw new StreamAlreadyExistsException(streamId, requestCharge);
@@ -220,7 +220,7 @@ namespace Eveneum
                     {
                         for (var i = 0; i < batch.Length; i++)
                         {
-                            if (response.GetOperationResultAtIndex<IEveneumDocument>(i + 1).StatusCode == System.Net.HttpStatusCode.Conflict)
+                            if (response.GetOperationResultAtIndex<IEveneumDocument>(i + 1).StatusCode == System.Net.HttpStatusCode.Conflict || response.GetOperationResultAtIndex<IEveneumDocument>(i + 1).StatusCode == System.Net.HttpStatusCode.PreconditionFailed)
                                 throw new EventAlreadyExistsException(streamId, batch[i].Version, requestCharge);
                         }
                     }
