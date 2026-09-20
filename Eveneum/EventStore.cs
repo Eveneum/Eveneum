@@ -309,7 +309,12 @@ namespace Eveneum
         {
             var query = $"SELECT * FROM c WHERE c.{nameof(EveneumDocument.DocumentType)} = 'Snapshot' AND c.Version < {olderThanVersion}";
 
-            return await DeleteDocuments(streamId, query, cancellationToken);
+            var deleteResponse = await DeleteDocuments(streamId, query, cancellationToken);
+
+            if (this.SnapshotWriter is object)
+                await this.SnapshotWriter.DeleteSnapshots(streamId, olderThanVersion, cancellationToken);
+
+            return deleteResponse;
         }
 
         public Task<Response> LoadAllEvents(Func<IReadOnlyCollection<EventData>, Task> callback, CancellationToken cancellationToken = default) =>

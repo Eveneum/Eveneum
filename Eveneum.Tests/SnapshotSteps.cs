@@ -18,6 +18,7 @@ namespace Eveneum.Tests
         public ulong Version { get; private set; }
         public object Snapshot { get; private set; }
         public object Metadata { get; private set; }
+        public List<(string StreamId, ulong Version)> DeletedSnapshots { get; } = new();
 
         public Task<bool> CreateSnapshot(string streamId, ulong version, object snapshot, object metadata = null, CancellationToken cancellationToken = default)
         {
@@ -35,6 +36,7 @@ namespace Eveneum.Tests
         {
             this.StreamId = streamId;
             this.Version = olderThanVersion;
+            this.DeletedSnapshots.Add((streamId, olderThanVersion));
 
             Console.WriteLine("Custom snapshots deleted for stream {0} in version older than {1}", streamId, olderThanVersion);
 
@@ -266,6 +268,17 @@ namespace Eveneum.Tests
 
                 Assert.That(olderSnapshotDocuments, Is.Empty);
             }));
+        }
+
+        [Then(@"the custom snapshots older than (\d+) are deleted")]
+        public void ThenTheCustomSnapshotsOlderThanAreDeleted(ulong version)
+        {
+            foreach (var context in Contexts)
+            {
+                var snapshotWriter = context.EventStoreOptions.SnapshotWriter as CustomSnapshotWriter;
+
+                Assert.That(snapshotWriter.DeletedSnapshots.Any(x => x.StreamId == context.StreamId && x.Version == version));
+            }
         }
 
         [Then(@"snapshots (\d+) and newer are not soft-deleted")]

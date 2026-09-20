@@ -10,3 +10,15 @@ Scenario: Deleting older snapshots
 	When I create snapshot for stream S in version 10 and delete older snapshots
 	Then the snapshots older than 10 are soft-deleted
 	And request charge is reported
+
+Scenario: Deleting older snapshots using Snapshot Writer
+	Given a custom Snapshot Writer
+	And an event store
+	And an existing stream S with 10 events
+	And an existing custom snapshot for version 3
+	And an existing custom snapshot for version 5
+	And an existing custom snapshot for version 7
+	When I create snapshot for stream S in version 10 and delete older snapshots
+	Then the snapshots older than 10 are soft-deleted
+	And the custom snapshots older than 10 are deleted
+	And request charge is reported

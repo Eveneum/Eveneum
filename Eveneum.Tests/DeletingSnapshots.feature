@@ -81,3 +81,16 @@ Scenario: Ttl-deleting some snapshots
 	And stream P is not soft-deleted
 	And request charge is reported
 	And 2 deleted documents are reported
+
+Scenario: Deleting snapshots using Snapshot Writer
+	Given a custom Snapshot Writer
+	And an event store
+	And an existing stream S with 10 events
+	And an existing custom snapshot for version 1
+	And an existing custom snapshot for version 3
+	And an existing custom snapshot for version 5
+	When I delete snapshots older than version 5 from stream S
+	Then the snapshots older than 5 are soft-deleted
+	And the custom snapshots older than 5 are deleted
+	And request charge is reported
+	And 2 deleted documents are reported
