@@ -24,11 +24,11 @@ namespace Eveneum.ApplicationInsights
                     exceptionTelemetry.Properties[nameof(CosmosException.RetryAfter)] = Convert.ToString(cosmosException.RetryAfter);
                     exceptionTelemetry.Properties[nameof(CosmosException.ResponseBody)] = cosmosException.ResponseBody;
                     exceptionTelemetry.Properties[nameof(CosmosException.RequestCharge)] = Convert.ToString(cosmosException.RequestCharge);
-                    exceptionTelemetry.Properties["ClientElapsedTime"] = Convert.ToString(cosmosException?.Diagnostics.GetClientElapsedTime());
-                    exceptionTelemetry.Properties[nameof(CosmosException.Headers.Session)] = cosmosException?.Headers.Session;
-                    exceptionTelemetry.Properties[nameof(CosmosException.Headers.ETag)] = cosmosException?.Headers.ETag;
-                    exceptionTelemetry.Properties[nameof(CosmosException.Headers.ContinuationToken)] = cosmosException?.Headers.ContinuationToken;
-                    exceptionTelemetry.Properties[nameof(CosmosException.Headers.Location)] = cosmosException?.Headers.Location;
+                    exceptionTelemetry.Properties["ClientElapsedTime"] = Convert.ToString(cosmosException?.Diagnostics?.GetClientElapsedTime());
+                    exceptionTelemetry.Properties[nameof(CosmosException.Headers.Session)] = cosmosException?.Headers?.Session;
+                    exceptionTelemetry.Properties[nameof(CosmosException.Headers.ETag)] = cosmosException?.Headers?.ETag;
+                    exceptionTelemetry.Properties[nameof(CosmosException.Headers.ContinuationToken)] = cosmosException?.Headers?.ContinuationToken;
+                    exceptionTelemetry.Properties[nameof(CosmosException.Headers.Location)] = cosmosException?.Headers?.Location;
                 }
             }
         }
