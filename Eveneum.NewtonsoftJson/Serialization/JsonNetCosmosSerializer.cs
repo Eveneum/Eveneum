@@ -1,8 +1,6 @@
 using System.IO;
 using System.Text;
 using Newtonsoft.Json;
-using Eveneum.Documents;
-using Eveneum.NewtonsoftJson.Documents;
 
 namespace Eveneum.NewtonsoftJson.Serialization
 {
@@ -71,14 +69,7 @@ namespace Eveneum.NewtonsoftJson.Serialization
 
                 using var streamReader = new StreamReader(stream);
                 using var textReader = new JsonTextReader(streamReader);
-                
-                // Handle EveneumDocument requests - deserialize to NewtonsoftJsonEveneumDocument
-                if (typeof(T) == typeof(EveneumDocument) || typeof(IEveneumDocument).IsAssignableFrom(typeof(T)))
-                {
-                    var document = this.Serializer.Deserialize<NewtonsoftJsonEveneumDocument>(textReader);
-                    return (T)(object)document;
-                }
-                
+
                 return this.Serializer.Deserialize<T>(textReader);
             }
         }

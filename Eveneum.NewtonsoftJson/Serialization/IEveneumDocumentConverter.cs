@@ -9,14 +9,27 @@ namespace Eveneum.NewtonsoftJson.Serialization
     {
         public override IEveneumDocument ReadJson(JsonReader reader, Type objectType, IEveneumDocument existingValue, bool hasExistingValue, JsonSerializer serializer)
         {
-            var jObject = JObject.Load(reader);
-            var document = new Documents.NewtonsoftJsonEveneumDocument(
-                jObject["id"]?.Value<string>(),
-                jObject["DocumentType"]?.ToObject<DocumentType>() ?? DocumentType.Header
-            );
+            var token = JToken.Load(reader);
 
-            serializer.Populate(jObject.CreateReader(), document);
-            return document;
+            if (objectType == typeof(IEveneumDocument))
+            {
+                var jObject = (JObject)token;
+                var document = new Documents.NewtonsoftJsonEveneumDocument(
+                    jObject["id"]?.Value<string>(),
+                    jObject["DocumentType"]?.ToObject<DocumentType>() ?? DocumentType.Header
+                );
+
+                serializer.Populate(jObject.CreateReader(), document);
+                return document;
+            }
+
+            if (hasExistingValue)
+            {
+                serializer.Populate(token.CreateReader(), existingValue);
+                return existingValue;
+            }
+
+            return (IEveneumDocument)token.ToObject(objectType, GetSerializerWithoutThisConverter(serializer));
         }
 
         public override void WriteJson(JsonWriter writer, IEveneumDocument value, JsonSerializer serializer)

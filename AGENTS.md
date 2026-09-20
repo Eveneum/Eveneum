@@ -73,6 +73,7 @@ Each scenario is executed against multiple `CosmosDbContext` implementations (Ne
 - The codebase contains essentially no comments; do not add comments unless requested
 - New public exceptions must derive from `EveneumException` and live in `Eveneum/Exceptions/`
 - Preserve the change-feed-friendly document shape in `Documents/EveneumDocument.cs`; changes to the stored schema affect existing production databases
+- Always use CRLF line endings (Windows-style) for all files
 
 ## CI & Packaging
 
