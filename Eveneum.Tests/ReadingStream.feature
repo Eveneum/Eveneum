@@ -290,3 +290,12 @@ Scenario: Reading stream with metadata, some events and single snapshot
 	And a snapshot with metadata for version 10 is returned
 	And no events are returned
 	And request charge is reported
+
+@ExpectException
+Scenario: Reading stream with Snapshot Writer snapshot without Snapshot Writer configured
+	Given an event store
+	And an existing stream S with 10 events
+	And an existing Snapshot Writer snapshot for version 5
+	When I read stream S
+	Then the action fails to read stream S because no Snapshot Writer is configured
+	And request charge is reported

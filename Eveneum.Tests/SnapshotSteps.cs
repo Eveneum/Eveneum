@@ -52,7 +52,7 @@ namespace Eveneum.Tests
     }
 
     [Binding]
-    public class SnapshotSteps(IEnumerable<CosmosDbContext> Contexts)
+    public class SnapshotSteps(ScenarioContext scenarioContext, IEnumerable<CosmosDbContext> Contexts)
     {
         [Given(@"an existing snapshot for version (\d+)")]
         public async Task GivenAnExistingSnapshotForVersion(ulong version)
@@ -101,6 +101,15 @@ namespace Eveneum.Tests
                 context.SnapshotMetadata = snapshotMetadata;
 
             await this.GivenAnExistingCustomSnapshotForVersion(version);
+        }
+
+        [Given(@"an existing Snapshot Writer snapshot for version (\d+)")]
+        public async Task GivenAnExistingSnapshotWriterSnapshotForVersion(ulong version)
+        {
+            await Task.WhenAll(Contexts.Select(async x =>
+            {
+                await x.EventStore.CreateSnapshot(x.StreamId, version, new SnapshotWriterSnapshot(typeof(CustomSnapshotWriter).AssemblyQualifiedName));
+            }));
         }
 
         [Given(@"a custom Snapshot Writer")]
@@ -279,6 +288,16 @@ namespace Eveneum.Tests
 
                 Assert.That(snapshotWriter.DeletedSnapshots.Any(x => x.StreamId == context.StreamId && x.Version == version));
             }
+        }
+
+        [Then(@"the action fails to read stream (.*) because no Snapshot Writer is configured")]
+        public void ThenTheActionFailsToReadStreamBecauseNoSnapshotWriterIsConfigured(string streamId)
+        {
+            Assert.That(scenarioContext.TestError, Is.InstanceOf<SnapshotWriterNotFoundException>());
+
+            var exception = scenarioContext.TestError as SnapshotWriterNotFoundException;
+            Assert.That(exception.StreamId, Is.EqualTo(streamId));
+            Assert.That(exception.SnapshotWriterType, Is.EqualTo(typeof(CustomSnapshotWriter).AssemblyQualifiedName));
         }
 
         [Then(@"snapshots (\d+) and newer are not soft-deleted")]

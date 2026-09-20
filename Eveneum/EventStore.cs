@@ -130,8 +130,13 @@ namespace Eveneum
                 {
                     snapshot = this.Serializer.DeserializeSnapshot(snapshotDocument);
 
-                    if (snapshot.Value.Data is SnapshotWriterSnapshot)
-                        snapshot = await this.SnapshotWriter.ReadSnapshot(streamId, snapshot.Value.Version, cancellationToken);
+                    if (snapshot.Value.Data is SnapshotWriterSnapshot snapshotWriterSnapshot)
+                    {
+                        if (this.SnapshotWriter is object)
+                            snapshot = await this.SnapshotWriter.ReadSnapshot(streamId, snapshot.Value.Version, cancellationToken);
+                        else
+                            throw new SnapshotWriterNotFoundException(streamId, requestCharge, snapshotWriterSnapshot.SnapshotWriterType);
+                    }
                 }
 
                 return new StreamResponse(new Stream(streamId, headerDocument.Version, metadata, events, snapshot), false, requestCharge);

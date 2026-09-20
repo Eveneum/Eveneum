@@ -105,7 +105,7 @@ namespace Eveneum.Tests
         
         private static global::Reqnroll.Formatters.RuntimeSupport.FeatureLevelCucumberMessages InitializeCucumberMessages()
         {
-            return new global::Reqnroll.Formatters.RuntimeSupport.FeatureLevelCucumberMessages("ReadingStream.feature.ndjson", 31);
+            return new global::Reqnroll.Formatters.RuntimeSupport.FeatureLevelCucumberMessages("ReadingStream.feature.ndjson", 32);
         }
         
         [global::NUnit.Framework.TestAttribute()]
@@ -1521,6 +1521,50 @@ this.ScenarioInitialize(scenarioInfo, ruleInfo);
  await testRunner.AndAsync("no events are returned", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
 #line hidden
 #line 292
+ await testRunner.AndAsync("request charge is reported", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
+#line hidden
+            }
+            await this.ScenarioCleanupAsync();
+        }
+        
+        [global::NUnit.Framework.TestAttribute()]
+        [global::NUnit.Framework.DescriptionAttribute("Reading stream with Snapshot Writer snapshot without Snapshot Writer configured")]
+        [global::NUnit.Framework.CategoryAttribute("ExpectException")]
+        public async global::System.Threading.Tasks.Task ReadingStreamWithSnapshotWriterSnapshotWithoutSnapshotWriterConfigured()
+        {
+            string[] tagsOfScenario = new string[] {
+                    "ExpectException"};
+            global::System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new global::System.Collections.Specialized.OrderedDictionary();
+            string pickleIndex = "29";
+            global::Reqnroll.ScenarioInfo scenarioInfo = new global::Reqnroll.ScenarioInfo("Reading stream with Snapshot Writer snapshot without Snapshot Writer configured", null, tagsOfScenario, argumentsOfScenario, featureTags, pickleIndex);
+            string[] tagsOfRule = ((string[])(null));
+            global::Reqnroll.RuleInfo ruleInfo = null;
+#line 295
+this.ScenarioInitialize(scenarioInfo, ruleInfo);
+#line hidden
+            if ((global::Reqnroll.TagHelper.ContainsIgnoreTag(scenarioInfo.CombinedTags) || global::Reqnroll.TagHelper.ContainsIgnoreTag(featureTags)))
+            {
+                await testRunner.SkipScenarioAsync();
+            }
+            else
+            {
+                await this.ScenarioStartAsync();
+#line 296
+ await testRunner.GivenAsync("an event store", ((string)(null)), ((global::Reqnroll.Table)(null)), "Given ");
+#line hidden
+#line 297
+ await testRunner.AndAsync("an existing stream S with 10 events", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
+#line hidden
+#line 298
+ await testRunner.AndAsync("an existing Snapshot Writer snapshot for version 5", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
+#line hidden
+#line 299
+ await testRunner.WhenAsync("I read stream S", ((string)(null)), ((global::Reqnroll.Table)(null)), "When ");
+#line hidden
+#line 300
+ await testRunner.ThenAsync("the action fails to read stream S because no Snapshot Writer is configured", ((string)(null)), ((global::Reqnroll.Table)(null)), "Then ");
+#line hidden
+#line 301
  await testRunner.AndAsync("request charge is reported", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
 #line hidden
             }

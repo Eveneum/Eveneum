@@ -33,6 +33,12 @@ namespace Eveneum.ApplicationInsights
                         exceptionTelemetry.Properties[nameof(ex.ActualVersion)] = ex.ActualVersion.ToString();
                         break;
 
+                    case SnapshotWriterNotFoundException ex:
+                        exceptionTelemetry.Properties[nameof(ex.StreamId)] = ex.StreamId;
+                        exceptionTelemetry.Properties[nameof(ex.RequestCharge)] = ex.RequestCharge.ToString("N", CultureInfo.InvariantCulture);
+                        exceptionTelemetry.Properties[nameof(ex.SnapshotWriterType)] = ex.SnapshotWriterType;
+                        break;
+
                     case StreamAlreadyExistsException ex:
                         exceptionTelemetry.Properties[nameof(ex.StreamId)] = ex.StreamId;
                         exceptionTelemetry.Properties[nameof(ex.RequestCharge)] = ex.RequestCharge.ToString("N", CultureInfo.InvariantCulture);
