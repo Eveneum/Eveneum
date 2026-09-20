@@ -29,6 +29,7 @@ namespace Eveneum.Tests.Infrastructure
         public EventData ReplacedEvent { get; set; }
         public List<IEveneumDocument> ExistingDocuments { get; set; }
         public Response Response { get; set; }
+        public Exception Exception { get; set; }
 
         public virtual void Dispose()
         {

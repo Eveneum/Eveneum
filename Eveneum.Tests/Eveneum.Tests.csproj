@@ -108,6 +108,11 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>DeletingStreamWithNonExpectedVersion.feature</DependentUpon>
     </Compile>
+    <Compile Update="InvalidBatchSize.feature.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>InvalidBatchSize.feature</DependentUpon>
+    </Compile>
     <Compile Update="ReadingStreamBetweenVersions.feature.cs">
       <DesignTime>True</DesignTime>
     </Compile>
@@ -196,6 +201,10 @@
     <SpecFlowFeatureFiles Update="DeletingStreamWithNonExpectedVersion.feature">
       <Generator>SpecFlowSingleFileGenerator</Generator>
       <LastGenOutput>DeletingStreamWithNonExpectedVersion.feature.cs</LastGenOutput>
+    </SpecFlowFeatureFiles>
+    <SpecFlowFeatureFiles Update="InvalidBatchSize.feature">
+      <Generator>SpecFlowSingleFileGenerator</Generator>
+      <LastGenOutput>InvalidBatchSize.feature.cs</LastGenOutput>
     </SpecFlowFeatureFiles>
     <SpecFlowFeatureFiles Update="ReadingStreamBetweenVersions.feature">
       <Generator Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">SpecFlowSingleFileGenerator</Generator>

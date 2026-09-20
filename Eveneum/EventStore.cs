@@ -29,6 +29,9 @@ namespace Eveneum
             Persistence = persistence ?? throw new ArgumentNullException(nameof(persistence));
             options = options ?? new EventStoreOptions();
 
+            if (options.BatchSize < 1)
+                throw new ArgumentOutOfRangeException(nameof(options), options.BatchSize, "BatchSize must be greater than zero.");
+
             this.DeleteMode = options.DeleteMode;
             this.StreamTimeToLiveAfterDelete = options.StreamTimeToLiveAfterDelete;
             this.BatchSize = Math.Min(options.BatchSize, (byte)100); // Maximum batch size supported by CosmosDB
