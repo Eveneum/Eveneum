@@ -2,7 +2,7 @@
 {
     public struct SnapshotWriterSnapshot
     {
-        public string SnapshotWriterType;
+        public string SnapshotWriterType { get; set; }
 
         internal SnapshotWriterSnapshot(string snapshotWriterType)
         {
