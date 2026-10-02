@@ -16,7 +16,7 @@ static class ScenarioDependencies
         services.AddScoped<SystemTextJsonCosmosDbContext>();
         services.AddScoped<SystemTextJsonLinuxCosmosDbContext>();
 
-        var emulatorOs = Environment.GetEnvironmentVariable("CosmosDbEmulator.OS", EnvironmentVariableTarget.User) ?? "Windows,Linux";
+        var emulatorOs = CosmosSetup.GetEmulatorSetting("CosmosDbEmulator.OS") ?? "Windows,Linux";
 
         if (emulatorOs.Contains("Windows", StringComparison.OrdinalIgnoreCase))
         {

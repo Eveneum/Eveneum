@@ -43,11 +43,14 @@ static class CosmosSetup
     public static Task<List<IEveneumDocument>> QueryAllDocumentsInStream(CosmosClient client, string database, string collection, string streamId, DocumentType? documentType = null)
         => Query(client, database, collection, $"SELECT * FROM x", new PartitionKey(streamId), documentType);
 
+    public static string? GetEmulatorSetting(string name) =>
+        Environment.GetEnvironmentVariable(name) ?? Environment.GetEnvironmentVariable(name, EnvironmentVariableTarget.User);
+
     private static CosmosClient GetClient(CosmosSerializer serializer)
     {
-        var endpoint = Environment.GetEnvironmentVariable("CosmosDbEmulator.Endpoint", EnvironmentVariableTarget.User) ?? "https://localhost:8081";
-        var key = Environment.GetEnvironmentVariable("CosmosDbEmulator.Key", EnvironmentVariableTarget.User) ?? "C2y6yDjf5/R+ob0N8A7Cgv30VRDJIWEHLM+4QDU5DE2nQ9nDuVTqobD4b8mGGyPMbIZnqyMsEcaGQy67XIw/Jw==";
-        var connectionMode = Environment.GetEnvironmentVariable("CosmosDbEmulator.ConnectionMode", EnvironmentVariableTarget.User) ?? "Direct";
+        var endpoint = GetEmulatorSetting("CosmosDbEmulator.Endpoint") ?? "https://localhost:8081";
+        var key = GetEmulatorSetting("CosmosDbEmulator.Key") ?? "C2y6yDjf5/R+ob0N8A7Cgv30VRDJIWEHLM+4QDU5DE2nQ9nDuVTqobD4b8mGGyPMbIZnqyMsEcaGQy67XIw/Jw==";
+        var connectionMode = GetEmulatorSetting("CosmosDbEmulator.ConnectionMode") ?? "Direct";
 
         return new CosmosClient(endpoint, key, new CosmosClientOptions
         {

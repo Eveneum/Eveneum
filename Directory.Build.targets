@@ -1,0 +1,47 @@
+<Project>
+
+  <PropertyGroup>
+    <_EveneumParentDirectoryBuildTargets>$([MSBuild]::GetPathOfFileAbove('Directory.Build.targets', '$(MSBuildThisFileDirectory)../'))</_EveneumParentDirectoryBuildTargets>
+  </PropertyGroup>
+
+  <Import Project="$(_EveneumParentDirectoryBuildTargets)" Condition="'$(_EveneumParentDirectoryBuildTargets)' != ''" />
+
+  <PropertyGroup>
+    <_EveneumDotnetToolManifestFile>$(MSBuildThisFileDirectory).config/dotnet-tools.json</_EveneumDotnetToolManifestFile>
+    <_EveneumDotnetToolRestoreOutputFile>$(MSBuildThisFileDirectory)obj/dotnet-tool-restore-$(NETCoreSdkVersion)-$(OS)</_EveneumDotnetToolRestoreOutputFile>
+  </PropertyGroup>
+
+  <!-- Make sure that dotnet tools are restored before restoring any project -->
+  <Target Name="EveneumToolRestore"
+          BeforeTargets="ResolveNuGetPackageAssets;BeforeCompile"
+          Condition="( '$(BuildingProject)' == 'false' OR '$(DesignTimeBuild)' == 'true' ) AND Exists('$(_EveneumDotnetToolManifestFile)')"
+          Inputs="$(_EveneumDotnetToolManifestFile)"
+          Outputs="$(_EveneumDotnetToolRestoreOutputFile)">
+    <Message Text="Restoring dotnet tools..." Importance="High" />
+    <Exec Command="dotnet tool restore" WorkingDirectory="$(MSBuildThisFileDirectory)" StandardOutputImportance="High" StandardErrorImportance="High" />
+    <MakeDir Directories="$(MSBuildThisFileDirectory)obj" />
+    <Touch Files="$(_EveneumDotnetToolRestoreOutputFile)" AlwaysCreate="True" ForceTouch="True" />
+  </Target>
+
+  <!--
+    Links .claude/skills to .github/skills so Claude Code discovers the repository skills.
+    Git cannot store a Windows junction, and a committed symlink only checks out as a real link
+    with core.symlinks=true plus Developer Mode, so the link is created locally and git-ignored.
+    A junction needs no elevation on Windows; elsewhere a relative symlink is used.
+    When several projects race to create it, the losers only get a warning.
+  -->
+  <PropertyGroup>
+    <_EveneumClaudeSkillsLink>$(MSBuildThisFileDirectory).claude/skills</_EveneumClaudeSkillsLink>
+    <_EveneumClaudeSkillsTarget>$(MSBuildThisFileDirectory).github/skills</_EveneumClaudeSkillsTarget>
+  </PropertyGroup>
+
+  <Target Name="EveneumClaudeSkillsLink"
+          BeforeTargets="ResolveNuGetPackageAssets;BeforeCompile"
+          Condition="( '$(BuildingProject)' == 'false' OR '$(DesignTimeBuild)' == 'true' ) AND !Exists('$(_EveneumClaudeSkillsLink)') AND Exists('$(_EveneumClaudeSkillsTarget)')">
+    <Message Text="Linking .claude/skills to .github/skills..." Importance="High" />
+    <MakeDir Directories="$(MSBuildThisFileDirectory).claude" />
+    <Exec Condition="'$(OS)' == 'Windows_NT'" Command="mklink /J &quot;$([System.IO.Path]::GetFullPath('$(_EveneumClaudeSkillsLink)'))&quot; &quot;$([System.IO.Path]::GetFullPath('$(_EveneumClaudeSkillsTarget)'))&quot;" ContinueOnError="WarnAndContinue" />
+    <Exec Condition="'$(OS)' != 'Windows_NT'" Command="ln -s ../.github/skills &quot;$(_EveneumClaudeSkillsLink)&quot;" ContinueOnError="WarnAndContinue" />
+  </Target>
+
+</Project>

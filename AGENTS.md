@@ -49,7 +49,8 @@ Tests require a **running Azure Cosmos DB emulator**:
 
 - Windows: `Import-Module "C:\Program Files\Azure Cosmos DB Emulator\PSModules\Microsoft.Azure.CosmosDB.Emulator"; Start-CosmosDbEmulator -Timeout 600`
 - Default endpoint `https://localhost:8081` with the well-known emulator master key
-- Overridable via **user-level** environment variables (see `Eveneum.Tests/Infrastructure/CosmosSetup.cs` and `ScenarioDependencies.cs`):
+- Linux / CI: the `copilot-setup-steps.yml` workflow runs the Linux emulator container (`mcr.microsoft.com/cosmosdb/linux/azure-cosmos-emulator:vnext-preview`) via the `.github/actions/setup-cosmos-emulator` action and selects the Linux contexts in Gateway mode
+- Overridable via process or **user-level** environment variables, process first (see `Eveneum.Tests/Infrastructure/CosmosSetup.cs` and `ScenarioDependencies.cs`):
   - `CosmosDbEmulator.Endpoint`
   - `CosmosDbEmulator.Key`
   - `CosmosDbEmulator.ConnectionMode` (`Direct` or `Gateway`)
@@ -76,6 +77,15 @@ Each scenario is executed against multiple `CosmosDbContext` implementations (Ne
 - New public exceptions must derive from `EveneumException` and live in `Eveneum/Exceptions/`
 - Preserve the change-feed-friendly document shape in `Documents/EveneumDocument.cs`; changes to the stored schema affect existing production databases
 - Always use CRLF line endings (Windows-style) for all files in the working copy. `.gitattributes` (`* text=auto eol=crlf`) enforces this on checkout on every OS, while the repository itself stores normalized LF, so blobs and diffs on GitHub show LF
+
+## MCP Servers
+
+Agents discover servers from `.mcp.json`; these are only hints on when to prefer one.
+
+- Use the `GitHub` server for code search in dependency repositories (e.g. [`Azure/azure-cosmos-dotnet-v3`](https://github.com/Azure/azure-cosmos-dotnet-v3), [`reqnroll/Reqnroll`](https://github.com/reqnroll/Reqnroll)). In Claude Code it authenticates through `.claude/scripts/github-mcp-headers.ps1`, which reuses the GitHub token stored by Git Credential Manager, because the server does not support the OAuth dynamic client registration Claude Code needs.
+- Use the `Microsoft Docs` server for official Microsoft and Azure documentation (Cosmos DB, .NET, MSBuild).
+- When adding or changing a server, keep `servers` (VS Code / GitHub Copilot) and `mcpServers` (Claude Code) in sync and sorted alphabetically by key.
+- Repository skills go to `.github/skills`; `Directory.Build.targets` links `.claude/skills` to it locally (git-ignored) so Claude Code discovers them. Dotnet tools pinned in `.config/dotnet-tools.json`, if present, are restored on design-time builds.
 
 ## CI & Packaging
 

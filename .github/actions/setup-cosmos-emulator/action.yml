@@ -1,0 +1,109 @@
+name: Setup Azure Cosmos DB Emulator
+description: Wait for Cosmos DB Emulator, trust its certificate, and verify connectivity.
+
+runs:
+  using: composite
+  steps:
+    - name: Wait for Azure Cosmos DB Emulator
+      shell: bash
+      run: |
+        max_attempts=120
+        attempt=1
+
+        while [ "$attempt" -le "$max_attempts" ]; do
+          if curl --silent --fail --connect-timeout 2 --max-time 5 http://127.0.0.1:8080/ready > /dev/null; then
+            echo "Cosmos DB Emulator is ready."
+            exit 0
+          fi
+
+          echo "Cosmos DB Emulator is not ready yet (attempt $attempt/$max_attempts)."
+          attempt=$((attempt + 1))
+          sleep 5
+        done
+
+        echo "Cosmos DB Emulator failed to become ready in time."
+        exit 1
+
+    - name: Trust Azure Cosmos DB Emulator certificate
+      shell: bash
+      run: |
+        cert_dir="$HOME/cosmos-certs"
+        rm -rf "$cert_dir"
+        mkdir -p "$cert_dir"
+
+        cert_path="$cert_dir/emulatorcert.crt"
+        cert_downloaded=false
+
+        for attempt in $(seq 1 30); do
+          if curl --silent --show-error --fail --insecure https://localhost:8081/_explorer/emulator.pem --output "$cert_path"; then
+            cert_downloaded=true
+            echo "Downloaded emulator certificate from https://localhost:8081/_explorer/emulator.pem."
+            break
+          fi
+
+          echo "Certificate endpoint is not ready yet (attempt $attempt/30)."
+          sleep 2
+        done
+
+        if [ "$cert_downloaded" != "true" ]; then
+          echo "Could not download emulator PEM, falling back to openssl export (Microsoft docs fallback)."
+          if ! timeout 20s openssl s_client -connect localhost:8081 </dev/null | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' > "$cert_path"; then
+            echo "Failed to export emulator certificate from endpoint."
+            exit 1
+          fi
+        fi
+
+        if [ ! -s "$cert_path" ]; then
+          echo "Failed to export emulator certificate."
+          exit 1
+        fi
+
+        sudo cp "$cert_path" /usr/local/share/ca-certificates/emulatorcert.crt
+        sudo update-ca-certificates
+
+        if ! curl --silent --show-error --fail https://localhost:8081/ --output /dev/null; then
+          echo "Emulator certificate is still not trusted for HTTPS after certificate installation."
+          exit 1
+        fi
+
+        if ! curl --silent --show-error --fail https://127.0.0.1:8081/ --output /dev/null; then
+          echo "Emulator certificate is still not trusted for HTTPS on 127.0.0.1 after certificate installation."
+          exit 1
+        fi
+
+    - name: Verify Cosmos DB Emulator Connection
+      shell: bash
+      run: |
+        echo "Final verification of Cosmos DB Emulator..."
+
+        if [ -f "$SSL_CERT_FILE" ]; then
+          echo "SSL_CERT_FILE is set: $SSL_CERT_FILE"
+        else
+          echo "SSL_CERT_FILE is not set or file does not exist."
+        fi
+
+        status_code="$(curl --silent --show-error --output /dev/null --write-out "%{http_code}" https://localhost:8081/)"
+        if [ "$status_code" = "200" ] || [ "$status_code" = "401" ]; then
+          echo "HTTPS endpoint is accessible (status: $status_code)."
+        else
+          echo "Unexpected HTTPS endpoint status: $status_code"
+          exit 1
+        fi
+
+        status_code_127="$(curl --silent --show-error --output /dev/null --write-out "%{http_code}" https://127.0.0.1:8081/)"
+        if [ "$status_code_127" = "200" ] || [ "$status_code_127" = "401" ]; then
+          echo "HTTPS endpoint via 127.0.0.1 is accessible (status: $status_code_127)."
+        else
+          echo "Unexpected HTTPS endpoint status via 127.0.0.1: $status_code_127"
+          exit 1
+        fi
+
+        explorer_status_code="$(curl --silent --show-error --output /dev/null --write-out "%{http_code}" http://localhost:1234/)"
+        if [ "$explorer_status_code" = "200" ]; then
+          echo "Data Explorer endpoint is accessible (status: $explorer_status_code)."
+        else
+          echo "Unexpected Data Explorer endpoint status: $explorer_status_code"
+          exit 1
+        fi
+
+        echo "Emulator should be accessible at: https://localhost:8081"
