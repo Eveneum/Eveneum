@@ -141,6 +141,30 @@ public class SystemTextJsonCosmosSerializerTests
         Assert.That(document.Body, Is.InstanceOf<JsonElement>());
     }
 
+    [Test]
+    public void FromStream_WithEveneumDocumentInterfaceAndNull_ReturnsNull()
+    {
+        var serializer = new SystemTextJsonCosmosSerializer();
+
+        var document = serializer.FromStream<IEveneumDocument>(CreateStream("null"));
+
+        Assert.That(document, Is.Null);
+    }
+
+    [Test]
+    public void FromStream_WithEveneumDocumentInterfaceArrayContainingNull_ReturnsNullElement()
+    {
+        var serializer = new SystemTextJsonCosmosSerializer();
+
+        var documents = serializer.FromStream<IEveneumDocument?[]>(CreateStream($"[{EventDocumentJson}, null]"));
+
+        Assert.That(documents, Is.Not.Null);
+        Assert.That(documents, Has.Length.EqualTo(2));
+        Assert.That(documents[0], Is.InstanceOf<EveneumDocument>());
+        AssertDocument(documents[0]!);
+        Assert.That(documents[1], Is.Null);
+    }
+
     private static void AssertDocument(IEveneumDocument document)
     {
         Assert.Multiple(() =>
