@@ -17,7 +17,7 @@ Core capabilities:
 ## Repository Layout
 
 ```
-Eveneum.sln
+Eveneum.slnx
 Eveneum/                  Core event store library (netstandard2.0)
 Eveneum.NewtonsoftJson/   Newtonsoft.Json Cosmos serializer support (netstandard2.0)
 Eveneum.ApplicationInsights/ Application Insights tracing extension (netstandard2.0)
@@ -39,7 +39,7 @@ Key areas inside `Eveneum/`:
 ## Build & Test
 
 ```powershell
-dotnet build Eveneum.sln -c Release
+dotnet build Eveneum.slnx -c Release
 dotnet test Eveneum.Tests
 ```
 

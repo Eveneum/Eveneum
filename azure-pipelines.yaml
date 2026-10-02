@@ -19,19 +19,11 @@ steps:
     dotnet-gitversion /output buildserver
   displayName: Run GitVersion
 
-- task: NuGetToolInstaller@1
-  displayName: 'Use NuGet '
-  inputs:
-    checkLatest: true
-
-- task: NuGetCommand@2
-  displayName: 'NuGet restore'
-  inputs:
-    verbosityRestore: Quiet
-
 - task: VSBuild@1
   displayName: 'Build solution'
   inputs:
+    solution: 'Eveneum.slnx'
+    msbuildArgs: '-restore'
     configuration: '$(Configuration)'
     maximumCpuCount: true
     msbuildArchitecture: x64
