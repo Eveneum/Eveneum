@@ -21,7 +21,8 @@ public class CommonSteps(ScenarioContext scenarioContext, IEnumerable<CosmosDbCo
             {
                 case NewtonsoftCosmosDbContext newtonsoftCosmosDbContext:
                     var contractResolver = new CamelCasePropertyNamesContractResolver();
-                    contractResolver.NamingStrategy.OverrideSpecifiedNames = false;
+                    if (contractResolver.NamingStrategy is { } namingStrategy)
+                        namingStrategy.OverrideSpecifiedNames = false;
 
                     newtonsoftCosmosDbContext.JsonSerializerSettings.ContractResolver = contractResolver;
                     break;
@@ -136,12 +137,13 @@ public class CommonSteps(ScenarioContext scenarioContext, IEnumerable<CosmosDbCo
     {
         foreach (var context in Contexts)
         {
-            var requestCharge = scenarioContext.TestError is EveneumException
-                ? (scenarioContext.TestError as EveneumException).RequestCharge
-                : context.Response.RequestCharge;
+            var requestCharge = scenarioContext.TestError is EveneumException eveneumException
+                ? eveneumException.RequestCharge
+                : context.Response?.RequestCharge;
 
             Console.WriteLine($"Request charge ({context.GetType().Name}): {requestCharge}");
 
+            Assert.That(requestCharge, Is.Not.Null);
             Assert.That(requestCharge, Is.GreaterThan(0));
         }
     }
@@ -155,6 +157,7 @@ public class CommonSteps(ScenarioContext scenarioContext, IEnumerable<CosmosDbCo
 
             var response = context.Response as DeleteResponse;
 
+            Assert.That(response, Is.Not.Null);
             Assert.That(response.DeletedDocuments, Is.EqualTo(deletedDocuments));
         }
     }

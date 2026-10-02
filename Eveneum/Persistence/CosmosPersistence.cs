@@ -74,7 +74,7 @@ public class CosmosPersistence<TDocument> : ICosmosPersistence
         }
     }
 
-    public virtual async Task<CosmosItemResponse<IEveneumDocument>> UpsertItemAsync(
+    public virtual async Task<CosmosItemResponse<IEveneumDocument?>> UpsertItemAsync(
         IEveneumDocument document,
         string partitionKey,
         CancellationToken cancellationToken = default)
@@ -84,10 +84,10 @@ public class CosmosPersistence<TDocument> : ICosmosPersistence
             new PartitionKey(partitionKey),
             cancellationToken: cancellationToken);
 
-        return new CosmosItemResponse<IEveneumDocument>(result.Resource, result.RequestCharge);
+        return new CosmosItemResponse<IEveneumDocument?>(result.Resource, result.RequestCharge);
     }
 
-    public virtual async Task<CosmosItemResponse<IEveneumDocument>> ReplaceItemAsync(
+    public virtual async Task<CosmosItemResponse<IEveneumDocument?>> ReplaceItemAsync(
         IEveneumDocument document,
         string id,
         string partitionKey,
@@ -99,13 +99,13 @@ public class CosmosPersistence<TDocument> : ICosmosPersistence
             new PartitionKey(partitionKey),
             cancellationToken: cancellationToken);
 
-        return new CosmosItemResponse<IEveneumDocument>(result.Resource, result.RequestCharge);
+        return new CosmosItemResponse<IEveneumDocument?>(result.Resource, result.RequestCharge);
     }
 
     public virtual async Task<StoredProcedureExecuteResponse<T>> ExecuteStoredProcedureAsync<T>(
         string storedProcedureId,
         string partitionKey,
-        object[] parameters,
+        object?[] parameters,
         CancellationToken cancellationToken = default)
     {
         return await Container.Scripts.ExecuteStoredProcedureAsync<T>(

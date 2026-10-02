@@ -7,7 +7,7 @@ namespace Eveneum.NewtonsoftJson.Serialization;
 
 public class IEveneumDocumentConverter : JsonConverter<IEveneumDocument>
 {
-    public override IEveneumDocument ReadJson(JsonReader reader, Type objectType, IEveneumDocument existingValue, bool hasExistingValue, JsonSerializer serializer)
+    public override IEveneumDocument? ReadJson(JsonReader reader, Type objectType, IEveneumDocument? existingValue, bool hasExistingValue, JsonSerializer serializer)
     {
         var token = JToken.Load(reader);
 
@@ -15,7 +15,7 @@ public class IEveneumDocumentConverter : JsonConverter<IEveneumDocument>
         {
             var jObject = (JObject)token;
             var document = new Documents.NewtonsoftJsonEveneumDocument(
-                jObject["id"]?.Value<string>(),
+                jObject["id"]?.Value<string>() ?? string.Empty,
                 jObject["DocumentType"]?.ToObject<DocumentType>() ?? DocumentType.Header
             );
 
@@ -23,17 +23,20 @@ public class IEveneumDocumentConverter : JsonConverter<IEveneumDocument>
             return document;
         }
 
-        if (hasExistingValue)
+        if (hasExistingValue && existingValue is not null)
         {
             serializer.Populate(token.CreateReader(), existingValue);
             return existingValue;
         }
 
-        return (IEveneumDocument)token.ToObject(objectType, GetSerializerWithoutThisConverter(serializer));
+        return (IEveneumDocument?)token.ToObject(objectType, GetSerializerWithoutThisConverter(serializer));
     }
 
-    public override void WriteJson(JsonWriter writer, IEveneumDocument value, JsonSerializer serializer)
+    public override void WriteJson(JsonWriter writer, IEveneumDocument? value, JsonSerializer serializer)
     {
+        if (value is null)
+            throw new ArgumentNullException(nameof(value));
+
         // Get the concrete type and serialize it without this converter to avoid circular reference
         var concreteType = value.GetType();
         var token = JToken.FromObject(value, GetSerializerWithoutThisConverter(serializer));

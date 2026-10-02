@@ -14,13 +14,13 @@ public class JsonDeserializationException : Exception
 
     public string Type
     {
-        get { return (string)this.Data[nameof(Type)]; }
+        get { return this.Data[nameof(Type)] as string ?? string.Empty; }
         private set { this.Data[nameof(Type)] = value; }
     }
 
     public string Json
     {
-        get { return (string)this.Data[nameof(Json)]; }
+        get { return this.Data[nameof(Json)] as string ?? string.Empty; }
         private set { this.Data[nameof(Json)] = value; }
     }
 

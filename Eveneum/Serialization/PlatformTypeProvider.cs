@@ -8,9 +8,9 @@ public class PlatformTypeProvider  : ITypeProvider
 {
 	public const string SnapshotWriterSnapshotTypeIdentifier = "Eveneum.SnapshotWriterSnapshot";
 
-	private readonly ConcurrentDictionary<string, Type> Cache = new();
+	private readonly ConcurrentDictionary<string, Type?> Cache = new();
 
-    public virtual string GetIdentifierForType(Type type) => type == typeof(SnapshotWriterSnapshot) ? SnapshotWriterSnapshotTypeIdentifier : type.AssemblyQualifiedName;
+    public virtual string GetIdentifierForType(Type type) => type == typeof(SnapshotWriterSnapshot) ? SnapshotWriterSnapshotTypeIdentifier : type.AssemblyQualifiedName ?? throw new ArgumentException($"Type '{type}' has no assembly-qualified name.", nameof(type));
 
-    public virtual Type GetTypeForIdentifier(string identifier) => identifier == SnapshotWriterSnapshotTypeIdentifier ? typeof(SnapshotWriterSnapshot) : this.Cache.GetOrAdd(identifier, t => Type.GetType(t, throwOnError: false));
+    public virtual Type? GetTypeForIdentifier(string identifier) => identifier == SnapshotWriterSnapshotTypeIdentifier ? typeof(SnapshotWriterSnapshot) : this.Cache.GetOrAdd(identifier, t => Type.GetType(t, throwOnError: false));
 }

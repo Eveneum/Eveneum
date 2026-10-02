@@ -14,13 +14,16 @@ namespace Eveneum.Tests;
 
 class CustomSnapshotWriter : ISnapshotWriter
 {
-    public string StreamId { get; private set; }
+    public static readonly string SnapshotWriterType = typeof(CustomSnapshotWriter).AssemblyQualifiedName
+        ?? throw new InvalidOperationException($"Type '{typeof(CustomSnapshotWriter)}' has no assembly-qualified name.");
+
+    public string? StreamId { get; private set; }
     public ulong Version { get; private set; }
-    public object Snapshot { get; private set; }
-    public object Metadata { get; private set; }
+    public object? Snapshot { get; private set; }
+    public object? Metadata { get; private set; }
     public List<(string StreamId, ulong Version)> DeletedSnapshots { get; } = new();
 
-    public Task<bool> CreateSnapshot(string streamId, ulong version, object snapshot, object metadata = null, CancellationToken cancellationToken = default)
+    public Task<bool> CreateSnapshot(string streamId, ulong version, object snapshot, object? metadata = null, CancellationToken cancellationToken = default)
     {
         this.StreamId = streamId;
         this.Version = version;
@@ -86,7 +89,7 @@ public class SnapshotSteps(ScenarioContext scenarioContext, IEnumerable<CosmosDb
         await Task.WhenAll(Contexts.Select(async x =>
         {
             x.Snapshot = snapshot;
-            x.SnapshotWriterSnapshot = new SnapshotWriterSnapshot(typeof(CustomSnapshotWriter).AssemblyQualifiedName);
+            x.SnapshotWriterSnapshot = new SnapshotWriterSnapshot(CustomSnapshotWriter.SnapshotWriterType);
 
             await x.EventStore.CreateSnapshot(x.StreamId, version, x.Snapshot, x.SnapshotMetadata);
         }));
@@ -108,7 +111,7 @@ public class SnapshotSteps(ScenarioContext scenarioContext, IEnumerable<CosmosDb
     {
         await Task.WhenAll(Contexts.Select(async x =>
         {
-            await x.EventStore.CreateSnapshot(x.StreamId, version, new SnapshotWriterSnapshot(typeof(CustomSnapshotWriter).AssemblyQualifiedName));
+            await x.EventStore.CreateSnapshot(x.StreamId, version, new SnapshotWriterSnapshot(CustomSnapshotWriter.SnapshotWriterType));
         }));
     }
 
@@ -212,7 +215,7 @@ public class SnapshotSteps(ScenarioContext scenarioContext, IEnumerable<CosmosDb
         await Task.WhenAll(Contexts.Select(async context =>
         {
             var streamId = context.StreamId;
-            var snapshot = new SnapshotWriterSnapshot(typeof(CustomSnapshotWriter).AssemblyQualifiedName);
+            var snapshot = new SnapshotWriterSnapshot(CustomSnapshotWriter.SnapshotWriterType);
 
             var snapshotDocuments = await CosmosSetup.QueryAllDocumentsInStream(context.Client, context.Database, context.Container, context.StreamId, DocumentType.Snapshot);
 
@@ -247,6 +250,7 @@ public class SnapshotSteps(ScenarioContext scenarioContext, IEnumerable<CosmosDb
 
             var snapshotWriter = context.EventStoreOptions.SnapshotWriter as CustomSnapshotWriter;
 
+            Assert.That(snapshotWriter, Is.Not.Null);
             Assert.That(snapshotWriter.StreamId, Is.EqualTo(streamId));
             Assert.That(snapshotWriter.Version, Is.EqualTo(version));
             Assert.That(snapshotWriter.Snapshot, Is.EqualTo(snapshot));
@@ -286,6 +290,7 @@ public class SnapshotSteps(ScenarioContext scenarioContext, IEnumerable<CosmosDb
         {
             var snapshotWriter = context.EventStoreOptions.SnapshotWriter as CustomSnapshotWriter;
 
+            Assert.That(snapshotWriter, Is.Not.Null);
             Assert.That(snapshotWriter.DeletedSnapshots.Any(x => x.StreamId == context.StreamId && x.Version == version));
         }
     }
@@ -295,7 +300,7 @@ public class SnapshotSteps(ScenarioContext scenarioContext, IEnumerable<CosmosDb
     {
         Assert.That(scenarioContext.TestError, Is.InstanceOf<SnapshotWriterNotFoundException>());
 
-        var exception = scenarioContext.TestError as SnapshotWriterNotFoundException;
+        var exception = (SnapshotWriterNotFoundException)scenarioContext.TestError;
         Assert.That(exception.StreamId, Is.EqualTo(streamId));
         Assert.That(exception.SnapshotWriterType, Is.EqualTo(typeof(CustomSnapshotWriter).AssemblyQualifiedName));
     }

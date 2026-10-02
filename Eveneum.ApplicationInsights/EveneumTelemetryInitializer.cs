@@ -9,10 +9,8 @@ public class EveneumTelemetryInitializer : ITelemetryInitializer
 {
     public void Initialize(ITelemetry telemetry)
     {
-        if (telemetry is ExceptionTelemetry)
+        if (telemetry is ExceptionTelemetry exceptionTelemetry)
         {
-            var exceptionTelemetry = telemetry as ExceptionTelemetry;
-
             switch (exceptionTelemetry.Exception)
             {
                 case EventAlreadyExistsException ex:

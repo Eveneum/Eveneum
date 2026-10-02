@@ -8,7 +8,7 @@ public class SystemTextJsonCosmosSerializer : Microsoft.Azure.Cosmos.CosmosSeria
 {
     private readonly JsonSerializerOptions Options;
 
-    public SystemTextJsonCosmosSerializer(JsonSerializerOptions options = null)
+    public SystemTextJsonCosmosSerializer(JsonSerializerOptions? options = null)
     {
         this.Options = options ?? new JsonSerializerOptions();
 
@@ -16,7 +16,7 @@ public class SystemTextJsonCosmosSerializer : Microsoft.Azure.Cosmos.CosmosSeria
             this.Options.Converters.Add(new IEveneumDocumentConverter());
     }
 
-    public override T FromStream<T>(System.IO.Stream stream)
+    public override T? FromStream<T>(System.IO.Stream stream) where T : default
     {
         using (stream)
         {

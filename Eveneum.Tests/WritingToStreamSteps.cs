@@ -147,7 +147,7 @@ public class WritingToStreamSteps(ScenarioContext scenarioContext, IEnumerable<C
     {
         Assert.That(scenarioContext.TestError, Is.InstanceOf<StreamAlreadyExistsException>());
 
-        var exception = scenarioContext.TestError as StreamAlreadyExistsException;
+        var exception = (StreamAlreadyExistsException)scenarioContext.TestError;
         Assert.That(exception.StreamId, Is.EqualTo(streamId));
     }
 
@@ -156,7 +156,7 @@ public class WritingToStreamSteps(ScenarioContext scenarioContext, IEnumerable<C
     {
         Assert.That(scenarioContext.TestError, Is.InstanceOf<StreamNotFoundException>());
 
-        var exception = scenarioContext.TestError as StreamNotFoundException;
+        var exception = (StreamNotFoundException)scenarioContext.TestError;
         Assert.That(exception.StreamId, Is.EqualTo(streamId));
     }
 
@@ -165,7 +165,7 @@ public class WritingToStreamSteps(ScenarioContext scenarioContext, IEnumerable<C
     {
         Assert.That(scenarioContext.TestError, Is.InstanceOf<StreamDeletedException>());
 
-        var exception = scenarioContext.TestError as StreamDeletedException;
+        var exception = (StreamDeletedException)scenarioContext.TestError;
         Assert.That(exception.StreamId, Is.EqualTo(streamId));
     }
 
@@ -174,7 +174,7 @@ public class WritingToStreamSteps(ScenarioContext scenarioContext, IEnumerable<C
     {
         Assert.That(scenarioContext.TestError, Is.InstanceOf<OptimisticConcurrencyException>());
 
-        var exception = scenarioContext.TestError as OptimisticConcurrencyException;
+        var exception = (OptimisticConcurrencyException)scenarioContext.TestError;
         Assert.That(exception.StreamId, Is.EqualTo(streamId));
         Assert.That(exception.ExpectedVersion, Is.EqualTo(expectedVersion));
         Assert.That(exception.ActualVersion, Is.EqualTo(currentVersion));
@@ -233,7 +233,7 @@ public class WritingToStreamSteps(ScenarioContext scenarioContext, IEnumerable<C
     {
         Assert.That(scenarioContext.TestError, Is.InstanceOf<EventAlreadyExistsException>());
 
-        var exception = scenarioContext.TestError as EventAlreadyExistsException;
+        var exception = (EventAlreadyExistsException)scenarioContext.TestError;
         Assert.That(exception.StreamId, Is.EqualTo(streamId));
         Assert.That(exception.Version, Is.EqualTo(version));
     }
@@ -252,6 +252,7 @@ public class WritingToStreamSteps(ScenarioContext scenarioContext, IEnumerable<C
             Assert.That(eventDocument, Is.Not.Null);
             Assert.That(eventDocument.DocumentType, Is.EqualTo(DocumentType.Event));
             Assert.That(eventDocument.StreamId, Is.EqualTo(streamId));
+            Assert.That(newEvent.Body, Is.Not.Null);
             Assert.That(eventDocument.BodyType, Is.EqualTo(typeProvider.GetIdentifierForType(newEvent.Body.GetType())));
             Assert.That(eventDocument.Body, Is.Not.Null);
             Assert.That(context.AreEqual(eventDocument.Body, newEvent.Body), Is.True);

@@ -35,6 +35,7 @@ public class InvalidBatchSizeSteps(IEnumerable<CosmosDbContext> Contexts)
             Assert.That(context.Exception, Is.InstanceOf<ArgumentOutOfRangeException>());
 
             var exception = context.Exception as ArgumentOutOfRangeException;
+            Assert.That(exception, Is.Not.Null);
             Assert.That(exception.ParamName, Is.EqualTo("options"));
         }
     }

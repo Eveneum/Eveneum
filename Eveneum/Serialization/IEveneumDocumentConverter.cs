@@ -11,7 +11,7 @@ namespace Eveneum.Serialization;
 /// </summary>
 public class IEveneumDocumentConverter : JsonConverter<IEveneumDocument>
 {
-    public override IEveneumDocument Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    public override IEveneumDocument? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
         // Deserialize to the concrete EveneumDocument type
         return JsonSerializer.Deserialize<EveneumDocument>(ref reader, options);

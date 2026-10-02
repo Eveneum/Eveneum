@@ -3,13 +3,13 @@
 public struct EventData
 {
     public string StreamId;
-    public object Body;
-    public object Metadata;
+    public object? Body;
+    public object? Metadata;
     public ulong Version;
-    public string Timestamp;
+    public string? Timestamp;
     public bool Deleted;
 
-    public EventData(string streamId, object body, object metadata, ulong version, string timestamp, bool deleted = false)
+    public EventData(string streamId, object? body, object? metadata, ulong version, string? timestamp, bool deleted = false)
     {
         this.StreamId = streamId;
         this.Body = body;

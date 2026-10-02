@@ -11,12 +11,12 @@ namespace Eveneum.Serialization;
 /// </summary>
 public class JsonNodeObjectConverter : JsonConverter<object>
 {
-    public override object Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    public override object? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
         return JsonNode.Parse(ref reader);
     }
 
-    public override void Write(Utf8JsonWriter writer, object value, JsonSerializerOptions options)
+    public override void Write(Utf8JsonWriter writer, object? value, JsonSerializerOptions options)
     {
         if (value == null)
         {

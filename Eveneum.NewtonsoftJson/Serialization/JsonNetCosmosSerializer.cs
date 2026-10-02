@@ -20,12 +20,12 @@ public class JsonNetCosmosSerializer : Microsoft.Azure.Cosmos.CosmosSerializer
         }
     }
 
-    public JsonNetCosmosSerializer(JsonSerializerSettings serializerSettings)
+    public JsonNetCosmosSerializer(JsonSerializerSettings? serializerSettings)
         : this(CreateSerializerWithConverter(serializerSettings))
     {
     }
 
-    private static JsonSerializer CreateSerializerWithConverter(JsonSerializerSettings serializerSettings)
+    private static JsonSerializer CreateSerializerWithConverter(JsonSerializerSettings? serializerSettings)
     {
         var settings = serializerSettings ?? new JsonSerializerSettings();
         if (!HasConverter<IEveneumDocumentConverter>(settings.Converters))
@@ -55,7 +55,7 @@ public class JsonNetCosmosSerializer : Microsoft.Azure.Cosmos.CosmosSerializer
         return false;
     }
 
-    public override T FromStream<T>(System.IO.Stream stream)
+    public override T? FromStream<T>(System.IO.Stream stream) where T : default
     {
         using (stream)
         {

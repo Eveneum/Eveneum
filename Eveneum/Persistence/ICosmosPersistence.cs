@@ -43,7 +43,7 @@ public interface ICosmosPersistence
     /// <summary>
     /// Upsert (insert or replace) a document.
     /// </summary>
-    Task<CosmosItemResponse<IEveneumDocument>> UpsertItemAsync(
+    Task<CosmosItemResponse<IEveneumDocument?>> UpsertItemAsync(
         IEveneumDocument document,
         string partitionKey,
         CancellationToken cancellationToken = default);
@@ -51,7 +51,7 @@ public interface ICosmosPersistence
     /// <summary>
     /// Replace an existing document.
     /// </summary>
-    Task<CosmosItemResponse<IEveneumDocument>> ReplaceItemAsync(
+    Task<CosmosItemResponse<IEveneumDocument?>> ReplaceItemAsync(
         IEveneumDocument document,
         string id,
         string partitionKey,
@@ -78,7 +78,7 @@ public interface ICosmosPersistence
     Task<StoredProcedureExecuteResponse<T>> ExecuteStoredProcedureAsync<T>(
         string storedProcedureId,
         string partitionKey,
-        object[] parameters,
+        object?[] parameters,
         CancellationToken cancellationToken = default);
 
     /// <summary>

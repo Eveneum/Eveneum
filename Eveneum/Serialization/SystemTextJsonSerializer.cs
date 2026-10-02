@@ -5,11 +5,11 @@ using Eveneum.Documents;
 
 namespace Eveneum.Serialization;
 
-public class SystemTextJsonSerializer(JsonSerializerOptions options = null) : IJsonSerializer
+public class SystemTextJsonSerializer(JsonSerializerOptions? options = null) : IJsonSerializer
 {
     private readonly JsonSerializerOptions Options = options ?? new JsonSerializerOptions();
 
-    public object Serialize(object value)
+    public object? Serialize(object? value)
     {
         if (value == null)
             return null;
@@ -17,7 +17,7 @@ public class SystemTextJsonSerializer(JsonSerializerOptions options = null) : IJ
         return JsonSerializer.SerializeToNode(value, Options);
     }
 
-    public object Deserialize(object token, Type targetType)
+    public object? Deserialize(object? token, Type targetType)
     {
         if (token == null || targetType == null)
             return null;

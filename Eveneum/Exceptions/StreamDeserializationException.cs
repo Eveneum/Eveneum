@@ -13,7 +13,7 @@ public class StreamDeserializationException : EveneumException
 
     public string Type
     {
-        get { return (string)this.Data[nameof(Type)]; }
+        get { return this.Data[nameof(Type)] as string ?? string.Empty; }
         private set { this.Data[nameof(Type)] = value; }
     }
 

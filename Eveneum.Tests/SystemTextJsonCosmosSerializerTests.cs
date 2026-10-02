@@ -18,22 +18,22 @@ public class CustomSystemTextJsonEveneumDocument(string id, DocumentType documen
     public DocumentType DocumentType { get; set; } = documentType;
 
     [JsonPropertyName("StreamId")]
-    public string StreamId { get; set; }
+    public string StreamId { get; set; } = null!;
 
     [JsonPropertyName("Version")]
     public ulong Version { get; set; }
 
     [JsonPropertyName("MetadataType")]
-    public string MetadataType { get; set; }
+    public string? MetadataType { get; set; }
 
     [JsonPropertyName("Metadata")]
-    public object Metadata { get; set; }
+    public object? Metadata { get; set; }
 
     [JsonPropertyName("BodyType")]
-    public string BodyType { get; set; }
+    public string? BodyType { get; set; }
 
     [JsonPropertyName("Body")]
-    public object Body { get; set; }
+    public object? Body { get; set; }
 
     [JsonPropertyName("SortOrder")]
     public decimal SortOrder => this.Version + EveneumDocument.GetOrderingFraction(this.DocumentType);
@@ -42,18 +42,18 @@ public class CustomSystemTextJsonEveneumDocument(string id, DocumentType documen
     public bool Deleted { get; set; }
 
     [JsonPropertyName("_etag")]
-    public string ETag { get; set; }
+    public string? ETag { get; set; }
 
     [JsonConverter(typeof(CosmosTimestampConverter))]
     [JsonPropertyName("_ts")]
-    public string Timestamp { get; set; }
+    public string? Timestamp { get; set; }
 
     [JsonPropertyName("ttl")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public int? TimeToLive { get; set; }
 
     [JsonPropertyName("CustomProperty")]
-    public string CustomProperty { get; set; }
+    public string? CustomProperty { get; set; }
 }
 
 [TestFixture]
@@ -87,6 +87,7 @@ public class SystemTextJsonCosmosSerializerTests
 
         var document = serializer.FromStream<IEveneumDocument>(CreateStream(EventDocumentJson));
 
+        Assert.That(document, Is.Not.Null);
         Assert.That(document, Is.InstanceOf<EveneumDocument>());
         AssertDocument(document);
     }
@@ -98,6 +99,7 @@ public class SystemTextJsonCosmosSerializerTests
 
         var document = serializer.FromStream<EveneumDocument>(CreateStream(EventDocumentJson));
 
+        Assert.That(document, Is.Not.Null);
         AssertDocument(document);
     }
 
@@ -108,6 +110,7 @@ public class SystemTextJsonCosmosSerializerTests
 
         var document = serializer.FromStream<CustomSystemTextJsonEveneumDocument>(CreateStream(EventDocumentJson));
 
+        Assert.That(document, Is.Not.Null);
         Assert.That(document, Is.InstanceOf<CustomSystemTextJsonEveneumDocument>());
         AssertDocument(document);
         Assert.That(document.CustomProperty, Is.EqualTo("custom-value"));
@@ -132,6 +135,7 @@ public class SystemTextJsonCosmosSerializerTests
         using var stream = serializer.ToStream(original);
         var document = serializer.FromStream<CustomSystemTextJsonEveneumDocument>(stream);
 
+        Assert.That(document, Is.Not.Null);
         AssertDocument(document);
         Assert.That(document.CustomProperty, Is.EqualTo("custom-value"));
         Assert.That(document.Body, Is.InstanceOf<JsonElement>());

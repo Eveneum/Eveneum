@@ -69,6 +69,7 @@ Each scenario is executed against multiple `CosmosDbContext` implementations (Ne
 - **Central Package Management**: add/update package versions only in `Directory.Packages.props`; `PackageReference` items in csproj files must not specify `Version`
 - Target frameworks: libraries `netstandard2.0` with `LangVersion latest` and `GenerateAssemblyInfo false`; tests `net10.0`. Do not raise library target frameworks without explicit request
 - File-scoped namespaces (`namespace Eveneum;`), enforced by `.editorconfig`
+- Nullable reference types are enabled in all projects and nullable warnings are errors. Annotate the real contract (`?` only where null can actually flow), avoid `!` suppressions, and keep the libraries warning-free when compiled against the annotated BCL as well (e.g. a `net10.0` build)
 - C# latest language features are in use (e.g. primary constructors in tests)
 - The codebase contains essentially no comments; do not add comments unless requested
 - New public exceptions must derive from `EveneumException` and live in `Eveneum/Exceptions/`

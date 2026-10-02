@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using System;
+using System.Reflection;
 using Reqnroll;
 using Reqnroll.Bindings;
 
@@ -12,7 +13,8 @@ public class StepArgumentConversions(ScenarioContext ScenarioContext)
     {
         if (ScenarioContext.StepContext.StepInfo.StepDefinitionType == StepDefinitionType.When)
         {
-            PropertyInfo testStatusProperty = typeof(ScenarioContext).GetProperty(nameof(ScenarioContext.ScenarioExecutionStatus), BindingFlags.Public | BindingFlags.Instance);
+            var testStatusProperty = typeof(ScenarioContext).GetProperty(nameof(ScenarioContext.ScenarioExecutionStatus), BindingFlags.Public | BindingFlags.Instance)
+                ?? throw new MissingMemberException(nameof(ScenarioContext), nameof(ScenarioContext.ScenarioExecutionStatus));
             testStatusProperty.SetValue(ScenarioContext, ScenarioExecutionStatus.OK);
         }
     }

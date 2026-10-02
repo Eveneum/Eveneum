@@ -119,7 +119,7 @@ static partial class MoreEnumerable
 
                 IEnumerable<TResult> Batch(uint s)
                 {
-                    TSource[] bucket = null;
+                    TSource[]? bucket = null;
                     var count = 0;
 
                     foreach (var item in source)

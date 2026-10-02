@@ -3,7 +3,7 @@ using Eveneum.Documents;
 
 namespace Eveneum.Serialization;
 
-public class EveneumDocumentSerializer(IJsonSerializer jsonSerializer = null, ITypeProvider typeProvider = null, bool ignoreMissingTypes = false)
+public class EveneumDocumentSerializer(IJsonSerializer? jsonSerializer = null, ITypeProvider? typeProvider = null, bool ignoreMissingTypes = false)
 {
     public IJsonSerializer JsonSerializer { get; } = jsonSerializer ?? new SystemTextJsonSerializer();
     public ITypeProvider TypeProvider { get; } = typeProvider ?? new PlatformTypeProvider();
@@ -26,7 +26,7 @@ public class EveneumDocumentSerializer(IJsonSerializer jsonSerializer = null, IT
         return new Snapshot(body, metadata, document.Version);
     }
 
-    internal void SerializeHeaderMetadata(IEveneumDocument header, object metadata)
+    internal void SerializeHeaderMetadata(IEveneumDocument header, object? metadata)
     {
         if (metadata != null)
         {
@@ -40,8 +40,9 @@ public class EveneumDocumentSerializer(IJsonSerializer jsonSerializer = null, IT
         var document = this.JsonSerializer.CreateDocument(GenerateEventId(streamId, @event.Version), DocumentType.Event);
         document.StreamId = streamId;
         document.Version = @event.Version;
-        document.BodyType = this.TypeProvider.GetIdentifierForType(@event.Body.GetType());
-        document.Body = this.JsonSerializer.Serialize(@event.Body);
+        var body = @event.Body ?? throw new ArgumentException($"Event version {@event.Version} of stream '{streamId}' has no Body.", nameof(@event));
+        document.BodyType = this.TypeProvider.GetIdentifierForType(body.GetType());
+        document.Body = this.JsonSerializer.Serialize(body);
 
         if (@event.Metadata != null)
         {
@@ -52,7 +53,7 @@ public class EveneumDocumentSerializer(IJsonSerializer jsonSerializer = null, IT
         return document;
     }
 
-    internal IEveneumDocument SerializeSnapshot(object snapshot, object metadata, ulong version, string streamId, SnapshotMode snapshotMode)
+    internal IEveneumDocument SerializeSnapshot(object snapshot, object? metadata, ulong version, string streamId, SnapshotMode snapshotMode)
     {
         var document = this.JsonSerializer.CreateDocument(GenerateSnapshotId(snapshotMode, streamId, version), DocumentType.Snapshot);
         document.StreamId = streamId;
@@ -69,9 +70,9 @@ public class EveneumDocumentSerializer(IJsonSerializer jsonSerializer = null, IT
         return document;
     }
 
-    internal object DeserializeObject(string typeName, object data)
+    internal object? DeserializeObject(string? typeName, object? data)
     {
-        if (string.IsNullOrEmpty(typeName))
+        if (typeName is null || typeName.Length == 0)
             return null;
 
         var type = this.TypeProvider.GetTypeForIdentifier(typeName);

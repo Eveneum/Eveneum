@@ -13,9 +13,9 @@ namespace Eveneum.Tests;
 
 public class CustomTypeProvider : ITypeProvider
 {
-    public string GetIdentifierForType(Type type) => type.FullName;
+    public string GetIdentifierForType(Type type) => type.FullName ?? throw new ArgumentException($"Type '{type}' has no full name.", nameof(type));
 
-    public Type GetTypeForIdentifier(string identifier) => Type.GetType(identifier);
+    public Type? GetTypeForIdentifier(string identifier) => Type.GetType(identifier);
 }
 
 [Binding]
@@ -34,7 +34,7 @@ public class CustomTypeProviderSteps(IEnumerable<CosmosDbContext> Contexts)
 	[Then(@"the Snapshot Writer snapshot for version (\d+) is persisted")]
 	public async Task ThenTheSnapshotWriterSnapshotForVersionIsPersisted(ulong version)
 	{
-		var snapshot = new SnapshotWriterSnapshot(typeof(CustomSnapshotWriter).AssemblyQualifiedName);
+		var snapshot = new SnapshotWriterSnapshot(CustomSnapshotWriter.SnapshotWriterType);
 
         await Task.WhenAll(Contexts.Select(async context =>
         {
@@ -51,6 +51,7 @@ public class CustomTypeProviderSteps(IEnumerable<CosmosDbContext> Contexts)
             Assert.That(snapshotDocument.Metadata, Is.Null);
 
             var typeProvider = context.EventStoreOptions.TypeProvider as CustomTypeProvider;
+            Assert.That(typeProvider, Is.Not.Null);
             Assert.That(snapshotDocument.BodyType, Is.EqualTo(typeProvider.GetIdentifierForType(typeof(SnapshotWriterSnapshot))));
             Assert.That(context.AreEqual(snapshotDocument.Body, snapshot), Is.True);
             Assert.That(snapshotDocument.Deleted, Is.False);

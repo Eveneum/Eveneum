@@ -16,21 +16,21 @@ public interface IEveneumDocument
 
     ulong Version { get; set; }
 
-    string MetadataType { get; set; }
+    string? MetadataType { get; set; }
 
-    object Metadata { get; set; }
+    object? Metadata { get; set; }
 
-    string BodyType { get; set; }
+    string? BodyType { get; set; }
 
-    object Body { get; set; }
+    object? Body { get; set; }
 
     decimal SortOrder { get; }
 
     bool Deleted { get; set; }
 
-    string ETag { get; set; }
+    string? ETag { get; set; }
 
-    string Timestamp { get; set; }
+    string? Timestamp { get; set; }
 
     int? TimeToLive { get; set; }
 }
@@ -45,24 +45,24 @@ public class EveneumDocument(string id, DocumentType documentType) : IEveneumDoc
     public DocumentType DocumentType { get; set; } = documentType;
 
     [JsonPropertyName("StreamId")]
-    public string StreamId { get; set; }
+    public string StreamId { get; set; } = null!;
 
     [JsonPropertyName("Version")]
     public ulong Version { get; set; }
 
     [JsonPropertyName("MetadataType")]
-    public string MetadataType { get; set; }
+    public string? MetadataType { get; set; }
 
     [JsonConverter(typeof(JsonNodeObjectConverter))]
     [JsonPropertyName("Metadata")]
-    public object Metadata { get; set; }
+    public object? Metadata { get; set; }
 
     [JsonPropertyName("BodyType")]
-    public string BodyType { get; set; }
+    public string? BodyType { get; set; }
 
     [JsonConverter(typeof(JsonNodeObjectConverter))]
     [JsonPropertyName("Body")]
-    public object Body { get; set; }
+    public object? Body { get; set; }
 
     [JsonPropertyName("SortOrder")]
     public decimal SortOrder => this.Version + GetOrderingFraction(this.DocumentType);
@@ -71,11 +71,11 @@ public class EveneumDocument(string id, DocumentType documentType) : IEveneumDoc
     public bool Deleted { get; set; }
 
     [JsonPropertyName("_etag")]
-    public string ETag { get; set; }
+    public string? ETag { get; set; }
 
     [JsonConverter(typeof(CosmosTimestampConverter))]
     [JsonPropertyName("_ts")]
-    public string Timestamp { get; set; }
+    public string? Timestamp { get; set; }
 
     [JsonPropertyName("ttl")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
