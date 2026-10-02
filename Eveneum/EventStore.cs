@@ -156,6 +156,15 @@ public class EventStore : IEventStore, IAdvancedEventStore
 
     public async Task<Response> WriteToStream(string streamId, EventData[] events, ulong? expectedVersion = null, object? metadata = null, CancellationToken cancellationToken = default)
     {
+        if (events is null)
+            throw new ArgumentNullException(nameof(events));
+
+        for (var i = 0; i < events.Length; i++)
+        {
+            if (events[i].Body is null)
+                throw new ArgumentException($"Event at index {i} of stream '{streamId}' has no Body.", nameof(events));
+        }
+
         double requestCharge = 0;
 
         var isNewStream = !expectedVersion.HasValue;
