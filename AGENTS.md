@@ -83,6 +83,7 @@ Each scenario is executed against multiple `CosmosDbContext` implementations (Ne
 Agents discover servers from `.mcp.json`; these are only hints on when to prefer one.
 
 - Use the `GitHub` server for code search in dependency repositories (e.g. [`Azure/azure-cosmos-dotnet-v3`](https://github.com/Azure/azure-cosmos-dotnet-v3), [`reqnroll/Reqnroll`](https://github.com/reqnroll/Reqnroll)). In Claude Code it authenticates through `.claude/scripts/github-mcp-headers.ps1`, which reuses the GitHub token stored by Git Credential Manager, because the server does not support the OAuth dynamic client registration Claude Code needs.
+- Claude Code runs `headersHelper` only for trusted workspaces. The VS Code extension does not show the trust dialog, so run `claude` once in the repository root and accept it; otherwise the `GitHub` server falls back to OAuth and fails with *does not support dynamic client registration*.
 - Use the `Microsoft Docs` server for official Microsoft and Azure documentation (Cosmos DB, .NET, MSBuild).
 - When adding or changing a server, keep `servers` (VS Code / GitHub Copilot) and `mcpServers` (Claude Code) in sync and sorted alphabetically by key.
 - Repository skills go to `.github/skills`; `Directory.Build.targets` links `.claude/skills` to it locally (git-ignored) so Claude Code discovers them. Dotnet tools pinned in `.config/dotnet-tools.json`, if present, are restored on design-time builds.
