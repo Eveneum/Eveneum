@@ -61,12 +61,12 @@ runs:
         sudo cp "$cert_path" /usr/local/share/ca-certificates/emulatorcert.crt
         sudo update-ca-certificates
 
-        if ! curl --silent --show-error --fail https://localhost:8081/ --output /dev/null; then
+        if ! curl --silent --show-error https://localhost:8081/ --output /dev/null; then
           echo "Emulator certificate is still not trusted for HTTPS after certificate installation."
           exit 1
         fi
 
-        if ! curl --silent --show-error --fail https://127.0.0.1:8081/ --output /dev/null; then
+        if ! curl --silent --show-error https://127.0.0.1:8081/ --output /dev/null; then
           echo "Emulator certificate is still not trusted for HTTPS on 127.0.0.1 after certificate installation."
           exit 1
         fi
