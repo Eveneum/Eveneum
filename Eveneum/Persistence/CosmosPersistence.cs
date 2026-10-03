@@ -22,7 +22,7 @@ public class CosmosPersistence<TDocument> : ICosmosPersistence
 
     public CosmosPersistence(CosmosClient cosmosClient, string databaseName, string containerName, BulkDeleteMode bulkDeleteMode = BulkDeleteMode.StoredProcedure)
     {
-        if (cosmosClient == null)
+        if (cosmosClient is null)
             throw new ArgumentNullException(nameof(cosmosClient));
 
         if (string.IsNullOrEmpty(databaseName))
@@ -52,7 +52,7 @@ public class CosmosPersistence<TDocument> : ICosmosPersistence
             typeof(EventStore),
             $"StoredProcedures.{procedureFileName}.js");
         
-        if (stream == null)
+        if (stream is null)
             throw new InvalidOperationException($"Could not find embedded resource for stored procedure: {procedureFileName}");
 
         using var reader = new StreamReader(stream);

@@ -23,7 +23,7 @@ public class NewtonsoftJsonSerializer : IJsonSerializer
 
     public object? Serialize(object? value)
     {
-        if (value == null)
+        if (value is null)
             return null;
 
         return JToken.FromObject(value, _serializer);
@@ -31,7 +31,7 @@ public class NewtonsoftJsonSerializer : IJsonSerializer
 
     public object? Deserialize(object? token, Type targetType)
     {
-        if (token == null || targetType == null)
+        if (token is null || targetType is null)
             return null;
 
         if (token is JToken jToken)

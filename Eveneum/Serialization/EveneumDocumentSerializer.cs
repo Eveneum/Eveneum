@@ -28,7 +28,7 @@ public class EveneumDocumentSerializer(IJsonSerializer? jsonSerializer = null, I
 
     internal void SerializeHeaderMetadata(IEveneumDocument header, object? metadata)
     {
-        if (metadata != null)
+        if (metadata is not null)
         {
             header.MetadataType = this.TypeProvider.GetIdentifierForType(metadata.GetType());
             header.Metadata = this.JsonSerializer.Serialize(metadata);
@@ -44,7 +44,7 @@ public class EveneumDocumentSerializer(IJsonSerializer? jsonSerializer = null, I
         document.BodyType = this.TypeProvider.GetIdentifierForType(body.GetType());
         document.Body = this.JsonSerializer.Serialize(body);
 
-        if (@event.Metadata != null)
+        if (@event.Metadata is not null)
         {
             document.MetadataType = this.TypeProvider.GetIdentifierForType(@event.Metadata.GetType());
             document.Metadata = this.JsonSerializer.Serialize(@event.Metadata);
@@ -61,7 +61,7 @@ public class EveneumDocumentSerializer(IJsonSerializer? jsonSerializer = null, I
         document.BodyType = this.TypeProvider.GetIdentifierForType(snapshot.GetType());
         document.Body = this.JsonSerializer.Serialize(snapshot);
 
-        if (metadata != null)
+        if (metadata is not null)
         {
             document.MetadataType = this.TypeProvider.GetIdentifierForType(metadata.GetType());
             document.Metadata = this.JsonSerializer.Serialize(metadata);

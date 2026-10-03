@@ -76,7 +76,7 @@ public class EventStore : IEventStore, IAdvancedEventStore
 
     private async Task<StreamResponse> ReadStream(string streamId, string sql, int maxItemCount, CancellationToken cancellationToken)
     {
-        if (streamId == null)
+        if (streamId is null)
             throw new ArgumentNullException(nameof(streamId));
 
         using var iterator = this.Persistence.GetItemQueryIterator(sql, streamId, maxItemCount);
@@ -129,13 +129,13 @@ public class EventStore : IEventStore, IAdvancedEventStore
 
             Snapshot? snapshot = null;
 
-            if(snapshotDocument is object)
+            if(snapshotDocument is not null)
             {
                 snapshot = this.Serializer.DeserializeSnapshot(snapshotDocument);
 
                 if (snapshot.Value.Data is SnapshotWriterSnapshot snapshotWriterSnapshot)
                 {
-                    if (this.SnapshotWriter is object)
+                    if (this.SnapshotWriter is not null)
                         snapshot = await this.SnapshotWriter.ReadSnapshot(streamId, snapshot.Value.Version, cancellationToken);
                     else
                         throw new SnapshotWriterNotFoundException(streamId, requestCharge, snapshotWriterSnapshot.SnapshotWriterType);
@@ -251,7 +251,7 @@ public class EventStore : IEventStore, IAdvancedEventStore
         var existingHeader = headerResponse.Document;
         var requestCharge = headerResponse.RequestCharge;
 
-        if (existingHeader == null)
+        if (existingHeader is null)
             throw new StreamNotFoundException(streamId, requestCharge);
 
         if (existingHeader.Deleted)
@@ -281,7 +281,7 @@ public class EventStore : IEventStore, IAdvancedEventStore
         var header = headerResponse.Document;
         var requestCharge = headerResponse.RequestCharge;
 
-        if (header == null)
+        if (header is null)
             throw new StreamNotFoundException(streamId, requestCharge);
 
         if (header.Deleted)
@@ -324,7 +324,7 @@ public class EventStore : IEventStore, IAdvancedEventStore
 
         var deleteResponse = await DeleteDocuments(streamId, query, cancellationToken);
 
-        if (this.SnapshotWriter is object)
+        if (this.SnapshotWriter is not null)
             await this.SnapshotWriter.DeleteSnapshots(streamId, olderThanVersion, cancellationToken);
 
         return deleteResponse;

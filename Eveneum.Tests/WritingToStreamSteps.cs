@@ -259,7 +259,7 @@ public class WritingToStreamSteps(ScenarioContext scenarioContext, IEnumerable<C
             Assert.That(eventDocument.ETag, Is.Not.Null);
             Assert.That(eventDocument.Deleted, Is.False);
 
-            if (newEvent.Metadata == null)
+            if (newEvent.Metadata is null)
             {
                 Assert.That(eventDocument.MetadataType, Is.Null);
                 Assert.That(eventDocument.Metadata, Is.Null);

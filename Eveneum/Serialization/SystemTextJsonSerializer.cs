@@ -11,7 +11,7 @@ public class SystemTextJsonSerializer(JsonSerializerOptions? options = null) : I
 
     public object? Serialize(object? value)
     {
-        if (value == null)
+        if (value is null)
             return null;
 
         return JsonSerializer.SerializeToNode(value, Options);
@@ -19,7 +19,7 @@ public class SystemTextJsonSerializer(JsonSerializerOptions? options = null) : I
 
     public object? Deserialize(object? token, Type targetType)
     {
-        if (token == null || targetType == null)
+        if (token is null || targetType is null)
             return null;
 
         if (token is JsonNode jsonNode)

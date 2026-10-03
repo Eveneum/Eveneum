@@ -191,7 +191,7 @@ public class SnapshotSteps(ScenarioContext scenarioContext, IEnumerable<CosmosDb
             Assert.That(snapshotDocument.Version, Is.EqualTo(version));
             Assert.That(snapshotDocument.SortOrder, Is.EqualTo(version + EveneumDocument.GetOrderingFraction(DocumentType.Snapshot)));
 
-            if (snapshotMetadata == null)
+            if (snapshotMetadata is null)
             {
                 Assert.That(snapshotDocument.MetadataType, Is.Null);
                 Assert.That(snapshotDocument.Metadata, Is.Null);

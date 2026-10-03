@@ -142,7 +142,7 @@ public class AdvancedSteps(IEnumerable<CosmosDbContext> Contexts)
             Assert.That(eventDocument.ETag, Is.Not.Null);
             Assert.That(eventDocument.Deleted, Is.False);
 
-            if (context.ReplacedEvent.Metadata == null)
+            if (context.ReplacedEvent.Metadata is null)
             {
                 Assert.That(eventDocument.MetadataType, Is.Null);
                 Assert.That(eventDocument.Metadata, Is.Null);
