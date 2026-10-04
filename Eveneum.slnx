@@ -4,6 +4,7 @@
     <File Path="azure-pipelines.yaml" />
     <File Path="Directory.Packages.props" />
     <File Path="GitVersion.yml" />
+    <File Path="global.json" />
     <File Path="README.md" />
   </Folder>
   <Project Path="Eveneum.ApplicationInsights/Eveneum.ApplicationInsights.csproj" />

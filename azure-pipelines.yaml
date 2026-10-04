@@ -73,14 +73,15 @@ steps:
   displayName: 'Start CosmosDB emulator'
   condition: eq(${{ parameters.RunTests }}, true)
 
-- task: VSTest@2
+- task: DotNetCoreCLI@2
   displayName: Test
   condition: eq(${{ parameters.RunTests }}, true)
   inputs:
-    testAssemblyVer2: |
-     **\*.Tests.dll
-     !**\*TestAdapter.dll
-     !**\obj\**
-    runInParallel: true
-    codeCoverageEnabled: true
-    diagnosticsEnabled: True
+    command: test
+    arguments: '--solution Eveneum.slnx --configuration $(Configuration) --no-build --coverage --coverage-output-format cobertura'
+
+- task: PublishCodeCoverageResults@2
+  displayName: 'Publish code coverage'
+  condition: and(succeededOrFailed(), eq(${{ parameters.RunTests }}, true))
+  inputs:
+    summaryFileLocation: '$(Agent.TempDirectory)/**/*.cobertura.xml'
