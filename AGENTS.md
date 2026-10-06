@@ -17,7 +17,7 @@ Core capabilities:
 ## Repository Layout
 
 ```
-Eveneum.sln
+Eveneum.slnx
 Eveneum/                  Core event store library (netstandard2.0)
 Eveneum.NewtonsoftJson/   Newtonsoft.Json Cosmos serializer support (netstandard2.0)
 Eveneum.ApplicationInsights/ Application Insights tracing extension (netstandard2.0)
@@ -39,7 +39,7 @@ Key areas inside `Eveneum/`:
 ## Build & Test
 
 ```powershell
-dotnet build Eveneum.sln -c Release
+dotnet build Eveneum.slnx -c Release
 dotnet test Eveneum.Tests
 ```
 
@@ -73,7 +73,7 @@ Each scenario is executed against multiple `CosmosDbContext` implementations (Ne
 - The codebase contains essentially no comments; do not add comments unless requested
 - New public exceptions must derive from `EveneumException` and live in `Eveneum/Exceptions/`
 - Preserve the change-feed-friendly document shape in `Documents/EveneumDocument.cs`; changes to the stored schema affect existing production databases
-- Always use CRLF line endings (Windows-style) for all files
+- Always use CRLF line endings (Windows-style) for all files in the working copy. `.gitattributes` (`* text=auto eol=crlf`) enforces this on checkout on every OS, while the repository itself stores normalized LF, so blobs and diffs on GitHub show LF
 
 ## CI & Packaging
 

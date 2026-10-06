@@ -1,0 +1,2 @@
+# Normalize line endings: the repository stores LF, working copies use CRLF on every OS
+* text=auto eol=crlf
