@@ -1,60 +1,59 @@
 ﻿using Eveneum.Documents;
 
-namespace Eveneum
+namespace Eveneum;
+
+public class Response
 {
-    public class Response
+    public Response(double requestCharge)
     {
-        public Response(double requestCharge)
-        {
-            this.RequestCharge = requestCharge;
-        }
-
-        public double RequestCharge { get; }
+        this.RequestCharge = requestCharge;
     }
 
-    public class StreamResponse : Response
-    {
-        public StreamResponse(Stream? stream, bool softDeleted, double requestCharge)
-            : base(requestCharge)
-        {
-            this.Stream = stream;
-            this.SoftDeleted = softDeleted;
-        }
+    public double RequestCharge { get; }
+}
 
-        public Stream? Stream { get; }
-        public bool SoftDeleted { get; }
+public class StreamResponse : Response
+{
+    public StreamResponse(Stream? stream, bool softDeleted, double requestCharge)
+        : base(requestCharge)
+    {
+        this.Stream = stream;
+        this.SoftDeleted = softDeleted;
     }
 
-    public class DeleteResponse : Response
-    {
-        public DeleteResponse(ulong deletedDocuments, double requestCharge)
-            : base(requestCharge)
-        {
-            this.DeletedDocuments = deletedDocuments;
-        }
+    public Stream? Stream { get; }
+    public bool SoftDeleted { get; }
+}
 
-        public ulong DeletedDocuments { get; }
+public class DeleteResponse : Response
+{
+    public DeleteResponse(ulong deletedDocuments, double requestCharge)
+        : base(requestCharge)
+    {
+        this.DeletedDocuments = deletedDocuments;
     }
 
-    public class StreamHeaderResponse : Response
-    {
-        public StreamHeaderResponse(StreamHeader streamHeader, double requestCharge)
-            : base(requestCharge)
-        {
-            this.StreamHeader = streamHeader;
-        }
+    public ulong DeletedDocuments { get; }
+}
 
-        public StreamHeader StreamHeader { get; }
+public class StreamHeaderResponse : Response
+{
+    public StreamHeaderResponse(StreamHeader streamHeader, double requestCharge)
+        : base(requestCharge)
+    {
+        this.StreamHeader = streamHeader;
     }
 
-    internal class DocumentResponse : Response
-    {
-        public DocumentResponse(IEveneumDocument document, double requestCharge)
-            : base(requestCharge)
-        {
-            this.Document = document;
-        }
+    public StreamHeader StreamHeader { get; }
+}
 
-        public IEveneumDocument Document { get; }
+internal class DocumentResponse : Response
+{
+    public DocumentResponse(IEveneumDocument document, double requestCharge)
+        : base(requestCharge)
+    {
+        this.Document = document;
     }
+
+    public IEveneumDocument Document { get; }
 }

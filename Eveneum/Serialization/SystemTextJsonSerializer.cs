@@ -3,36 +3,35 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using Eveneum.Documents;
 
-namespace Eveneum.Serialization
+namespace Eveneum.Serialization;
+
+public class SystemTextJsonSerializer(JsonSerializerOptions? options = null) : IJsonSerializer
 {
-    public class SystemTextJsonSerializer(JsonSerializerOptions options = null) : IJsonSerializer
+    private readonly JsonSerializerOptions Options = options ?? new JsonSerializerOptions();
+
+    public object? Serialize(object? value)
     {
-        private readonly JsonSerializerOptions Options = options ?? new JsonSerializerOptions();
+        if (value is null)
+            return null;
 
-        public object Serialize(object value)
+        return JsonSerializer.SerializeToNode(value, Options);
+    }
+
+    public object? Deserialize(object? token, Type targetType)
+    {
+        if (token is null || targetType is null)
+            return null;
+
+        if (token is JsonNode jsonNode)
         {
-            if (value == null)
-                return null;
-
-            return JsonSerializer.SerializeToNode(value, Options);
+            return jsonNode.Deserialize(targetType, Options);
         }
 
-        public object Deserialize(object token, Type targetType)
-        {
-            if (token == null || targetType == null)
-                return null;
+        throw new ArgumentException($"Token must be of type JsonNode, but was {token.GetType()}", nameof(token));
+    }
 
-            if (token is JsonNode jsonNode)
-            {
-                return jsonNode.Deserialize(targetType, Options);
-            }
-
-            throw new ArgumentException($"Token must be of type JsonNode, but was {token.GetType()}", nameof(token));
-        }
-
-        public IEveneumDocument CreateDocument(string id, DocumentType documentType)
-        {
-            return new EveneumDocument(id, documentType);
-        }
+    public IEveneumDocument CreateDocument(string id, DocumentType documentType)
+    {
+        return new EveneumDocument(id, documentType);
     }
 }

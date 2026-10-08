@@ -331,3 +331,6 @@ ASALocalRun/
 
 # Cosmos DB server-side JavaScript typings acquired by Visual Studio
 /Eveneum/lib/
+
+# Local junction to .github/skills, created by Directory.Build.targets
+/.claude/skills

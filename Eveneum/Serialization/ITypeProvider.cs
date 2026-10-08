@@ -1,10 +1,9 @@
 ﻿using System;
 
-namespace Eveneum.Serialization
+namespace Eveneum.Serialization;
+
+public interface ITypeProvider
 {
-    public interface ITypeProvider
-    {
-        string GetIdentifierForType(Type type);
-        Type GetTypeForIdentifier(string identifier);
-    }
+    string GetIdentifierForType(Type type);
+    Type? GetTypeForIdentifier(string identifier);
 }

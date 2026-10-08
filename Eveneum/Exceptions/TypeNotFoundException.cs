@@ -1,23 +1,22 @@
 ﻿using System;
 
-namespace Eveneum
+namespace Eveneum;
+
+[Serializable]
+public class TypeNotFoundException : Exception
 {
-    [Serializable]
-    public class TypeNotFoundException : Exception
+    public TypeNotFoundException(string type) : base($"Type '{type}' wasn't found")
     {
-        public TypeNotFoundException(string type) : base($"Type '{type}' wasn't found")
-        {
-            this.Type = type;
-        }
-
-        public string Type
-        {
-            get { return (string)this.Data[nameof(Type)]; }
-            private set { this.Data[nameof(Type)] = value; }
-        }
-
-        protected TypeNotFoundException(
-          System.Runtime.Serialization.SerializationInfo info,
-          System.Runtime.Serialization.StreamingContext context) : base(info, context) { }
+        this.Type = type;
     }
+
+    public string Type
+    {
+        get { return this.Data[nameof(Type)] as string ?? string.Empty; }
+        private set { this.Data[nameof(Type)] = value; }
+    }
+
+    protected TypeNotFoundException(
+      System.Runtime.Serialization.SerializationInfo info,
+      System.Runtime.Serialization.StreamingContext context) : base(info, context) { }
 }

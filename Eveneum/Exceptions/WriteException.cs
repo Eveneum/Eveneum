@@ -1,29 +1,28 @@
 ﻿using System;
 using System.Net;
 
-namespace Eveneum
+namespace Eveneum;
+
+[Serializable]
+public class WriteException : EveneumException
 {
-    [Serializable]
-    public class WriteException : EveneumException
+    public WriteException(string streamId, double requestCharge, string? message, HttpStatusCode statusCode)
+        : this(streamId, requestCharge, message, statusCode, null)
+    {}
+
+    public WriteException(string streamId, double requestCharge, string? message, HttpStatusCode statusCode, Exception? inner)
+        : base(streamId, requestCharge, $"Failed to write to CosmosDB (response: {statusCode}): {message}", inner)
     {
-        public WriteException(string streamId, double requestCharge, string message, HttpStatusCode statusCode)
-            : this(streamId, requestCharge, message, statusCode, null)
-        {}
-
-        public WriteException(string streamId, double requestCharge, string message, HttpStatusCode statusCode, Exception inner)
-            : base(streamId, requestCharge, $"Failed to write to CosmosDB (response: {statusCode}): {message}", inner)
-        {
-            this.StatusCode = statusCode;
-        }
-
-        public HttpStatusCode StatusCode
-        {
-            get { return (HttpStatusCode)this.Data[nameof(StatusCode)]; }
-            private set { this.Data[nameof(StatusCode)] = value; }
-        }
-
-        protected WriteException(
-          System.Runtime.Serialization.SerializationInfo info,
-          System.Runtime.Serialization.StreamingContext context) : base(info, context) { }
+        this.StatusCode = statusCode;
     }
+
+    public HttpStatusCode StatusCode
+    {
+        get { return this.Data[nameof(StatusCode)] is HttpStatusCode statusCode ? statusCode : default; }
+        private set { this.Data[nameof(StatusCode)] = value; }
+    }
+
+    protected WriteException(
+      System.Runtime.Serialization.SerializationInfo info,
+      System.Runtime.Serialization.StreamingContext context) : base(info, context) { }
 }

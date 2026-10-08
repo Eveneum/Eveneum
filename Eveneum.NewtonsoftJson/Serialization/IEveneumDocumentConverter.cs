@@ -3,67 +3,69 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Eveneum.Documents;
 
-namespace Eveneum.NewtonsoftJson.Serialization
+namespace Eveneum.NewtonsoftJson.Serialization;
+
+public class IEveneumDocumentConverter : JsonConverter<IEveneumDocument>
 {
-    public class IEveneumDocumentConverter : JsonConverter<IEveneumDocument>
+    public override IEveneumDocument? ReadJson(JsonReader reader, Type objectType, IEveneumDocument? existingValue, bool hasExistingValue, JsonSerializer serializer)
     {
-        public override IEveneumDocument ReadJson(JsonReader reader, Type objectType, IEveneumDocument existingValue, bool hasExistingValue, JsonSerializer serializer)
+        var token = JToken.Load(reader);
+
+        if (objectType == typeof(IEveneumDocument))
         {
-            var token = JToken.Load(reader);
+            var jObject = (JObject)token;
+            var document = new Documents.NewtonsoftJsonEveneumDocument(
+                jObject["id"]?.Value<string>() ?? string.Empty,
+                jObject["DocumentType"]?.ToObject<DocumentType>() ?? DocumentType.Header
+            );
 
-            if (objectType == typeof(IEveneumDocument))
-            {
-                var jObject = (JObject)token;
-                var document = new Documents.NewtonsoftJsonEveneumDocument(
-                    jObject["id"]?.Value<string>(),
-                    jObject["DocumentType"]?.ToObject<DocumentType>() ?? DocumentType.Header
-                );
-
-                serializer.Populate(jObject.CreateReader(), document);
-                return document;
-            }
-
-            if (hasExistingValue)
-            {
-                serializer.Populate(token.CreateReader(), existingValue);
-                return existingValue;
-            }
-
-            return (IEveneumDocument)token.ToObject(objectType, GetSerializerWithoutThisConverter(serializer));
+            serializer.Populate(jObject.CreateReader(), document);
+            return document;
         }
 
-        public override void WriteJson(JsonWriter writer, IEveneumDocument value, JsonSerializer serializer)
+        if (hasExistingValue && existingValue is not null)
         {
-            // Get the concrete type and serialize it without this converter to avoid circular reference
-            var concreteType = value.GetType();
-            var token = JToken.FromObject(value, GetSerializerWithoutThisConverter(serializer));
-            token.WriteTo(writer);
+            serializer.Populate(token.CreateReader(), existingValue);
+            return existingValue;
         }
 
-        private static JsonSerializer GetSerializerWithoutThisConverter(JsonSerializer original)
-        {
-            var settings = new JsonSerializerSettings
-            {
-                ContractResolver = original.ContractResolver,
-                Formatting = original.Formatting,
-                DateFormatHandling = original.DateFormatHandling,
-                DateTimeZoneHandling = original.DateTimeZoneHandling,
-                NullValueHandling = original.NullValueHandling,
-                DefaultValueHandling = original.DefaultValueHandling,
-                ReferenceLoopHandling = original.ReferenceLoopHandling,
-                TypeNameHandling = original.TypeNameHandling
-            };
+        return (IEveneumDocument?)token.ToObject(objectType, GetSerializerWithoutThisConverter(serializer));
+    }
 
-            // Copy all converters except this one
-            foreach (var converter in original.Converters)
+    public override void WriteJson(JsonWriter writer, IEveneumDocument? value, JsonSerializer serializer)
+    {
+        if (value is null)
+            throw new ArgumentNullException(nameof(value));
+
+        // Get the concrete type and serialize it without this converter to avoid circular reference
+        var concreteType = value.GetType();
+        var token = JToken.FromObject(value, GetSerializerWithoutThisConverter(serializer));
+        token.WriteTo(writer);
+    }
+
+    private static JsonSerializer GetSerializerWithoutThisConverter(JsonSerializer original)
+    {
+        var settings = new JsonSerializerSettings
+        {
+            ContractResolver = original.ContractResolver,
+            Formatting = original.Formatting,
+            DateFormatHandling = original.DateFormatHandling,
+            DateTimeZoneHandling = original.DateTimeZoneHandling,
+            NullValueHandling = original.NullValueHandling,
+            DefaultValueHandling = original.DefaultValueHandling,
+            ReferenceLoopHandling = original.ReferenceLoopHandling,
+            TypeNameHandling = original.TypeNameHandling
+        };
+
+        // Copy all converters except this one
+        foreach (var converter in original.Converters)
+        {
+            if (!(converter is IEveneumDocumentConverter))
             {
-                if (!(converter is IEveneumDocumentConverter))
-                {
-                    settings.Converters.Add(converter);
-                }
+                settings.Converters.Add(converter);
             }
-
-            return JsonSerializer.Create(settings);
         }
+
+        return JsonSerializer.Create(settings);
     }
 }

@@ -2,93 +2,92 @@ using System.IO;
 using System.Text;
 using Newtonsoft.Json;
 
-namespace Eveneum.NewtonsoftJson.Serialization
+namespace Eveneum.NewtonsoftJson.Serialization;
+
+public class JsonNetCosmosSerializer : Microsoft.Azure.Cosmos.CosmosSerializer
 {
-    public class JsonNetCosmosSerializer : Microsoft.Azure.Cosmos.CosmosSerializer
+    private static readonly Encoding DefaultEncoding = new UTF8Encoding(false, true);
+    private readonly JsonSerializer Serializer;
+
+    public JsonNetCosmosSerializer(JsonSerializer serializer)
     {
-        private static readonly Encoding DefaultEncoding = new UTF8Encoding(false, true);
-        private readonly JsonSerializer Serializer;
-
-        public JsonNetCosmosSerializer(JsonSerializer serializer)
+        this.Serializer = serializer;
+        
+        // Add converter for IEveneumDocument if not already present
+        if (!HasConverter<IEveneumDocumentConverter>(serializer))
         {
-            this.Serializer = serializer;
-            
-            // Add converter for IEveneumDocument if not already present
-            if (!HasConverter<IEveneumDocumentConverter>(serializer))
+            this.Serializer.Converters.Add(new IEveneumDocumentConverter());
+        }
+    }
+
+    public JsonNetCosmosSerializer(JsonSerializerSettings? serializerSettings)
+        : this(CreateSerializerWithConverter(serializerSettings))
+    {
+    }
+
+    private static JsonSerializer CreateSerializerWithConverter(JsonSerializerSettings? serializerSettings)
+    {
+        var settings = serializerSettings ?? new JsonSerializerSettings();
+        if (!HasConverter<IEveneumDocumentConverter>(settings.Converters))
+        {
+            settings.Converters.Add(new IEveneumDocumentConverter());
+        }
+        return JsonSerializer.Create(settings);
+    }
+
+    private static bool HasConverter<T>(JsonSerializer serializer) where T : JsonConverter
+    {
+        foreach (var converter in serializer.Converters)
+        {
+            if (converter is T)
+                return true;
+        }
+        return false;
+    }
+
+    private static bool HasConverter<T>(System.Collections.Generic.IList<JsonConverter> converters) where T : JsonConverter
+    {
+        foreach (var converter in converters)
+        {
+            if (converter is T)
+                return true;
+        }
+        return false;
+    }
+
+    public override T? FromStream<T>(System.IO.Stream stream) where T : default
+    {
+        using (stream)
+        {
+            if (typeof(System.IO.Stream).IsAssignableFrom(typeof(T)))
             {
-                this.Serializer.Converters.Add(new IEveneumDocumentConverter());
+                var copy = new MemoryStream();
+                stream.CopyTo(copy);
+                copy.Position = 0;
+                return (T)(object)copy;
             }
+
+            using var streamReader = new StreamReader(stream);
+            using var textReader = new JsonTextReader(streamReader);
+
+            return this.Serializer.Deserialize<T>(textReader);
         }
+    }
 
-        public JsonNetCosmosSerializer(JsonSerializerSettings serializerSettings)
-            : this(CreateSerializerWithConverter(serializerSettings))
-        {
-        }
+    public override System.IO.Stream ToStream<T>(T input)
+    {
+        var stream = new MemoryStream();
 
-        private static JsonSerializer CreateSerializerWithConverter(JsonSerializerSettings serializerSettings)
-        {
-            var settings = serializerSettings ?? new JsonSerializerSettings();
-            if (!HasConverter<IEveneumDocumentConverter>(settings.Converters))
-            {
-                settings.Converters.Add(new IEveneumDocumentConverter());
-            }
-            return JsonSerializer.Create(settings);
-        }
+        using var streamWriter = new StreamWriter(stream, encoding: JsonNetCosmosSerializer.DefaultEncoding, bufferSize: 1024, leaveOpen: true);
+        using JsonWriter writer = new JsonTextWriter(streamWriter);
 
-        private static bool HasConverter<T>(JsonSerializer serializer) where T : JsonConverter
-        {
-            foreach (var converter in serializer.Converters)
-            {
-                if (converter is T)
-                    return true;
-            }
-            return false;
-        }
+        this.Serializer.Serialize(writer, input);
 
-        private static bool HasConverter<T>(System.Collections.Generic.IList<JsonConverter> converters) where T : JsonConverter
-        {
-            foreach (var converter in converters)
-            {
-                if (converter is T)
-                    return true;
-            }
-            return false;
-        }
+        writer.Flush();
+        streamWriter.Flush();
 
-        public override T FromStream<T>(System.IO.Stream stream)
-        {
-            using (stream)
-            {
-                if (typeof(System.IO.Stream).IsAssignableFrom(typeof(T)))
-                {
-                    var copy = new MemoryStream();
-                    stream.CopyTo(copy);
-                    copy.Position = 0;
-                    return (T)(object)copy;
-                }
+        stream.Position = 0;
 
-                using var streamReader = new StreamReader(stream);
-                using var textReader = new JsonTextReader(streamReader);
-
-                return this.Serializer.Deserialize<T>(textReader);
-            }
-        }
-
-        public override System.IO.Stream ToStream<T>(T input)
-        {
-            var stream = new MemoryStream();
-
-            using var streamWriter = new StreamWriter(stream, encoding: JsonNetCosmosSerializer.DefaultEncoding, bufferSize: 1024, leaveOpen: true);
-            using JsonWriter writer = new JsonTextWriter(streamWriter);
-
-            this.Serializer.Serialize(writer, input);
-
-            writer.Flush();
-            streamWriter.Flush();
-
-            stream.Position = 0;
-
-            return stream;
-        }
+        return stream;
     }
 }

@@ -49,7 +49,8 @@ Tests require a **running Azure Cosmos DB emulator**:
 
 - Windows: `Import-Module "C:\Program Files\Azure Cosmos DB Emulator\PSModules\Microsoft.Azure.CosmosDB.Emulator"; Start-CosmosDbEmulator -Timeout 600`
 - Default endpoint `https://localhost:8081` with the well-known emulator master key
-- Overridable via **user-level** environment variables (see `Eveneum.Tests/Infrastructure/CosmosSetup.cs` and `ScenarioDependencies.cs`):
+- Linux / CI: the `copilot-setup-steps.yml` workflow runs the Linux emulator container (`mcr.microsoft.com/cosmosdb/linux/azure-cosmos-emulator:vnext-preview`) via the `.github/actions/setup-cosmos-emulator` action and selects the Linux contexts in Gateway mode
+- Overridable via process or **user-level** environment variables, process first (see `Eveneum.Tests/Infrastructure/CosmosSetup.cs` and `ScenarioDependencies.cs`):
   - `CosmosDbEmulator.Endpoint`
   - `CosmosDbEmulator.Key`
   - `CosmosDbEmulator.ConnectionMode` (`Direct` or `Gateway`)
@@ -68,12 +69,24 @@ Each scenario is executed against multiple `CosmosDbContext` implementations (Ne
 
 - **Central Package Management**: add/update package versions only in `Directory.Packages.props`; `PackageReference` items in csproj files must not specify `Version`
 - Target frameworks: libraries `netstandard2.0` with `LangVersion latest` and `GenerateAssemblyInfo false`; tests `net10.0`. Do not raise library target frameworks without explicit request
-- Block-scoped namespaces (`namespace Eveneum { ... }`), matching existing style
+- File-scoped namespaces (`namespace Eveneum;`), enforced by `.editorconfig`
+- Nullable reference types are enabled in all projects and nullable warnings are errors. Annotate the real contract (`?` only where null can actually flow), avoid `!` suppressions, and keep the libraries warning-free when compiled against the annotated BCL as well (e.g. a `net10.0` build)
+- Null checks use the `is null` / `is not null` patterns, never `== null`, `!= null` or `is object`
 - C# latest language features are in use (e.g. primary constructors in tests)
 - The codebase contains essentially no comments; do not add comments unless requested
 - New public exceptions must derive from `EveneumException` and live in `Eveneum/Exceptions/`
 - Preserve the change-feed-friendly document shape in `Documents/EveneumDocument.cs`; changes to the stored schema affect existing production databases
 - Always use CRLF line endings (Windows-style) for all files in the working copy. `.gitattributes` (`* text=auto eol=crlf`) enforces this on checkout on every OS, while the repository itself stores normalized LF, so blobs and diffs on GitHub show LF
+
+## MCP Servers
+
+Agents discover servers from `.mcp.json`; these are only hints on when to prefer one.
+
+- Use the `GitHub` server for code search in dependency repositories (e.g. [`Azure/azure-cosmos-dotnet-v3`](https://github.com/Azure/azure-cosmos-dotnet-v3), [`reqnroll/Reqnroll`](https://github.com/reqnroll/Reqnroll)). In Claude Code it authenticates through `.claude/scripts/github-mcp-headers.ps1`, which reuses the GitHub token stored by Git Credential Manager, because the server does not support the OAuth dynamic client registration Claude Code needs.
+- Claude Code runs `headersHelper` only for trusted workspaces. The VS Code extension does not show the trust dialog, so run `claude` once in the repository root and accept it; otherwise the `GitHub` server falls back to OAuth and fails with *does not support dynamic client registration*.
+- Use the `Microsoft Docs` server for official Microsoft and Azure documentation (Cosmos DB, .NET, MSBuild).
+- When adding or changing a server, keep `servers` (VS Code / GitHub Copilot) and `mcpServers` (Claude Code) in sync and sorted alphabetically by key.
+- Repository skills go to `.github/skills`; `Directory.Build.targets` links `.claude/skills` to it locally (git-ignored) so Claude Code discovers them. Dotnet tools pinned in `.config/dotnet-tools.json`, if present, are restored on design-time builds.
 
 ## CI & Packaging
 

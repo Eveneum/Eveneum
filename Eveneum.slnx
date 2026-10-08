@@ -1,7 +1,10 @@
 <Solution>
   <Folder Name="/Solution Items/">
+    <File Path=".mcp.json" />
     <File Path="AGENTS.md" />
     <File Path="azure-pipelines.yaml" />
+    <File Path="CLAUDE.md" />
+    <File Path="Directory.Build.targets" />
     <File Path="Directory.Packages.props" />
     <File Path="GitVersion.yml" />
     <File Path="README.md" />

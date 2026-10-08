@@ -5,50 +5,51 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NodaTime;
 using NodaTime.Serialization.JsonNet;
+using System;
 using System.Threading.Tasks;
 
-namespace Eveneum.Tests.Infrastructure
+namespace Eveneum.Tests.Infrastructure;
+
+public class NewtonsoftCosmosDbContext : CosmosDbContext
 {
-    public class NewtonsoftCosmosDbContext : CosmosDbContext
+    public override string Container { get; } = "Newtonsoft";
+
+    public JsonSerializerSettings JsonSerializerSettings { get; set; } = new JsonSerializerSettings();
+
+    public override async Task Initialize()
     {
-        public override string Container { get; } = "Newtonsoft";
+        this.JsonSerializerSettings.ConfigureForNodaTime(DateTimeZoneProviders.Tzdb);
 
-        public JsonSerializerSettings JsonSerializerSettings { get; set; } = new JsonSerializerSettings();
+        this.Client = await CosmosSetup.GetClientWithNewtonsoftJson(this.Database, this.Container, this.JsonSerializerSettings);
 
-        public override async Task Initialize()
-        {
-            this.JsonSerializerSettings.ConfigureForNodaTime(DateTimeZoneProviders.Tzdb);
+        await DeleteAllDocuments<NewtonsoftJsonEveneumDocument>();
 
-            this.Client = await CosmosSetup.GetClientWithNewtonsoftJson(this.Database, this.Container, this.JsonSerializerSettings);
+        this.EventStoreOptions.JsonSerializer = new NewtonsoftJsonSerializer(this.JsonSerializerSettings);
+        
+        var persistence = new CosmosPersistence<NewtonsoftJsonEveneumDocument>(this.Client, this.Database, this.Container, this.BulkDeleteMode);
+        this.EventStore = new EventStore(persistence, this.EventStoreOptions);
 
-            await DeleteAllDocuments<NewtonsoftJsonEveneumDocument>();
-
-            this.EventStoreOptions.JsonSerializer = new NewtonsoftJsonSerializer(this.JsonSerializerSettings);
-            
-            var persistence = new CosmosPersistence<NewtonsoftJsonEveneumDocument>(this.Client, this.Database, this.Container, this.BulkDeleteMode);
-            this.EventStore = new EventStore(persistence, this.EventStoreOptions);
-
-            await this.EventStore.Initialize();
-        }
-
-        public override bool AreEqual(object first, object second)
-        {
-            if (first is null && second is null)
-                return true;
-
-            if (first is null != second is null)
-                return false;
-
-            var firstToken = first is JToken firstJToken ? firstJToken : (JToken)this.EventStoreOptions.JsonSerializer.Serialize(first);
-            var secondToken = second is JToken secondJToken ? secondJToken : (JToken)this.EventStoreOptions.JsonSerializer.Serialize(second);
-
-            return JToken.DeepEquals(firstToken, secondToken);
-        }
+        await this.EventStore.Initialize();
     }
 
-    public class NewtonsoftLinuxCosmosDbContext : NewtonsoftCosmosDbContext
+    public override bool AreEqual(object? first, object? second)
     {
-        public override string Container => base.Container + "Linux";
-        public override BulkDeleteMode BulkDeleteMode => Eveneum.BulkDeleteMode.TransactionalBatch;
+        if (first is null && second is null)
+            return true;
+
+        if (first is null != second is null)
+            return false;
+
+        var serializer = this.EventStoreOptions.JsonSerializer ?? throw new InvalidOperationException($"{nameof(Initialize)}() must be called first.");
+        var firstToken = first is JToken firstJToken ? firstJToken : (JToken?)serializer.Serialize(first);
+        var secondToken = second is JToken secondJToken ? secondJToken : (JToken?)serializer.Serialize(second);
+
+        return JToken.DeepEquals(firstToken, secondToken);
     }
+}
+
+public class NewtonsoftLinuxCosmosDbContext : NewtonsoftCosmosDbContext
+{
+    public override string Container => base.Container + "Linux";
+    public override BulkDeleteMode BulkDeleteMode => Eveneum.BulkDeleteMode.TransactionalBatch;
 }

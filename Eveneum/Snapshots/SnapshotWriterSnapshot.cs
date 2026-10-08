@@ -1,12 +1,11 @@
-﻿namespace Eveneum.Snapshots
-{
-    public struct SnapshotWriterSnapshot
-    {
-        public string SnapshotWriterType { get; set; }
+﻿namespace Eveneum.Snapshots;
 
-        internal SnapshotWriterSnapshot(string snapshotWriterType)
-        {
-            this.SnapshotWriterType = snapshotWriterType;
-        }
+public struct SnapshotWriterSnapshot
+{
+    public string SnapshotWriterType { get; set; }
+
+    internal SnapshotWriterSnapshot(string snapshotWriterType)
+    {
+        this.SnapshotWriterType = snapshotWriterType;
     }
 }

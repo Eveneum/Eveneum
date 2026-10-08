@@ -1,9 +1,8 @@
-﻿namespace Eveneum
+﻿namespace Eveneum;
+
+public enum DeleteMode
 {
-    public enum DeleteMode
-    {
-        SoftDelete = 1,
-        HardDelete = 2,
-        TtlDelete = 3, // set time to live
-    }
+    SoftDelete = 1,
+    HardDelete = 2,
+    TtlDelete = 3, // set time to live
 }

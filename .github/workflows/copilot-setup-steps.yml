@@ -1,0 +1,56 @@
+name: "Copilot Setup Steps"
+
+# Automatically run the setup steps when they are changed to allow for easy validation, and
+# allow manual testing through the repository's "Actions" tab
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - .github/workflows/copilot-setup-steps.yml
+      - .github/actions/setup-cosmos-emulator/**
+  pull_request:
+    paths:
+      - .github/workflows/copilot-setup-steps.yml
+      - .github/actions/setup-cosmos-emulator/**
+
+jobs:
+  # The job MUST be called `copilot-setup-steps` or it will not be picked up by Copilot.
+  copilot-setup-steps:
+    runs-on: ubuntu-latest
+
+    # Set the permissions to the lowest permissions possible needed for your steps.
+    # Copilot will be given its own token for its operations.
+    permissions:
+      contents: read
+
+    services:
+      cosmosdb:
+        image: mcr.microsoft.com/cosmosdb/linux/azure-cosmos-emulator:vnext-preview
+        ports:
+          - 8081:8081
+          - 8080:8080
+          - 1234:1234
+        env:
+          PROTOCOL: https
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 10.x
+
+      - name: Setup Azure Cosmos DB Emulator
+        uses: ./.github/actions/setup-cosmos-emulator
+
+      # The Linux emulator only supports Gateway mode, and there is no Windows emulator on this runner
+      - name: Configure tests for the Linux emulator
+        shell: bash
+        run: |
+          echo "CosmosDbEmulator.OS=Linux" >> "$GITHUB_ENV"
+          echo "CosmosDbEmulator.ConnectionMode=Gateway" >> "$GITHUB_ENV"
+
+      - name: Restore dependencies
+        run: dotnet restore Eveneum.slnx

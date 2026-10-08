@@ -7,156 +7,158 @@ using System.Linq;
 using System.Threading.Tasks;
 using Reqnroll;
 
-namespace Eveneum.Tests
+namespace Eveneum.Tests;
+
+[Binding]
+public class CommonSteps(ScenarioContext scenarioContext, IEnumerable<CosmosDbContext> Contexts)
 {
-    [Binding]
-    public class CommonSteps(ScenarioContext scenarioContext, IEnumerable<CosmosDbContext> Contexts)
+    [Given(@"Cosmos serializer with camel-case naming policy")]
+    public void GivenCosmosSerializerWithCamelCaseNamingPolicy()
     {
-        [Given(@"Cosmos serializer with camel-case naming policy")]
-        public void GivenCosmosSerializerWithCamelCaseNamingPolicy()
+        foreach (var context in Contexts)
         {
-            foreach (var context in Contexts)
+            switch (context)
             {
-                switch (context)
-                {
-                    case NewtonsoftCosmosDbContext newtonsoftCosmosDbContext:
-                        var contractResolver = new CamelCasePropertyNamesContractResolver();
-                        contractResolver.NamingStrategy.OverrideSpecifiedNames = false;
+                case NewtonsoftCosmosDbContext newtonsoftCosmosDbContext:
+                    var contractResolver = new CamelCasePropertyNamesContractResolver();
+                    if (contractResolver.NamingStrategy is { } namingStrategy)
+                        namingStrategy.OverrideSpecifiedNames = false;
 
-                        newtonsoftCosmosDbContext.JsonSerializerSettings.ContractResolver = contractResolver;
-                        break;
+                    newtonsoftCosmosDbContext.JsonSerializerSettings.ContractResolver = contractResolver;
+                    break;
 
-                    case SystemTextJsonCosmosDbContext systemTextJsonCosmosDbContext:
-                        systemTextJsonCosmosDbContext.JsonSerializerOptions = new System.Text.Json.JsonSerializerOptions
-                        {
-                            IncludeFields = true,
-                            PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase
-                        };
-                        break;
-                    
-                    default:
-                        break;
-                }
+                case SystemTextJsonCosmosDbContext systemTextJsonCosmosDbContext:
+                    systemTextJsonCosmosDbContext.JsonSerializerOptions = new System.Text.Json.JsonSerializerOptions
+                    {
+                        IncludeFields = true,
+                        PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase
+                    };
+                    break;
+                
+                default:
+                    break;
             }
         }
+    }
 
-        [Given("an event store")]
-        public async Task GivenAnEventStore()
+    [Given("an event store")]
+    public async Task GivenAnEventStore()
+    {
+        await Task.WhenAll(Contexts.Select(x => x.Initialize()));
+    }
+
+    [Given("hard-delete mode")]
+    public void GivenHardDeleteMode()
+    {
+        foreach (var context in Contexts)
         {
-            await Task.WhenAll(Contexts.Select(x => x.Initialize()));
+            context.EventStoreOptions.DeleteMode = DeleteMode.HardDelete;
         }
+    }
 
-        [Given("hard-delete mode")]
-        public void GivenHardDeleteMode()
+    [Given("ttl-delete mode with {int} seconds as ttl")]
+    public void GivenTTlDeleteMode(int streamTtlAfterDelete)
+    {
+        foreach (var context in Contexts)
         {
-            foreach (var context in Contexts)
-            {
-                context.EventStoreOptions.DeleteMode = DeleteMode.HardDelete;
-            }
+            context.EventStoreOptions.DeleteMode = DeleteMode.TtlDelete;
+            context.EventStoreOptions.StreamTimeToLiveAfterDelete = TimeSpan.FromSeconds(streamTtlAfterDelete);
         }
+    }
 
-        [Given("ttl-delete mode with {int} seconds as ttl")]
-        public void GivenTTlDeleteMode(int streamTtlAfterDelete)
+    [Given("single snapshot mode")]
+    public void GivenSingleSnapshotMode()
+    {
+        foreach (var context in Contexts)
         {
-            foreach (var context in Contexts)
-            {
-                context.EventStoreOptions.DeleteMode = DeleteMode.TtlDelete;
-                context.EventStoreOptions.StreamTimeToLiveAfterDelete = TimeSpan.FromSeconds(streamTtlAfterDelete);
-            }
+            context.EventStoreOptions.SnapshotMode = SnapshotMode.Single;
         }
+    }
 
-        [Given("single snapshot mode")]
-        public void GivenSingleSnapshotMode()
+    [Given("a batch size of {int}")]
+    public void GivenABatchSize(int batchSize)
+    {
+        foreach (var context in Contexts)
         {
-            foreach (var context in Contexts)
-            {
-                context.EventStoreOptions.SnapshotMode = SnapshotMode.Single;
-            }
+            context.EventStoreOptions.BatchSize = (byte)batchSize;
         }
+    }
 
-        [Given("a batch size of {int}")]
-        public void GivenABatchSize(int batchSize)
+    [Given("an existing stream {word} with {int} events")]
+    public async Task GivenAnExistingStream(string streamId, ushort events)
+    {
+        var eventData = TestSetup.GetEvents(events);
+
+        await Task.WhenAll(Contexts.Select(async x =>
         {
-            foreach (var context in Contexts)
-            {
-                context.EventStoreOptions.BatchSize = (byte)batchSize;
-            }
+            x.StreamId = streamId;
+
+            await x.EventStore.WriteToStream(streamId, eventData);
+        }));
+    }
+
+    [Given("an existing stream {word} with metadata and {int} events")]
+    public async Task GivenAnExistingStreamWithMetadataAndEvents(string streamId, ushort events)
+    {
+        var metadata = TestSetup.GetMetadata();
+        var eventData = TestSetup.GetEvents(events);
+
+        await Task.WhenAll(Contexts.Select(async x =>
+        {
+            x.StreamId = streamId;
+            x.HeaderMetadata = metadata;
+
+            await x.EventStore.WriteToStream(streamId, eventData, metadata: metadata);
+        }));
+    }
+
+    [Given("a deleted stream {word} with {int} events")]
+    public async Task GivenADeletedStream(string streamId, ushort events)
+    {
+        var eventData = TestSetup.GetEvents(events);
+
+        await Task.WhenAll(Contexts.Select(async x =>
+        {
+            x.StreamId = streamId;
+
+            await x.EventStore.WriteToStream(streamId, eventData);
+            await x.EventStore.DeleteStream(streamId, (ulong)eventData.Length);
+        }));
+    }
+
+    [When("I wait for {int} seconds")]
+    public async Task Wait(int waitForSeconds)
+    {
+        await Task.Delay(TimeSpan.FromSeconds(waitForSeconds));
+    }
+
+    [Then("request charge is reported")]
+    public void ThenRequestChargeIsReported()
+    {
+        foreach (var context in Contexts)
+        {
+            var requestCharge = scenarioContext.TestError is EveneumException eveneumException
+                ? eveneumException.RequestCharge
+                : context.Response?.RequestCharge;
+
+            Console.WriteLine($"Request charge ({context.GetType().Name}): {requestCharge}");
+
+            Assert.That(requestCharge, Is.Not.Null);
+            Assert.That(requestCharge, Is.GreaterThan(0));
         }
+    }
 
-        [Given("an existing stream {word} with {int} events")]
-        public async Task GivenAnExistingStream(string streamId, ushort events)
+    [Then("{int} deleted documents are reported")]
+    public void ThenDeletedDocumentsAreReported(ulong deletedDocuments)
+    {
+        foreach (var context in Contexts)
         {
-            var eventData = TestSetup.GetEvents(events);
+            Assert.That(context.Response, Is.InstanceOf<DeleteResponse>());
 
-            await Task.WhenAll(Contexts.Select(async x =>
-            {
-                x.StreamId = streamId;
+            var response = context.Response as DeleteResponse;
 
-                await x.EventStore.WriteToStream(streamId, eventData);
-            }));
-        }
-
-        [Given("an existing stream {word} with metadata and {int} events")]
-        public async Task GivenAnExistingStreamWithMetadataAndEvents(string streamId, ushort events)
-        {
-            var metadata = TestSetup.GetMetadata();
-            var eventData = TestSetup.GetEvents(events);
-
-            await Task.WhenAll(Contexts.Select(async x =>
-            {
-                x.StreamId = streamId;
-                x.HeaderMetadata = metadata;
-
-                await x.EventStore.WriteToStream(streamId, eventData, metadata: metadata);
-            }));
-        }
-
-        [Given("a deleted stream {word} with {int} events")]
-        public async Task GivenADeletedStream(string streamId, ushort events)
-        {
-            var eventData = TestSetup.GetEvents(events);
-
-            await Task.WhenAll(Contexts.Select(async x =>
-            {
-                x.StreamId = streamId;
-
-                await x.EventStore.WriteToStream(streamId, eventData);
-                await x.EventStore.DeleteStream(streamId, (ulong)eventData.Length);
-            }));
-        }
-
-        [When("I wait for {int} seconds")]
-        public async Task Wait(int waitForSeconds)
-        {
-            await Task.Delay(TimeSpan.FromSeconds(waitForSeconds));
-        }
-
-        [Then("request charge is reported")]
-        public void ThenRequestChargeIsReported()
-        {
-            foreach (var context in Contexts)
-            {
-                var requestCharge = scenarioContext.TestError is EveneumException
-                    ? (scenarioContext.TestError as EveneumException).RequestCharge
-                    : context.Response.RequestCharge;
-
-                Console.WriteLine($"Request charge ({context.GetType().Name}): {requestCharge}");
-
-                Assert.That(requestCharge, Is.GreaterThan(0));
-            }
-        }
-
-        [Then("{int} deleted documents are reported")]
-        public void ThenDeletedDocumentsAreReported(ulong deletedDocuments)
-        {
-            foreach (var context in Contexts)
-            {
-                Assert.That(context.Response, Is.InstanceOf<DeleteResponse>());
-
-                var response = context.Response as DeleteResponse;
-
-                Assert.That(response.DeletedDocuments, Is.EqualTo(deletedDocuments));
-            }
+            Assert.That(response, Is.Not.Null);
+            Assert.That(response.DeletedDocuments, Is.EqualTo(deletedDocuments));
         }
     }
 }

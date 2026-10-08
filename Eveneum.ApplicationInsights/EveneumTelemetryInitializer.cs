@@ -3,76 +3,73 @@ using Microsoft.ApplicationInsights.DataContracts;
 using Microsoft.ApplicationInsights.Extensibility;
 using System.Globalization;
 
-namespace Eveneum.ApplicationInsights
+namespace Eveneum.ApplicationInsights;
+
+public class EveneumTelemetryInitializer : ITelemetryInitializer
 {
-    public class EveneumTelemetryInitializer : ITelemetryInitializer
+    public void Initialize(ITelemetry telemetry)
     {
-        public void Initialize(ITelemetry telemetry)
+        if (telemetry is ExceptionTelemetry exceptionTelemetry)
         {
-            if (telemetry is ExceptionTelemetry)
+            switch (exceptionTelemetry.Exception)
             {
-                var exceptionTelemetry = telemetry as ExceptionTelemetry;
+                case EventAlreadyExistsException ex:
+                    exceptionTelemetry.Properties[nameof(ex.StreamId)] = ex.StreamId;
+                    exceptionTelemetry.Properties[nameof(ex.RequestCharge)] = ex.RequestCharge.ToString("N", CultureInfo.InvariantCulture);
+                    exceptionTelemetry.Properties[nameof(ex.Version)] = ex.Version.ToString();
+                    break;
 
-                switch (exceptionTelemetry.Exception)
-                {
-                    case EventAlreadyExistsException ex:
-                        exceptionTelemetry.Properties[nameof(ex.StreamId)] = ex.StreamId;
-                        exceptionTelemetry.Properties[nameof(ex.RequestCharge)] = ex.RequestCharge.ToString("N", CultureInfo.InvariantCulture);
-                        exceptionTelemetry.Properties[nameof(ex.Version)] = ex.Version.ToString();
-                        break;
+                case JsonDeserializationException ex:
+                    exceptionTelemetry.Properties[nameof(ex.Type)] = ex.Type;
+                    exceptionTelemetry.Properties[nameof(ex.Json)] = ex.Json;
+                    break;
 
-                    case JsonDeserializationException ex:
-                        exceptionTelemetry.Properties[nameof(ex.Type)] = ex.Type;
-                        exceptionTelemetry.Properties[nameof(ex.Json)] = ex.Json;
-                        break;
+                case OptimisticConcurrencyException ex:
+                    exceptionTelemetry.Properties[nameof(ex.StreamId)] = ex.StreamId;
+                    exceptionTelemetry.Properties[nameof(ex.RequestCharge)] = ex.RequestCharge.ToString("N", CultureInfo.InvariantCulture);
+                    exceptionTelemetry.Properties[nameof(ex.ExpectedVersion)] = ex.ExpectedVersion.ToString();
+                    exceptionTelemetry.Properties[nameof(ex.ActualVersion)] = ex.ActualVersion.ToString();
+                    break;
 
-                    case OptimisticConcurrencyException ex:
-                        exceptionTelemetry.Properties[nameof(ex.StreamId)] = ex.StreamId;
-                        exceptionTelemetry.Properties[nameof(ex.RequestCharge)] = ex.RequestCharge.ToString("N", CultureInfo.InvariantCulture);
-                        exceptionTelemetry.Properties[nameof(ex.ExpectedVersion)] = ex.ExpectedVersion.ToString();
-                        exceptionTelemetry.Properties[nameof(ex.ActualVersion)] = ex.ActualVersion.ToString();
-                        break;
+                case SnapshotWriterNotFoundException ex:
+                    exceptionTelemetry.Properties[nameof(ex.StreamId)] = ex.StreamId;
+                    exceptionTelemetry.Properties[nameof(ex.RequestCharge)] = ex.RequestCharge.ToString("N", CultureInfo.InvariantCulture);
+                    exceptionTelemetry.Properties[nameof(ex.SnapshotWriterType)] = ex.SnapshotWriterType;
+                    break;
 
-                    case SnapshotWriterNotFoundException ex:
-                        exceptionTelemetry.Properties[nameof(ex.StreamId)] = ex.StreamId;
-                        exceptionTelemetry.Properties[nameof(ex.RequestCharge)] = ex.RequestCharge.ToString("N", CultureInfo.InvariantCulture);
-                        exceptionTelemetry.Properties[nameof(ex.SnapshotWriterType)] = ex.SnapshotWriterType;
-                        break;
+                case StreamAlreadyExistsException ex:
+                    exceptionTelemetry.Properties[nameof(ex.StreamId)] = ex.StreamId;
+                    exceptionTelemetry.Properties[nameof(ex.RequestCharge)] = ex.RequestCharge.ToString("N", CultureInfo.InvariantCulture);
+                    break;
 
-                    case StreamAlreadyExistsException ex:
-                        exceptionTelemetry.Properties[nameof(ex.StreamId)] = ex.StreamId;
-                        exceptionTelemetry.Properties[nameof(ex.RequestCharge)] = ex.RequestCharge.ToString("N", CultureInfo.InvariantCulture);
-                        break;
+                case StreamDeletedException ex:
+                    exceptionTelemetry.Properties[nameof(ex.StreamId)] = ex.StreamId;
+                    exceptionTelemetry.Properties[nameof(ex.RequestCharge)] = ex.RequestCharge.ToString("N", CultureInfo.InvariantCulture);
+                    break;
 
-                    case StreamDeletedException ex:
-                        exceptionTelemetry.Properties[nameof(ex.StreamId)] = ex.StreamId;
-                        exceptionTelemetry.Properties[nameof(ex.RequestCharge)] = ex.RequestCharge.ToString("N", CultureInfo.InvariantCulture);
-                        break;
+                case StreamDeserializationException ex:
+                    exceptionTelemetry.Properties[nameof(ex.StreamId)] = ex.StreamId;
+                    exceptionTelemetry.Properties[nameof(ex.RequestCharge)] = ex.RequestCharge.ToString("N", CultureInfo.InvariantCulture);
+                    exceptionTelemetry.Properties[nameof(ex.Type)] = ex.Type;
+                    break;
 
-                    case StreamDeserializationException ex:
-                        exceptionTelemetry.Properties[nameof(ex.StreamId)] = ex.StreamId;
-                        exceptionTelemetry.Properties[nameof(ex.RequestCharge)] = ex.RequestCharge.ToString("N", CultureInfo.InvariantCulture);
-                        exceptionTelemetry.Properties[nameof(ex.Type)] = ex.Type;
-                        break;
+                case StreamNotFoundException ex:
+                    exceptionTelemetry.Properties[nameof(ex.StreamId)] = ex.StreamId;
+                    exceptionTelemetry.Properties[nameof(ex.RequestCharge)] = ex.RequestCharge.ToString("N", CultureInfo.InvariantCulture);
+                    break;
 
-                    case StreamNotFoundException ex:
-                        exceptionTelemetry.Properties[nameof(ex.StreamId)] = ex.StreamId;
-                        exceptionTelemetry.Properties[nameof(ex.RequestCharge)] = ex.RequestCharge.ToString("N", CultureInfo.InvariantCulture);
-                        break;
+                case TypeNotFoundException ex:
+                    exceptionTelemetry.Properties[nameof(ex.Type)] = ex.Type;
+                    break;
 
-                    case TypeNotFoundException ex:
-                        exceptionTelemetry.Properties[nameof(ex.Type)] = ex.Type;
-                        break;
+                case WriteException ex:
+                    exceptionTelemetry.Properties[nameof(ex.StreamId)] = ex.StreamId;
+                    exceptionTelemetry.Properties[nameof(ex.RequestCharge)] = ex.RequestCharge.ToString("N", CultureInfo.InvariantCulture);
+                    exceptionTelemetry.Properties[nameof(ex.StatusCode)] = ex.StatusCode.ToString();
+                    break;
 
-                    case WriteException ex:
-                        exceptionTelemetry.Properties[nameof(ex.StreamId)] = ex.StreamId;
-                        exceptionTelemetry.Properties[nameof(ex.RequestCharge)] = ex.RequestCharge.ToString("N", CultureInfo.InvariantCulture);
-                        exceptionTelemetry.Properties[nameof(ex.StatusCode)] = ex.StatusCode.ToString();
-                        break;
-
-                    default:
-                        break;
-                }
+                default:
+                    break;
             }
         }
     }

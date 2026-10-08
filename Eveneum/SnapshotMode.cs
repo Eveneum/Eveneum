@@ -1,8 +1,7 @@
-﻿namespace Eveneum
+﻿namespace Eveneum;
+
+public enum SnapshotMode
 {
-    public enum SnapshotMode
-    {
-        Multiple = 1,
-        Single = 2
-    }
+    Multiple = 1,
+    Single = 2
 }
