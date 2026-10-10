@@ -39,6 +39,50 @@ public class WritingToStreamSteps(ScenarioContext scenarioContext, IEnumerable<C
         await WhenIWriteNewStreamWithEvents(streamId, events);
     }
 
+    [When("I write a new stream {word} with {int} events where event at index {int} has no body")]
+    public async Task WhenIWriteNewStreamWithEventsWhereEventAtIndexHasNoBody(string streamId, int events, int index)
+    {
+        var eventsData = TestSetup.GetEvents(events);
+        eventsData[index].Body = null;
+
+        await Task.WhenAll(Contexts.Select(async x =>
+        {
+            x.StreamId = streamId;
+            x.NewEvents = eventsData;
+
+            x.ExistingDocuments = await CosmosSetup.QueryAllDocuments(x.Client, x.Database, x.Container);
+
+            try
+            {
+                x.Response = await x.EventStore.WriteToStream(streamId, eventsData, metadata: x.HeaderMetadata);
+            }
+            catch (Exception ex)
+            {
+                x.Exception = ex;
+            }
+        }));
+    }
+
+    [When("I write a new stream {word} with a null events array")]
+    public async Task WhenIWriteNewStreamWithNullEventsArray(string streamId)
+    {
+        await Task.WhenAll(Contexts.Select(async x =>
+        {
+            x.StreamId = streamId;
+
+            x.ExistingDocuments = await CosmosSetup.QueryAllDocuments(x.Client, x.Database, x.Container);
+
+            try
+            {
+                x.Response = await x.EventStore.WriteToStream(streamId, null!);
+            }
+            catch (Exception ex)
+            {
+                x.Exception = ex;
+            }
+        }));
+    }
+
     [When("I append {int} events to stream {word} in expected version {int}")]
     public async Task WhenIAppendEventsToStreamInExpectedVersion(int events, string streamId, ushort expectedVersion)
     {
@@ -51,6 +95,30 @@ public class WritingToStreamSteps(ScenarioContext scenarioContext, IEnumerable<C
 
             x.ExistingDocuments = await CosmosSetup.QueryAllDocuments(x.Client, x.Database, x.Container);
             x.Response = await x.EventStore.WriteToStream(streamId, eventsData, expectedVersion, metadata: x.HeaderMetadata);
+        }));
+    }
+
+    [When("I append {int} events to stream {word} in expected version {int} where event at index {int} has no body")]
+    public async Task WhenIAppendEventsToStreamInExpectedVersionWhereEventAtIndexHasNoBody(int events, string streamId, ushort expectedVersion, int index)
+    {
+        var eventsData = TestSetup.GetEvents(events, expectedVersion + 1);
+        eventsData[index].Body = null;
+
+        await Task.WhenAll(Contexts.Select(async x =>
+        {
+            x.StreamId = streamId;
+            x.NewEvents = eventsData;
+
+            x.ExistingDocuments = await CosmosSetup.QueryAllDocuments(x.Client, x.Database, x.Container);
+
+            try
+            {
+                x.Response = await x.EventStore.WriteToStream(streamId, eventsData, expectedVersion, metadata: x.HeaderMetadata);
+            }
+            catch (Exception ex)
+            {
+                x.Exception = ex;
+            }
         }));
     }
 
@@ -236,6 +304,44 @@ public class WritingToStreamSteps(ScenarioContext scenarioContext, IEnumerable<C
         var exception = (EventAlreadyExistsException)scenarioContext.TestError;
         Assert.That(exception.StreamId, Is.EqualTo(streamId));
         Assert.That(exception.Version, Is.EqualTo(version));
+    }
+
+    [Then("the action fails as event with version {int} has no body")]
+    public void ThenTheActionFailsAsEventWithVersionHasNoBody(ulong version)
+    {
+        foreach (var context in Contexts)
+        {
+            Assert.That(context.Exception, Is.InstanceOf<EventBodyMissingException>());
+
+            var exception = context.Exception as EventBodyMissingException;
+            Assert.That(exception, Is.Not.Null);
+            Assert.That(exception.StreamId, Is.EqualTo(context.StreamId));
+            Assert.That(exception.Version, Is.EqualTo(version));
+        }
+    }
+
+    [Then("the action fails as the events array is null")]
+    public void ThenTheActionFailsAsEventsArrayIsNull()
+    {
+        foreach (var context in Contexts)
+        {
+            Assert.That(context.Exception, Is.InstanceOf<ArgumentNullException>());
+
+            var exception = context.Exception as ArgumentNullException;
+            Assert.That(exception, Is.Not.Null);
+            Assert.That(exception.ParamName, Is.EqualTo("events"));
+        }
+    }
+
+    [Then("stream {word} is not persisted")]
+    public async Task ThenStreamIsNotPersisted(string streamId)
+    {
+        await Task.WhenAll(Contexts.Select(async context =>
+        {
+            var documents = await CosmosSetup.QueryAllDocumentsInStream(context.Client, context.Database, context.Container, streamId);
+
+            Assert.That(documents, Is.Empty);
+        }));
     }
 
     private static void VerifyEventDocuments(CosmosDbContext context, List<IEveneumDocument> newEventDocuments, EventData[] newEvents)

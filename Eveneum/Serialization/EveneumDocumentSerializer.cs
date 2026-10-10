@@ -40,7 +40,7 @@ public class EveneumDocumentSerializer(IJsonSerializer? jsonSerializer = null, I
         var document = this.JsonSerializer.CreateDocument(GenerateEventId(streamId, @event.Version), DocumentType.Event);
         document.StreamId = streamId;
         document.Version = @event.Version;
-        var body = @event.Body ?? throw new ArgumentException($"Event version {@event.Version} of stream '{streamId}' has no Body.", nameof(@event));
+        var body = @event.Body ?? throw new EventBodyMissingException(streamId, @event.Version, 0);
         document.BodyType = this.TypeProvider.GetIdentifierForType(body.GetType());
         document.Body = this.JsonSerializer.Serialize(body);
 

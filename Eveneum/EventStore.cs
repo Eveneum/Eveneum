@@ -156,6 +156,8 @@ public class EventStore : IEventStore, IAdvancedEventStore
 
     public async Task<Response> WriteToStream(string streamId, EventData[] events, ulong? expectedVersion = null, object? metadata = null, CancellationToken cancellationToken = default)
     {
+        ValidateEvents(streamId, events);
+
         double requestCharge = 0;
 
         var isNewStream = !expectedVersion.HasValue;
@@ -399,6 +401,18 @@ public class EventStore : IEventStore, IAdvancedEventStore
         await callbackProcessing;
 
         return new Response(requestCharge);
+    }
+
+    private static void ValidateEvents(string streamId, EventData[] events)
+    {
+        if (events is null)
+            throw new ArgumentNullException(nameof(events));
+
+        foreach (var @event in events)
+        {
+            if (@event.Body is null)
+                throw new EventBodyMissingException(streamId, @event.Version, 0);
+        }
     }
 
     private async Task<DocumentResponse> ReadHeaderDocument(string streamId, CancellationToken cancellationToken = default)

@@ -58,3 +58,16 @@ Scenario: Creating new stream with some events with a small batch size
 	Then the header version 10 with no metadata is persisted
 	And new events are appended
 	And request charge is reported
+
+Scenario: Creating new stream with an event without body in a later batch fails
+	Given a batch size of 2
+	And an event store
+	When I write a new stream S with 3 events where event at index 1 has no body
+	Then stream S is not persisted
+	And the action fails as event with version 2 has no body
+
+Scenario: Creating new stream with a null events array fails
+	Given an event store
+	When I write a new stream S with a null events array
+	Then stream S is not persisted
+	And the action fails as the events array is null

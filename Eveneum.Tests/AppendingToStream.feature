@@ -41,3 +41,12 @@ Scenario: Appending to stream with some events with a small batch size
 	Then the header version 15 with no metadata is persisted
 	And new events are appended
 	And request charge is reported
+
+Scenario: Appending to stream with an event without body in a later batch fails
+	Given a batch size of 2
+	And an event store
+	And an existing stream S with 5 events
+	When I append 3 events to stream S in expected version 5 where event at index 1 has no body
+	Then no events are appended
+	And the header version 5 with no metadata is persisted
+	And the action fails as event with version 7 has no body
