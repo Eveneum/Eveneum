@@ -11,6 +11,9 @@ public class IEveneumDocumentConverter : JsonConverter<IEveneumDocument>
     {
         var token = JToken.Load(reader);
 
+        if (token.Type == JTokenType.Null)
+            return null;
+
         if (objectType == typeof(IEveneumDocument))
         {
             var jObject = (JObject)token;
