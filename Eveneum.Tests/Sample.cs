@@ -34,5 +34,5 @@ public struct SampleSnapshot
 
 public struct NestedContent
 {
-    public string Content;
+    public string? Content;
 }

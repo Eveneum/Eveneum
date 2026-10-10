@@ -13,7 +13,7 @@ public class SnapshotWriterNotFoundException : EveneumException
 
     public string SnapshotWriterType
     {
-        get { return (string)this.Data[nameof(SnapshotWriterType)]; }
+        get { return this.GetRequired<string>(nameof(SnapshotWriterType)); }
         private set { this.Data[nameof(SnapshotWriterType)] = value; }
     }
 

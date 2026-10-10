@@ -20,7 +20,7 @@ public class AdvancedSteps(IEnumerable<CosmosDbContext> Contexts)
         await Task.WhenAll(Contexts.Select(async x =>
         {
             var events = new List<EventData>();
-            var response = await (x.EventStore as IAdvancedEventStore).LoadAllEvents(e => { events.AddRange(e); return Task.CompletedTask; });
+            var response = await ((IAdvancedEventStore)x.EventStore).LoadAllEvents(e => { events.AddRange(e); return Task.CompletedTask; });
             x.LoadAllEvents = events;
             x.Response = response;
         }));
@@ -32,7 +32,7 @@ public class AdvancedSteps(IEnumerable<CosmosDbContext> Contexts)
         await Task.WhenAll(Contexts.Select(async x =>
         {
             var events = new List<EventData>();
-            var response = await (x.EventStore as IAdvancedEventStore).LoadEvents(query, e => { events.AddRange(e); return Task.CompletedTask; });
+            var response = await ((IAdvancedEventStore)x.EventStore).LoadEvents(query, e => { events.AddRange(e); return Task.CompletedTask; });
             x.LoadAllEvents = events;
             x.Response = response;
         }));
@@ -44,7 +44,7 @@ public class AdvancedSteps(IEnumerable<CosmosDbContext> Contexts)
         await Task.WhenAll(Contexts.Select(async x =>
         {
             var events = new List<EventData>();
-            var response = await (x.EventStore as IAdvancedEventStore).LoadEvents(new QueryDefinition(query), e => { events.AddRange(e); return Task.CompletedTask; });
+            var response = await ((IAdvancedEventStore)x.EventStore).LoadEvents(new QueryDefinition(query), e => { events.AddRange(e); return Task.CompletedTask; });
             x.LoadAllEvents = events;
             x.Response = response;
         }));
@@ -56,7 +56,7 @@ public class AdvancedSteps(IEnumerable<CosmosDbContext> Contexts)
         await Task.WhenAll(Contexts.Select(async x =>
         {
             var headers = new List<StreamHeader>();
-            var response = await (x.EventStore as IAdvancedEventStore).LoadStreamHeaders(query, e => { headers.AddRange(e); return Task.CompletedTask; });
+            var response = await ((IAdvancedEventStore)x.EventStore).LoadStreamHeaders(query, e => { headers.AddRange(e); return Task.CompletedTask; });
             x.LoadAllStreamHeaders = headers;
             x.Response = response;
         }));
@@ -68,7 +68,7 @@ public class AdvancedSteps(IEnumerable<CosmosDbContext> Contexts)
         await Task.WhenAll(Contexts.Select(async x =>
         {
             var headers = new List<StreamHeader>();
-            var response = await (x.EventStore as IAdvancedEventStore).LoadStreamHeaders(new QueryDefinition(query), e => { headers.AddRange(e); return Task.CompletedTask; });
+            var response = await ((IAdvancedEventStore)x.EventStore).LoadStreamHeaders(new QueryDefinition(query), e => { headers.AddRange(e); return Task.CompletedTask; });
             x.LoadAllStreamHeaders = headers;
             x.Response = response;
         }));
@@ -82,7 +82,7 @@ public class AdvancedSteps(IEnumerable<CosmosDbContext> Contexts)
         await Task.WhenAll(Contexts.Select(async x =>
         {
             x.ReplacedEvent = replacedEvent;
-            var response = await (x.EventStore as IAdvancedEventStore).ReplaceEvent(replacedEvent);
+            var response = await ((IAdvancedEventStore)x.EventStore).ReplaceEvent(replacedEvent);
             x.Response = response;
         }));
     }
@@ -92,7 +92,7 @@ public class AdvancedSteps(IEnumerable<CosmosDbContext> Contexts)
     {
         await Task.WhenAll(Contexts.Select(async x =>
         {
-            x.Response = await (x.EventStore as IAdvancedEventStore).DeleteEvent(streamId, version);
+            x.Response = await ((IAdvancedEventStore)x.EventStore).DeleteEvent(streamId, version);
         }));
     }
 
@@ -132,15 +132,17 @@ public class AdvancedSteps(IEnumerable<CosmosDbContext> Contexts)
             var documents = await CosmosSetup.QueryAllDocumentsInStream(context.Client, context.Database, context.Container, streamId, DocumentType.Event);
             var eventDocument = documents.SingleOrDefault(x => x.Id == EveneumDocumentSerializer.GenerateEventId(streamId, version));
 
+            Assert.That(eventDocument, Is.Not.Null);
             Assert.That(eventDocument.DocumentType, Is.EqualTo(DocumentType.Event));
             Assert.That(eventDocument.StreamId, Is.EqualTo(streamId));
+            Assert.That(context.ReplacedEvent.Body, Is.Not.Null);
             Assert.That(eventDocument.BodyType, Is.EqualTo(typeProvider.GetIdentifierForType(context.ReplacedEvent.Body.GetType())));
             Assert.That(eventDocument.Body, Is.Not.Null);
             Assert.That(context.AreEqual(eventDocument.Body, context.ReplacedEvent.Body), Is.True);
             Assert.That(eventDocument.ETag, Is.Not.Null);
             Assert.That(eventDocument.Deleted, Is.False);
 
-            if (context.ReplacedEvent.Metadata == null)
+            if (context.ReplacedEvent.Metadata is null)
             {
                 Assert.That(eventDocument.MetadataType, Is.Null);
                 Assert.That(eventDocument.Metadata, Is.Null);

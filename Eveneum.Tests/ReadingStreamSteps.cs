@@ -37,7 +37,7 @@ public class ReadingStreamSteps(IEnumerable<CosmosDbContext> Contexts)
         foreach (var context in Contexts)
         {
             Assert.That(context.Stream.HasValue, Is.False);
-            Assert.That((context.Response as StreamResponse).SoftDeleted, Is.False);
+            Assert.That((context.Response as StreamResponse)?.SoftDeleted, Is.False);
         }
     }
 
@@ -47,7 +47,7 @@ public class ReadingStreamSteps(IEnumerable<CosmosDbContext> Contexts)
         foreach (var context in Contexts)
         {
             Assert.That(context.Stream.HasValue, Is.False);
-            Assert.That((context.Response as StreamResponse).SoftDeleted);
+            Assert.That((context.Response as StreamResponse)?.SoftDeleted, Is.True);
         }
     }
 
@@ -128,10 +128,11 @@ public class ReadingStreamSteps(IEnumerable<CosmosDbContext> Contexts)
         await Task.WhenAll(Contexts.Select(async context =>
         {
             var stream = context.Stream;
+            Assert.That(stream.HasValue);
+
             var documents = await CosmosSetup.QueryAllDocumentsInStream(context.Client, context.Database, context.Container, stream.Value.StreamId, Documents.DocumentType.Event);
             var eventDocuments = documents.ToDictionary(x => x.Version);
 
-            Assert.That(stream.HasValue);
             Assert.That(stream.Value.Events, Is.Not.Empty);
             Assert.That(stream.Value.Events.Length, Is.EqualTo(toVersion - fromVersion + 1));
 
@@ -147,7 +148,7 @@ public class ReadingStreamSteps(IEnumerable<CosmosDbContext> Contexts)
         }));
     }
 
-    private async Task WhenIReadStream(string streamId, ReadStreamOptions options)
+    private async Task WhenIReadStream(string streamId, ReadStreamOptions? options)
     {
         await Task.WhenAll(Contexts.Select(async x =>
         {

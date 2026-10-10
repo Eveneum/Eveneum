@@ -3,6 +3,7 @@ using Eveneum.Persistence;
 using Eveneum.Serialization;
 using NodaTime;
 using NodaTime.Serialization.SystemTextJson;
+using System;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
@@ -35,7 +36,7 @@ public class SystemTextJsonCosmosDbContext : CosmosDbContext
         await this.EventStore.Initialize();
     }
 
-    public override bool AreEqual(object first, object second)
+    public override bool AreEqual(object? first, object? second)
     {
         if (first is null && second is null)
             return true;
@@ -43,8 +44,9 @@ public class SystemTextJsonCosmosDbContext : CosmosDbContext
         if (first is null != second is null)
             return false;
 
-        var firstToken = first is JsonNode firstNode ? firstNode : (JsonNode)this.EventStoreOptions.JsonSerializer.Serialize(first);
-        var secondToken = second is JsonNode secondNode ? secondNode : (JsonNode)this.EventStoreOptions.JsonSerializer.Serialize(second);
+        var serializer = this.EventStoreOptions.JsonSerializer ?? throw new InvalidOperationException($"{nameof(Initialize)}() must be called first.");
+        var firstToken = first is JsonNode firstNode ? firstNode : (JsonNode?)serializer.Serialize(first);
+        var secondToken = second is JsonNode secondNode ? secondNode : (JsonNode?)serializer.Serialize(second);
 
         return JsonNode.DeepEquals(firstToken, secondToken);
     }

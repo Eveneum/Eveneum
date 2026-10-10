@@ -12,7 +12,7 @@ public class TypeNotFoundException : Exception
 
     public string Type
     {
-        get { return (string)this.Data[nameof(Type)]; }
+        get { return this.GetRequired<string>(nameof(Type)); }
         private set { this.Data[nameof(Type)] = value; }
     }
 

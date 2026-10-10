@@ -14,13 +14,13 @@ public class OptimisticConcurrencyException : EveneumException
 
     public ulong ExpectedVersion
     {
-        get { return (ulong)this.Data[nameof(ExpectedVersion)]; }
+        get { return this.GetRequired<ulong>(nameof(ExpectedVersion)); }
         private set { this.Data[nameof(ExpectedVersion)] = value; }
     }
 
     public ulong ActualVersion
     {
-        get { return (ulong)this.Data[nameof(ActualVersion)]; }
+        get { return this.GetRequired<ulong>(nameof(ActualVersion)); }
         private set { this.Data[nameof(ActualVersion)] = value; }
     }
 

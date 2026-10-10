@@ -14,22 +14,22 @@ public class NewtonsoftJsonEveneumDocument(string id, DocumentType documentType)
     public DocumentType DocumentType { get; } = documentType;
 
     [JsonProperty(PropertyName = "StreamId")]
-    public string StreamId { get; set; }
+    public string StreamId { get; set; } = null!;
 
     [JsonProperty(PropertyName = "Version")]
     public ulong Version { get; set; }
 
     [JsonProperty(PropertyName = "MetadataType")]
-    public string MetadataType { get; set; }
+    public string? MetadataType { get; set; }
 
     [JsonProperty(PropertyName = "Metadata")]
-    public object Metadata { get; set; }
+    public object? Metadata { get; set; }
 
     [JsonProperty(PropertyName = "BodyType")]
-    public string BodyType { get; set; }
+    public string? BodyType { get; set; }
 
     [JsonProperty(PropertyName = "Body")]
-    public object Body { get; set; }
+    public object? Body { get; set; }
 
     [JsonProperty(PropertyName = "SortOrder")]
     public decimal SortOrder => this.Version + EveneumDocument.GetOrderingFraction(this.DocumentType);
@@ -38,10 +38,10 @@ public class NewtonsoftJsonEveneumDocument(string id, DocumentType documentType)
     public bool Deleted { get; set; }
 
     [JsonProperty(PropertyName = "_etag")]
-    public string ETag { get; set; }
+    public string? ETag { get; set; }
 
     [JsonProperty(PropertyName = "_ts")]
-    public string Timestamp { get; set; }
+    public string? Timestamp { get; set; }
 
     [JsonProperty(PropertyName = "ttl", NullValueHandling = NullValueHandling.Ignore)]
     public int? TimeToLive { get; set; }

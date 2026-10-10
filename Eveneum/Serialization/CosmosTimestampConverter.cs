@@ -9,7 +9,7 @@ namespace Eveneum.Serialization;
 /// </summary>
 public class CosmosTimestampConverter : JsonConverter<string>
 {
-    public override string Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    public override string? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
         // CosmosDB returns _ts as a number (Unix timestamp)
         if (reader.TokenType == JsonTokenType.Number)
@@ -32,9 +32,9 @@ public class CosmosTimestampConverter : JsonConverter<string>
         throw new JsonException($"Unexpected token type {reader.TokenType} for Timestamp field");
     }
 
-    public override void Write(Utf8JsonWriter writer, string value, JsonSerializerOptions options)
+    public override void Write(Utf8JsonWriter writer, string? value, JsonSerializerOptions options)
     {
-        if (value == null)
+        if (value is null)
         {
             writer.WriteNullValue();
         }

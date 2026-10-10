@@ -9,11 +9,11 @@ public class StreamNotFoundException : EveneumException
         : this(streamId, requestCharge, null)
     { }
 
-    public StreamNotFoundException(string streamId, double requestCharge, Exception inner)
+    public StreamNotFoundException(string streamId, double requestCharge, Exception? inner)
         : this(streamId, requestCharge, $"Stream '{streamId}' wasn't found", inner)
     { }
 
-    protected StreamNotFoundException(string streamId, double requestCharge, string message, Exception inner)
+    protected StreamNotFoundException(string streamId, double requestCharge, string message, Exception? inner)
         : base(streamId, requestCharge, message, inner)
     {}
 

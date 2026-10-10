@@ -5,6 +5,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NodaTime;
 using NodaTime.Serialization.JsonNet;
+using System;
 using System.Threading.Tasks;
 
 namespace Eveneum.Tests.Infrastructure;
@@ -31,7 +32,7 @@ public class NewtonsoftCosmosDbContext : CosmosDbContext
         await this.EventStore.Initialize();
     }
 
-    public override bool AreEqual(object first, object second)
+    public override bool AreEqual(object? first, object? second)
     {
         if (first is null && second is null)
             return true;
@@ -39,8 +40,9 @@ public class NewtonsoftCosmosDbContext : CosmosDbContext
         if (first is null != second is null)
             return false;
 
-        var firstToken = first is JToken firstJToken ? firstJToken : (JToken)this.EventStoreOptions.JsonSerializer.Serialize(first);
-        var secondToken = second is JToken secondJToken ? secondJToken : (JToken)this.EventStoreOptions.JsonSerializer.Serialize(second);
+        var serializer = this.EventStoreOptions.JsonSerializer ?? throw new InvalidOperationException($"{nameof(Initialize)}() must be called first.");
+        var firstToken = first is JToken firstJToken ? firstJToken : (JToken?)serializer.Serialize(first);
+        var secondToken = second is JToken secondJToken ? secondJToken : (JToken?)serializer.Serialize(second);
 
         return JToken.DeepEquals(firstToken, secondToken);
     }

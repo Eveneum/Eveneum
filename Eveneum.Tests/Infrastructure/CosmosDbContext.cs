@@ -10,33 +10,49 @@ namespace Eveneum.Tests.Infrastructure;
 
 public abstract class CosmosDbContext : IDisposable
 {
+    private CosmosClient? client;
+    private IEventStore? eventStore;
+    private string? streamId;
+
     public string Database { get; } = "EveneumDB";
     public abstract string Container { get; }
-    public CosmosClient Client { get; protected set; }
-    public IEventStore EventStore { get; protected set; }
+    public CosmosClient Client
+    {
+        get => this.client ?? throw new InvalidOperationException($"{nameof(Initialize)}() must be called first.");
+        protected set => this.client = value;
+    }
+    public IEventStore EventStore
+    {
+        get => this.eventStore ?? throw new InvalidOperationException($"{nameof(Initialize)}() must be called first.");
+        protected set => this.eventStore = value;
+    }
     public EventStoreOptions EventStoreOptions { get; } = new EventStoreOptions() { QueryMaxItemCount = 100 };
     public virtual BulkDeleteMode BulkDeleteMode { get; } = Eveneum.BulkDeleteMode.StoredProcedure;
-    
-    public string StreamId { get; set; }
+
+    public string StreamId
+    {
+        get => this.streamId ?? throw new InvalidOperationException($"{nameof(StreamId)} has not been set.");
+        set => this.streamId = value;
+    }
     public Stream? Stream { get; set; }
-    public SampleMetadata HeaderMetadata { get; set; }
+    public SampleMetadata? HeaderMetadata { get; set; }
     public SampleSnapshot Snapshot { get; set; }
-    public SampleMetadata SnapshotMetadata { get; set; }
+    public SampleMetadata? SnapshotMetadata { get; set; }
     public SnapshotWriterSnapshot SnapshotWriterSnapshot { get; set; }
-    public EventData[] NewEvents { get; set; }
-    public List<EventData> LoadAllEvents { get; set; }
-    public List<StreamHeader> LoadAllStreamHeaders { get; set; }
+    public EventData[] NewEvents { get; set; } = [];
+    public List<EventData> LoadAllEvents { get; set; } = [];
+    public List<StreamHeader> LoadAllStreamHeaders { get; set; } = [];
     public EventData ReplacedEvent { get; set; }
-    public List<IEveneumDocument> ExistingDocuments { get; set; }
-    public Response Response { get; set; }
-    public Exception Exception { get; set; }
+    public List<IEveneumDocument> ExistingDocuments { get; set; } = [];
+    public Response? Response { get; set; }
+    public Exception? Exception { get; set; }
 
     public virtual void Dispose()
     {
-        this.Client?.Dispose();
+        this.client?.Dispose();
     }
 
-    public abstract bool AreEqual(object expected, object actual);
+    public abstract bool AreEqual(object? expected, object? actual);
 
     public abstract Task Initialize();
 

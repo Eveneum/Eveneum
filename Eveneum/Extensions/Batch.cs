@@ -83,9 +83,9 @@ static partial class MoreEnumerable
     public static IEnumerable<TResult> Batch<TSource, TResult>(this IEnumerable<TSource> source, uint size,
         Func<IEnumerable<TSource>, TResult> resultSelector)
     {
-        if (source == null) throw new ArgumentNullException(nameof(source));
+        if (source is null) throw new ArgumentNullException(nameof(source));
         if (size <= 0) throw new ArgumentOutOfRangeException(nameof(size));
-        if (resultSelector == null) throw new ArgumentNullException(nameof(resultSelector));
+        if (resultSelector is null) throw new ArgumentNullException(nameof(resultSelector));
 
         switch (source)
         {
@@ -119,12 +119,12 @@ static partial class MoreEnumerable
 
                 IEnumerable<TResult> Batch(uint s)
                 {
-                    TSource[] bucket = null;
+                    TSource[]? bucket = null;
                     var count = 0;
 
                     foreach (var item in source)
                     {
-                        if (bucket == null)
+                        if (bucket is null)
                             bucket = new TSource[s];
 
                         bucket[count++] = item;
@@ -140,7 +140,7 @@ static partial class MoreEnumerable
                     }
 
                     // Return the last bucket with all remaining elements
-                    if (bucket != null && count > 0)
+                    if (bucket is not null && count > 0)
                     {
                         Array.Resize(ref bucket, count);
                         yield return resultSelector(bucket);

@@ -21,10 +21,10 @@ public class EventStore : IEventStore, IAdvancedEventStore
     public byte BatchSize { get; }
     public int QueryMaxItemCount { get; }
     public EveneumDocumentSerializer Serializer { get; }
-    public ISnapshotWriter SnapshotWriter { get; }
+    public ISnapshotWriter? SnapshotWriter { get; }
     public SnapshotMode SnapshotMode { get; }
 
-    public EventStore(ICosmosPersistence persistence, EventStoreOptions options = null)
+    public EventStore(ICosmosPersistence persistence, EventStoreOptions? options = null)
     {
         Persistence = persistence ?? throw new ArgumentNullException(nameof(persistence));
         options = options ?? new EventStoreOptions();
@@ -46,7 +46,7 @@ public class EventStore : IEventStore, IAdvancedEventStore
         await Persistence.Initialize(cancellationToken);
     }
 
-    public Task<StreamResponse> ReadStream(string streamId, ReadStreamOptions options = null, CancellationToken cancellationToken = default)
+    public Task<StreamResponse> ReadStream(string streamId, ReadStreamOptions? options = null, CancellationToken cancellationToken = default)
     {
         options = options ?? new ReadStreamOptions();
 
@@ -76,7 +76,7 @@ public class EventStore : IEventStore, IAdvancedEventStore
 
     private async Task<StreamResponse> ReadStream(string streamId, string sql, int maxItemCount, CancellationToken cancellationToken)
     {
-        if (streamId == null)
+        if (streamId is null)
             throw new ArgumentNullException(nameof(streamId));
 
         using var iterator = this.Persistence.GetItemQueryIterator(sql, streamId, maxItemCount);
@@ -129,13 +129,13 @@ public class EventStore : IEventStore, IAdvancedEventStore
 
             Snapshot? snapshot = null;
 
-            if(snapshotDocument is object)
+            if(snapshotDocument is not null)
             {
                 snapshot = this.Serializer.DeserializeSnapshot(snapshotDocument);
 
                 if (snapshot.Value.Data is SnapshotWriterSnapshot snapshotWriterSnapshot)
                 {
-                    if (this.SnapshotWriter is object)
+                    if (this.SnapshotWriter is not null)
                         snapshot = await this.SnapshotWriter.ReadSnapshot(streamId, snapshot.Value.Version, cancellationToken);
                     else
                         throw new SnapshotWriterNotFoundException(streamId, requestCharge, snapshotWriterSnapshot.SnapshotWriterType);
@@ -154,16 +154,16 @@ public class EventStore : IEventStore, IAdvancedEventStore
         }
     }
 
-    public async Task<Response> WriteToStream(string streamId, EventData[] events, ulong? expectedVersion = null, object metadata = null, CancellationToken cancellationToken = default)
+    public async Task<Response> WriteToStream(string streamId, EventData[] events, ulong? expectedVersion = null, object? metadata = null, CancellationToken cancellationToken = default)
     {
         double requestCharge = 0;
 
         var isNewStream = !expectedVersion.HasValue;
 
         IEveneumDocument header;
-        string headerETag = null;
+        string? headerETag = null;
 
-        if (isNewStream)
+        if (expectedVersion is null)
         {
             header = this.Serializer.JsonSerializer.CreateDocument(streamId, DocumentType.Header);
             header.StreamId = streamId;
@@ -251,7 +251,7 @@ public class EventStore : IEventStore, IAdvancedEventStore
         var existingHeader = headerResponse.Document;
         var requestCharge = headerResponse.RequestCharge;
 
-        if (existingHeader == null)
+        if (existingHeader is null)
             throw new StreamNotFoundException(streamId, requestCharge);
 
         if (existingHeader.Deleted)
@@ -274,14 +274,14 @@ public class EventStore : IEventStore, IAdvancedEventStore
         return new DeleteResponse(deleteResponse.DeletedDocuments, requestCharge + deleteResponse.RequestCharge);
     }
 
-    public async Task<Response> CreateSnapshot(string streamId, ulong version, object snapshot, object metadata = null, bool deleteOlderSnapshots = false, CancellationToken cancellationToken = default)
+    public async Task<Response> CreateSnapshot(string streamId, ulong version, object snapshot, object? metadata = null, bool deleteOlderSnapshots = false, CancellationToken cancellationToken = default)
     {
         var headerResponse = await this.ReadHeaderDocument(streamId, cancellationToken);
 
         var header = headerResponse.Document;
         var requestCharge = headerResponse.RequestCharge;
 
-        if (header == null)
+        if (header is null)
             throw new StreamNotFoundException(streamId, requestCharge);
 
         if (header.Deleted)
@@ -290,14 +290,19 @@ public class EventStore : IEventStore, IAdvancedEventStore
         if (header.Version < version)
             throw new OptimisticConcurrencyException(streamId, requestCharge, version, header.Version);
 
-        var customSnapshotCreated = false;
+        IEveneumDocument document;
 
-        if(this.SnapshotWriter is object)
-            customSnapshotCreated = await this.SnapshotWriter.CreateSnapshot(streamId, version, snapshot, metadata, cancellationToken);
+        if (this.SnapshotWriter is { } snapshotWriter && await snapshotWriter.CreateSnapshot(streamId, version, snapshot, metadata, cancellationToken))
+        {
+            var snapshotWriterType = snapshotWriter.GetType();
+            var snapshotWriterTypeName = snapshotWriterType.AssemblyQualifiedName ?? throw new InvalidOperationException($"Snapshot writer type '{snapshotWriterType}' has no assembly-qualified name.");
 
-        var document = customSnapshotCreated
-            ? this.Serializer.SerializeSnapshot(new SnapshotWriterSnapshot(this.SnapshotWriter.GetType().AssemblyQualifiedName), null, version, streamId, this.SnapshotMode)
-            : this.Serializer.SerializeSnapshot(snapshot, metadata, version, streamId, this.SnapshotMode);
+            document = this.Serializer.SerializeSnapshot(new SnapshotWriterSnapshot(snapshotWriterTypeName), null, version, streamId, this.SnapshotMode);
+        }
+        else
+        {
+            document = this.Serializer.SerializeSnapshot(snapshot, metadata, version, streamId, this.SnapshotMode);
+        }
 
         var response = await Persistence.UpsertItemAsync(document, streamId, cancellationToken);
 
@@ -319,7 +324,7 @@ public class EventStore : IEventStore, IAdvancedEventStore
 
         var deleteResponse = await DeleteDocuments(streamId, query, cancellationToken);
 
-        if (this.SnapshotWriter is object)
+        if (this.SnapshotWriter is not null)
             await this.SnapshotWriter.DeleteSnapshots(streamId, olderThanVersion, cancellationToken);
 
         return deleteResponse;

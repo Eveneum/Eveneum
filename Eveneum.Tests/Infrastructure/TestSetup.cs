@@ -7,7 +7,7 @@ namespace Eveneum.Tests.Infrastructure;
 
 static class TestSetup
 {
-    public static EventData[] GetEvents(int count = 5, int startVersion = 1, string streamId = null)
+    public static EventData[] GetEvents(int count = 5, int startVersion = 1, string? streamId = null)
     {
         streamId = streamId ?? Gen.Random.Text.Words()();
         var numbers = Gen.Random.Numbers.Decimals();

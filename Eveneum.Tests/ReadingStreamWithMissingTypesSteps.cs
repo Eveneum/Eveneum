@@ -13,7 +13,7 @@ public class UnresolvableTypeProvider : ITypeProvider
 
     public string GetIdentifierForType(Type type) => $"{type.FullName}, MissingAssembly";
 
-    public Type GetTypeForIdentifier(string identifier) => this.Resolver.GetTypeForIdentifier(identifier);
+    public Type? GetTypeForIdentifier(string identifier) => this.Resolver.GetTypeForIdentifier(identifier);
 }
 
 [Binding]
@@ -39,7 +39,7 @@ public class ReadingStreamWithMissingTypesSteps(ScenarioContext scenarioContext,
     {
         Assert.That(scenarioContext.TestError, Is.InstanceOf<StreamDeserializationException>());
 
-        var exception = scenarioContext.TestError as StreamDeserializationException;
+        var exception = (StreamDeserializationException)scenarioContext.TestError;
         Assert.That(exception.StreamId, Is.EqualTo(streamId));
         Assert.That(exception.Type, Is.EqualTo(new UnresolvableTypeProvider().GetIdentifierForType(typeof(SampleMetadata))));
     }

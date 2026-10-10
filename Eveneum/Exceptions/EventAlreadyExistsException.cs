@@ -13,7 +13,7 @@ public class EventAlreadyExistsException : EveneumException
 
     public ulong Version
     {
-        get { return (ulong)this.Data[nameof(Version)]; }
+        get { return this.GetRequired<ulong>(nameof(Version)); }
         private set { this.Data[nameof(Version)] = value; }
     }
 

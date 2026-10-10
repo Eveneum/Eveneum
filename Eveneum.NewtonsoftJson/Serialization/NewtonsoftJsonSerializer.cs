@@ -11,27 +11,27 @@ public class NewtonsoftJsonSerializer : IJsonSerializer
 {
     private readonly JsonSerializer _serializer;
 
-    public NewtonsoftJsonSerializer(JsonSerializer serializer = null)
+    public NewtonsoftJsonSerializer(JsonSerializer? serializer = null)
     {
         _serializer = serializer ?? JsonSerializer.CreateDefault();
     }
 
-    public NewtonsoftJsonSerializer(JsonSerializerSettings settings)
+    public NewtonsoftJsonSerializer(JsonSerializerSettings? settings)
         : this(JsonSerializer.Create(settings))
     {
     }
 
-    public object Serialize(object value)
+    public object? Serialize(object? value)
     {
-        if (value == null)
+        if (value is null)
             return null;
 
         return JToken.FromObject(value, _serializer);
     }
 
-    public object Deserialize(object token, Type targetType)
+    public object? Deserialize(object? token, Type targetType)
     {
-        if (token == null || targetType == null)
+        if (token is null || targetType is null)
             return null;
 
         if (token is JToken jToken)
