@@ -29,8 +29,9 @@ public interface ICosmosPersistence
 
     /// <summary>
     /// Read a single document by id and partition key.
+    /// Implementations may return a <see langword="null"/> resource when the document does not exist.
     /// </summary>
-    Task<CosmosItemResponse<IEveneumDocument>> ReadItemAsync(
+    Task<CosmosItemResponse<IEveneumDocument?>> ReadItemAsync(
         string id,
         string partitionKey,
         CancellationToken cancellationToken = default);
