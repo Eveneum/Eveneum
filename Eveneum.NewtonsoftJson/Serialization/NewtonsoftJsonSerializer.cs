@@ -5,46 +5,45 @@ using Eveneum.Serialization;
 using Eveneum.Documents;
 using Eveneum.NewtonsoftJson.Documents;
 
-namespace Eveneum.NewtonsoftJson.Serialization
+namespace Eveneum.NewtonsoftJson.Serialization;
+
+public class NewtonsoftJsonSerializer : IJsonSerializer
 {
-    public class NewtonsoftJsonSerializer : IJsonSerializer
+    private readonly JsonSerializer _serializer;
+
+    public NewtonsoftJsonSerializer(JsonSerializer serializer = null)
     {
-        private readonly JsonSerializer _serializer;
+        _serializer = serializer ?? JsonSerializer.CreateDefault();
+    }
 
-        public NewtonsoftJsonSerializer(JsonSerializer serializer = null)
+    public NewtonsoftJsonSerializer(JsonSerializerSettings settings)
+        : this(JsonSerializer.Create(settings))
+    {
+    }
+
+    public object Serialize(object value)
+    {
+        if (value == null)
+            return null;
+
+        return JToken.FromObject(value, _serializer);
+    }
+
+    public object Deserialize(object token, Type targetType)
+    {
+        if (token == null || targetType == null)
+            return null;
+
+        if (token is JToken jToken)
         {
-            _serializer = serializer ?? JsonSerializer.CreateDefault();
+            return jToken.ToObject(targetType, _serializer);
         }
 
-        public NewtonsoftJsonSerializer(JsonSerializerSettings settings)
-            : this(JsonSerializer.Create(settings))
-        {
-        }
+        throw new ArgumentException($"Token must be of type JToken, but was {token.GetType()}", nameof(token));
+    }
 
-        public object Serialize(object value)
-        {
-            if (value == null)
-                return null;
-
-            return JToken.FromObject(value, _serializer);
-        }
-
-        public object Deserialize(object token, Type targetType)
-        {
-            if (token == null || targetType == null)
-                return null;
-
-            if (token is JToken jToken)
-            {
-                return jToken.ToObject(targetType, _serializer);
-            }
-
-            throw new ArgumentException($"Token must be of type JToken, but was {token.GetType()}", nameof(token));
-        }
-
-        public IEveneumDocument CreateDocument(string id, DocumentType documentType)
-        {
-            return new NewtonsoftJsonEveneumDocument(id, documentType);
-        }
+    public IEveneumDocument CreateDocument(string id, DocumentType documentType)
+    {
+        return new NewtonsoftJsonEveneumDocument(id, documentType);
     }
 }

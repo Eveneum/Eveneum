@@ -2,48 +2,47 @@ using System.IO;
 using System.Linq;
 using System.Text.Json;
 
-namespace Eveneum.Serialization
+namespace Eveneum.Serialization;
+
+public class SystemTextJsonCosmosSerializer : Microsoft.Azure.Cosmos.CosmosSerializer
 {
-    public class SystemTextJsonCosmosSerializer : Microsoft.Azure.Cosmos.CosmosSerializer
+    private readonly JsonSerializerOptions Options;
+
+    public SystemTextJsonCosmosSerializer(JsonSerializerOptions options = null)
     {
-        private readonly JsonSerializerOptions Options;
+        this.Options = options ?? new JsonSerializerOptions();
 
-        public SystemTextJsonCosmosSerializer(JsonSerializerOptions options = null)
+        if (!this.Options.Converters.OfType<IEveneumDocumentConverter>().Any())
+            this.Options.Converters.Add(new IEveneumDocumentConverter());
+    }
+
+    public override T FromStream<T>(System.IO.Stream stream)
+    {
+        using (stream)
         {
-            this.Options = options ?? new JsonSerializerOptions();
-
-            if (!this.Options.Converters.OfType<IEveneumDocumentConverter>().Any())
-                this.Options.Converters.Add(new IEveneumDocumentConverter());
-        }
-
-        public override T FromStream<T>(System.IO.Stream stream)
-        {
-            using (stream)
+            if (typeof(System.IO.Stream).IsAssignableFrom(typeof(T)))
             {
-                if (typeof(System.IO.Stream).IsAssignableFrom(typeof(T)))
-                {
-                    var copy = new MemoryStream();
-                    stream.CopyTo(copy);
-                    copy.Position = 0;
-                    return (T)(object)copy;
-                }
-
-                return JsonSerializer.Deserialize<T>(stream, Options);
+                var copy = new MemoryStream();
+                stream.CopyTo(copy);
+                copy.Position = 0;
+                return (T)(object)copy;
             }
-        }
 
-        public override System.IO.Stream ToStream<T>(T input)
-        {
-            var stream = new MemoryStream();
-            
-            // Get the actual runtime type to ensure we serialize the concrete type with all its attributes
-            var actualType = input?.GetType() ?? typeof(T);
-            
-            // Serialize using the actual runtime type, not the generic parameter type
-            // This ensures that if T is IEveneumDocument, we still serialize the concrete EveneumDocument
-            JsonSerializer.Serialize(stream, input, actualType, Options);
-            stream.Position = 0;
-            return stream;
+            return JsonSerializer.Deserialize<T>(stream, Options);
         }
+    }
+
+    public override System.IO.Stream ToStream<T>(T input)
+    {
+        var stream = new MemoryStream();
+        
+        // Get the actual runtime type to ensure we serialize the concrete type with all its attributes
+        var actualType = input?.GetType() ?? typeof(T);
+        
+        // Serialize using the actual runtime type, not the generic parameter type
+        // This ensures that if T is IEveneumDocument, we still serialize the concrete EveneumDocument
+        JsonSerializer.Serialize(stream, input, actualType, Options);
+        stream.Position = 0;
+        return stream;
     }
 }

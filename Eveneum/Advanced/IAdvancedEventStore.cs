@@ -4,16 +4,15 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Eveneum.Advanced
+namespace Eveneum.Advanced;
+
+public interface IAdvancedEventStore
 {
-    public interface IAdvancedEventStore
-    {
-        Task<Response> LoadAllEvents(Func<IReadOnlyCollection<EventData>, Task> callback, CancellationToken cancellationToken = default);
-        Task<Response> LoadEvents(string query, Func<IReadOnlyCollection<EventData>, Task> callback, CancellationToken cancellationToken = default);
-        Task<Response> LoadEvents(QueryDefinition query, Func<IReadOnlyCollection<EventData>, Task> callback, CancellationToken cancellationToken = default);
-        Task<Response> LoadStreamHeaders(string query, Func<IReadOnlyCollection<StreamHeader>, Task> callback, CancellationToken cancellationToken = default);
-        Task<Response> LoadStreamHeaders(QueryDefinition query, Func<IReadOnlyCollection<StreamHeader>, Task> callback, CancellationToken cancellationToken = default);
-        Task<Response> ReplaceEvent(EventData newEvent, CancellationToken cancellationToken = default);
-        Task<DeleteResponse> DeleteEvent(string streamId, ulong version, CancellationToken cancellationToken = default);
-    }
+    Task<Response> LoadAllEvents(Func<IReadOnlyCollection<EventData>, Task> callback, CancellationToken cancellationToken = default);
+    Task<Response> LoadEvents(string query, Func<IReadOnlyCollection<EventData>, Task> callback, CancellationToken cancellationToken = default);
+    Task<Response> LoadEvents(QueryDefinition query, Func<IReadOnlyCollection<EventData>, Task> callback, CancellationToken cancellationToken = default);
+    Task<Response> LoadStreamHeaders(string query, Func<IReadOnlyCollection<StreamHeader>, Task> callback, CancellationToken cancellationToken = default);
+    Task<Response> LoadStreamHeaders(QueryDefinition query, Func<IReadOnlyCollection<StreamHeader>, Task> callback, CancellationToken cancellationToken = default);
+    Task<Response> ReplaceEvent(EventData newEvent, CancellationToken cancellationToken = default);
+    Task<DeleteResponse> DeleteEvent(string streamId, ulong version, CancellationToken cancellationToken = default);
 }
