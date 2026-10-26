@@ -42,56 +42,56 @@ public class NullHeaderResourceTests
     private static EventStore CreateEventStore() => new(new NullHeaderResourcePersistence(RequestCharge));
 
     [Test]
-    public void WriteToStream_WithExpectedVersionAndNullHeaderResource_ThrowsStreamNotFoundException()
+    public async Task WriteToStream_WithExpectedVersionAndNullHeaderResource_ThrowsStreamNotFoundException()
     {
         var eventStore = CreateEventStore();
 
-        AssertStreamNotFound(() => eventStore.WriteToStream(StreamId, [], 10));
+        await AssertStreamNotFound(() => eventStore.WriteToStream(StreamId, [], 10));
     }
 
     [Test]
-    public void ReadHeader_WithNullHeaderResource_ThrowsStreamNotFoundException()
+    public async Task ReadHeader_WithNullHeaderResource_ThrowsStreamNotFoundException()
     {
         var eventStore = CreateEventStore();
 
-        AssertStreamNotFound(() => eventStore.ReadHeader(StreamId));
+        await AssertStreamNotFound(() => eventStore.ReadHeader(StreamId));
     }
 
     [Test]
-    public void DeleteStream_WithNullHeaderResource_ThrowsStreamNotFoundException()
+    public async Task DeleteStream_WithNullHeaderResource_ThrowsStreamNotFoundException()
     {
         var eventStore = CreateEventStore();
 
-        AssertStreamNotFound(() => eventStore.DeleteStream(StreamId, 10));
+        await AssertStreamNotFound(() => eventStore.DeleteStream(StreamId, 10));
     }
 
     [Test]
-    public void CreateSnapshot_WithNullHeaderResource_ThrowsStreamNotFoundException()
+    public async Task CreateSnapshot_WithNullHeaderResource_ThrowsStreamNotFoundException()
     {
         var eventStore = CreateEventStore();
 
-        AssertStreamNotFound(() => eventStore.CreateSnapshot(StreamId, 5, new SampleSnapshot { Version = 5 }));
+        await AssertStreamNotFound(() => eventStore.CreateSnapshot(StreamId, 5, new SampleSnapshot { Version = 5 }));
     }
 
     [Test]
-    public void DeleteSnapshots_WithNullHeaderResource_ThrowsStreamNotFoundException()
+    public async Task DeleteSnapshots_WithNullHeaderResource_ThrowsStreamNotFoundException()
     {
         var eventStore = CreateEventStore();
 
-        AssertStreamNotFound(() => eventStore.DeleteSnapshots(StreamId, 10));
+        await AssertStreamNotFound(() => eventStore.DeleteSnapshots(StreamId, 10));
     }
 
     [Test]
-    public void DeleteEvent_WithNullHeaderResource_ThrowsStreamNotFoundException()
+    public async Task DeleteEvent_WithNullHeaderResource_ThrowsStreamNotFoundException()
     {
         var eventStore = CreateEventStore();
 
-        AssertStreamNotFound(() => eventStore.DeleteEvent(StreamId, 5));
+        await AssertStreamNotFound(() => eventStore.DeleteEvent(StreamId, 5));
     }
 
-    private static void AssertStreamNotFound(Func<Task> action)
+    private static async Task AssertStreamNotFound(Func<Task> action)
     {
-        var exception = Assert.ThrowsAsync<StreamNotFoundException>(action);
+        var exception = await Assert.ThrowsAsync<StreamNotFoundException>(action);
 
         Assert.Multiple(() =>
         {

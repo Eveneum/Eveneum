@@ -13,8 +13,8 @@
     <tags>event-sourcing event-store cosmosdb</tags>
     <dependencies>
       <group targetFramework=".NETStandard2.0">
-        <dependency id="Microsoft.Azure.Cosmos" version="[3.35.4,4)" />
-        <dependency id="System.Text.Json" version="8.0.6" />
+        <dependency id="Microsoft.Azure.Cosmos" version="[3.36.2,4)" />
+        <dependency id="System.Text.Json" version="10.0.14" />
       </group>
     </dependencies>
   </metadata>
