@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
@@ -68,7 +69,7 @@ public class CosmosPersistence<TDocument> : ICosmosPersistence
             await Container.Scripts.ReadStoredProcedureAsync(procedureId, cancellationToken: cancellationToken);
             await Container.Scripts.ReplaceStoredProcedureAsync(properties, cancellationToken: cancellationToken);
         }
-        catch (CosmosException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
+        catch (CosmosException ex) when (ex.StatusCode == HttpStatusCode.NotFound)
         {
             await Container.Scripts.CreateStoredProcedureAsync(properties, cancellationToken: cancellationToken);
         }

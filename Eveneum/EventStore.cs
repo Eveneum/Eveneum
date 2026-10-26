@@ -7,6 +7,7 @@ using Microsoft.Azure.Cosmos;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -214,9 +215,9 @@ public class EventStore : IEventStore, IAdvancedEventStore
             using var response = await transaction.ExecuteAsync(cancellationToken);
             requestCharge += response.RequestCharge;
 
-            if (response.StatusCode == System.Net.HttpStatusCode.Conflict || response.StatusCode == System.Net.HttpStatusCode.PreconditionFailed)
+            if (IsConflict(response.StatusCode))
             {
-                if (response.GetOperationResultAtIndex<IEveneumDocument>(0).StatusCode == System.Net.HttpStatusCode.Conflict || response.GetOperationResultAtIndex<IEveneumDocument>(0).StatusCode == System.Net.HttpStatusCode.PreconditionFailed)
+                if (IsConflict(response, 0))
                 {
                     if (isNewStream && firstBatch)
                         throw new StreamAlreadyExistsException(streamId, requestCharge);
@@ -226,19 +227,17 @@ public class EventStore : IEventStore, IAdvancedEventStore
 
                     throw new OptimisticConcurrencyException(streamId, requestCharge, baseVersion + (ulong)(writtenEvents - batch.Length), currentHeaderResponse.Document.Version);
                 }
-                else
+
+                for (var i = 0; i < batch.Length; i++)
                 {
-                    for (var i = 0; i < batch.Length; i++)
-                    {
-                        if (response.GetOperationResultAtIndex<IEveneumDocument>(i + 1).StatusCode == System.Net.HttpStatusCode.Conflict || response.GetOperationResultAtIndex<IEveneumDocument>(i + 1).StatusCode == System.Net.HttpStatusCode.PreconditionFailed)
-                            throw new EventAlreadyExistsException(streamId, batch[i].Version, requestCharge);
-                    }
+                    if (IsConflict(response, i + 1))
+                        throw new EventAlreadyExistsException(streamId, batch[i].Version, requestCharge);
                 }
             }
             else if (!response.IsSuccessStatusCode)
                 throw new WriteException(streamId, requestCharge, response.ErrorMessage, response.StatusCode);
 
-            headerETag = response.GetOperationResultAtIndex<IEveneumDocument>(0).ETag;
+            headerETag = OperationResultAt(response, 0).ETag;
             firstBatch = false;
         }
         while (offset < events.Length);
@@ -409,6 +408,15 @@ public class EventStore : IEventStore, IAdvancedEventStore
         }
     }
 
+    private static bool IsConflict(HttpStatusCode statusCode) =>
+        statusCode is HttpStatusCode.Conflict or HttpStatusCode.PreconditionFailed;
+
+    private static bool IsConflict(TransactionalBatchResponse response, int index) =>
+        IsConflict(OperationResultAt(response, index).StatusCode);
+
+    private static TransactionalBatchOperationResult<IEveneumDocument> OperationResultAt(TransactionalBatchResponse response, int index) =>
+        response.GetOperationResultAtIndex<IEveneumDocument>(index);
+
     private async Task<DocumentResponse> ReadHeaderDocument(string streamId, CancellationToken cancellationToken = default)
     {
         try
@@ -420,7 +428,7 @@ public class EventStore : IEventStore, IAdvancedEventStore
 
             return new DocumentResponse(result.Resource, result.RequestCharge);
         }
-        catch (CosmosException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
+        catch (CosmosException ex) when (ex.StatusCode == HttpStatusCode.NotFound)
         {
             throw new StreamNotFoundException(streamId, ex.RequestCharge, ex);
         }
